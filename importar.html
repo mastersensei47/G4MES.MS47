@@ -3,53 +3,76 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Importar juegos - MS47</title>
+<title>Importar páginas de la versión vieja - MS47</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial, sans-serif;}
 body{background:#0e0e0e;color:white;padding:20px;}
 h1{margin-bottom:20px;}
 .card{background:#1b1b1b;border-radius:10px;padding:20px;max-width:750px;margin:0 auto 20px;border:1px solid #333;}
-input[type=password]{width:100%;padding:10px;border-radius:6px;border:1px solid #333;background:#111;color:white;font-size:14px;}
+input[type=password],input[type=text]{width:100%;padding:10px;border-radius:6px;border:1px solid #333;background:#111;color:white;font-size:14px;margin-bottom:10px;}
 button{cursor:pointer;border:none;border-radius:6px;padding:12px 20px;font-weight:bold;margin-top:10px;margin-right:8px;font-size:15px;}
 .btn-primary{background:#ff0000;color:white;}
 .btn-primary:hover{background:#c70000;}
 .btn-primary:disabled{background:#552222;cursor:not-allowed;}
 #panel{display:none;max-width:750px;margin:0 auto;}
 #login{max-width:350px;margin:100px auto;text-align:center;}
-.item{background:#1a1a1a;border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;display:flex;justify-content:space-between;}
-.ok{color:#6bff8f;}
-.err{color:#ff6b6b;}
-.pending{color:#888;}
+.item{background:#1a1a1a;border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;display:flex;justify-content:space-between;gap:10px;}
+.ok{color:#6bff8f;} .err{color:#ff6b6b;} .pending{color:#888;} .warn{color:#ffd166;}
 .msg{margin-top:10px;font-size:14px;}
 .msg.error{color:#ff6b6b;}
+.chk{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px;}
+.chk input{width:auto;margin:0;}
+#log{margin-top:15px;font-size:13px;line-height:1.6;white-space:pre-wrap;color:#ccc;}
+a{color:#00bfff;}
 </style>
 </head>
 <body>
 
 <div id="login">
-  <h1>🔒 Importar juegos</h1>
+  <h1>🔒 Importar páginas</h1>
   <div class="card">
-    <label>Clave de acceso</label><br><br>
-    <input type="password" id="loginPass" placeholder="Ingresá la clave">
+    <label>Correo</label><br><br>
+    <input type="text" id="loginEmail" autocomplete="username" placeholder="tu@correo.com">
+    <label>Contraseña</label><br><br>
+    <input type="password" id="loginPass" autocomplete="current-password" placeholder="Tu contraseña">
     <button class="btn-primary" id="btnLogin" style="width:100%;">Entrar</button>
     <p class="msg error" id="loginMsg"></p>
   </div>
 </div>
 
 <div id="panel">
-  <h1>Importar 14 juegos a Firebase</h1>
+  <h1>Importar páginas de la versión vieja</h1>
   <div class="card">
-    <p>Esto va a crear (o sobreescribir si ya existen) estas páginas en <code>paginasJuegos</code>. Después de importar vas a poder editarlas o borrarlas desde <b>admin.html</b> como cualquier otra.</p>
+    <p>Pasa a la base de datos nueva (<code>ms47admin</code>) todo lo que tenía la versión vieja:</p>
+    <ul style="margin:10px 0 10px 20px;font-size:14px;line-height:1.6;">
+      <li><b>Juegos</b> (<code>paginasJuegos</code>): los 14 que trae este archivo + los que haya en la base vieja.</li>
+      <li><b>Series y películas</b> (<code>paginasSeries</code>) de la base vieja.</li>
+      <li><b>Canales de TV y fútbol</b> (<code>canales</code>) de la base vieja.</li>
+      <li>Los deja dentro de su categoría para que aparezcan en el sitio (se pueden cambiar desde <b>admin.html → Categorías</b>).</li>
+    </ul>
+    <label class="chk"><input type="checkbox" id="chkPisar"> Sobrescribir las páginas que ya existan en la base nueva</label>
     <button class="btn-primary" id="btnImportar">Importar todo</button>
+    <a href="admin.html" style="font-size:14px;">Volver al admin</a>
     <div id="lista" style="margin-top:15px;"></div>
+    <div id="log"></div>
   </div>
 </div>
 
+<script src="config.js"></script>
+<script src="defaults.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-const firebaseConfig = {
+// ---- Base NUEVA (la del sitio actual) ----
+const app = initializeApp(window.MS47.firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+const D = window.MS47_DEFAULTS;
+
+// ---- Base VIEJA (solo lectura, de donde se copian los datos) ----
+const appVieja = initializeApp({
     apiKey: "AIzaSyBjQB3yJdJPc44qvmge-H_961QJ1s_kh7E",
     authDomain: "tv-fulvo.firebaseapp.com",
     projectId: "tv-fulvo",
@@ -57,21 +80,24 @@ const firebaseConfig = {
     messagingSenderId: "733955226142",
     appId: "1:733955226142:web:d49871efff59452b604c0f",
     databaseURL: "https://tv-fulvo-default-rtdb.firebaseio.com"
-};
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+}, "vieja");
+const dbVieja = getDatabase(appVieja);
 
-const CLAVE_ADMIN = "ms47admin";
-
-document.getElementById("btnLogin").addEventListener("click", () => {
+document.getElementById("btnLogin").addEventListener("click", async () => {
+  const email = document.getElementById("loginEmail").value.trim();
   const pass = document.getElementById("loginPass").value;
-  if(pass === CLAVE_ADMIN){
-    document.getElementById("login").style.display = "none";
-    document.getElementById("panel").style.display = "block";
-    pintarLista();
-  }else{
-    document.getElementById("loginMsg").textContent = "Clave incorrecta.";
+  try{
+    await signInWithEmailAndPassword(auth, email, pass);
+  }catch(e){
+    document.getElementById("loginMsg").textContent = "Correo o contraseña incorrectos.";
   }
+});
+document.getElementById("loginPass").addEventListener("keydown", e => { if(e.key === "Enter") document.getElementById("btnLogin").click(); });
+
+onAuthStateChanged(auth, (user) => {
+  document.getElementById("login").style.display = user ? "none" : "block";
+  document.getElementById("panel").style.display = user ? "block" : "none";
+  if(user) pintarLista();
 });
 
 function d(label, url){ return {label, url}; }
@@ -375,37 +401,147 @@ const juegos = [
 },
 ];
 
+// Categoría donde se ubica cada juego (se puede cambiar después desde admin.html → Categorías)
+const CATEGORIA_JUEGO = {
+  "rdr2": "mundo-abierto",
+  "palworld": "mundo-abierto",
+  "171": "mundo-abierto",
+  "gta-v": "mundo-abierto",
+  "watch-dogs-2": "mundo-abierto",
+  "bodycam": "online",
+  "uncharted-legacy-of-thieves-collection": "aventura",
+  "dragon-ball-sparking-zero": "pelea",
+  "jump-force": "pelea",
+  "mk11": "pelea",
+  "waterpark-simulator": "simuladores",
+  "fifa-22": "deportes",
+  "fnaf-security-breach": "terror",
+  "resident-evil-4": "terror"
+};
+const CATEGORIA_SERIES = "peliculas-y-series";
+
+const logEl = document.getElementById("log");
+const log = (t) => { logEl.textContent += t + "\n"; };
+
 function pintarLista(){
   const cont = document.getElementById("lista");
   cont.innerHTML = "";
   juegos.forEach(j => {
     const row = document.createElement("div");
     row.className = "item";
-    row.id = "row-" + j.slug;
-    row.innerHTML = `<span>${j.titulo}</span><span class="pending" id="estado-${j.slug}">pendiente</span>`;
+    row.innerHTML = `<span></span><span class="pending">en la lista</span>`;
+    row.firstChild.textContent = j.titulo;
     cont.appendChild(row);
   });
 }
 
+async function leerVieja(nodo){
+  try{
+    const s = await get(ref(dbVieja, nodo));
+    return s.val() || {};
+  }catch(e){
+    console.error(e);
+    log(`⚠ No se pudo leer "${nodo}" de la base vieja (${e.code || e.message}).`);
+    return null;
+  }
+}
+
 document.getElementById("btnImportar").addEventListener("click", async () => {
   const btn = document.getElementById("btnImportar");
+  const pisar = document.getElementById("chkPisar").checked;
   btn.disabled = true;
   btn.textContent = "Importando...";
-  for(const j of juegos){
-    const estadoEl = document.getElementById("estado-" + j.slug);
-    estadoEl.textContent = "subiendo...";
-    try{
-      const { slug, ...data } = j;
-      await set(ref(db, "paginasJuegos/" + slug), data);
-      estadoEl.textContent = "✔ importado";
-      estadoEl.className = "ok";
-    }catch(err){
-      console.error(err);
-      estadoEl.textContent = "✕ error";
-      estadoEl.className = "err";
-    }
+  logEl.textContent = "";
+
+  try{
+    // 1) Datos de la base nueva
+    const [sJ, sS, sC, sCat, sCfg] = await Promise.all(
+      ["paginasJuegos", "paginasSeries", "canales", "categorias", "config"].map(n => get(ref(db, n)))
+    );
+    const exJ = sJ.val() || {}, exS = sS.val() || {}, exC = sC.val() || {};
+    const categorias = sCat.val() || {};
+    const cfgActual = sCfg.val() || {};
+
+    // 2) Datos de la base vieja
+    const [vJ, vS, vC] = await Promise.all([leerVieja("paginasJuegos"), leerVieja("paginasSeries"), leerVieja("canales")]);
+
+    // Juegos: los embebidos en este archivo + los de la base vieja (la vieja gana)
+    const juegosFinal = {};
+    juegos.forEach(({ slug, ...data }) => { juegosFinal[slug] = data; });
+    Object.keys(vJ || {}).forEach(k => { juegosFinal[k] = vJ[k]; });
+    // FNAF: se usa la ficha actualizada del sitio nuevo
+    juegosFinal["fnaf-security-breach"] = { ...D.FNAF_JUEGO };
+
+    const up = {};
+    const nuevos = { juego: [], serie: [] };
+    let omitidos = 0;
+
+    const filas = {};
+    const poner = (nodo, tipo, k, data, existentes) => {
+      if(existentes[k] && !pisar){ omitidos++; return; }
+      up[`${nodo}/${k}`] = { ...data, actualizado: Date.now() };
+      if(tipo) nuevos[tipo].push(k);
+    };
+    Object.keys(juegosFinal).forEach(k => poner("paginasJuegos", "juego", k, juegosFinal[k], exJ));
+    Object.keys(vS || {}).forEach(k => poner("paginasSeries", "serie", k, vS[k], exS));
+    let canalesN = 0;
+    Object.keys(vC || {}).forEach(k => {
+      if(exC[k] && !pisar){ omitidos++; return; }
+      up[`canales/${k}`] = vC[k]; canalesN++;
+    });
+
+    // 3) Categorías y ajustes iniciales (las que falten) para que la home no quede a medias
+    Object.keys(D.DEFAULT_CATEGORIAS).forEach(k => {
+      if(!categorias[k]){ categorias[k] = JSON.parse(JSON.stringify(D.DEFAULT_CATEGORIAS[k])); }
+    });
+    Object.keys(D.DEFAULT_CONFIG).forEach(k => {
+      if(cfgActual[k] === undefined) up["config/" + k] = D.DEFAULT_CONFIG[k];
+    });
+    up["config/inicializado"] = true;
+
+    // 4) Poner cada página en su categoría (sin duplicar si ya está en alguna)
+    const yaUbicado = new Set();
+    Object.values(categorias).forEach(c => (c.items || []).forEach(it => yaUbicado.add(it.tipo + ":" + it.slug)));
+    const sinCategoria = [];
+    const ubicar = (tipo, slug, catSlug) => {
+      if(yaUbicado.has(tipo + ":" + slug)) return;
+      const c = categorias[catSlug];
+      if(!c){ if(nuevos[tipo].includes(slug)) sinCategoria.push(slug); return; }
+      c.items = Array.isArray(c.items) ? c.items : [];
+      c.items.push({ tipo, slug });
+      yaUbicado.add(tipo + ":" + slug);
+    };
+    // También las que ya existían en la base nueva pero no estaban en ninguna categoría
+    Object.keys({ ...juegosFinal, ...exJ }).forEach(k => ubicar("juego", k, CATEGORIA_JUEGO[k] || ""));
+    Object.keys({ ...(vS || {}), ...exS }).forEach(k => ubicar("serie", k, CATEGORIA_SERIES));
+    Object.keys(categorias).forEach(k => { up["categorias/" + k] = categorias[k]; });
+
+    // 5) Subir todo de una vez
+    await update(ref(db), up);
+
+    // 6) Resultado
+    const lista = document.getElementById("lista");
+    lista.innerHTML = "";
+    const fila = (txt, cls) => {
+      const r = document.createElement("div"); r.className = "item";
+      r.innerHTML = `<span></span><span class="${cls}">✔</span>`; r.firstChild.textContent = txt; lista.appendChild(r);
+    };
+    nuevos.juego.forEach(k => fila("Juego: " + (juegosFinal[k].titulo || k), "ok"));
+    nuevos.serie.forEach(k => fila("Serie/película: " + ((vS[k] && vS[k].titulo) || k), "ok"));
+    if(canalesN) fila(`${canalesN} canales de TV y fútbol`, "ok");
+
+    log(`✔ Listo: ${nuevos.juego.length} juegos, ${nuevos.serie.length} series/películas y ${canalesN} canales importados.`);
+    if(omitidos) log(`ℹ ${omitidos} ya existían en la base nueva y se dejaron como estaban (tildá "Sobrescribir" si querés pisarlos).`);
+    if(vS === null || vC === null || vJ === null) log("⚠ La base vieja no se pudo leer del todo: solo se importó lo que se pudo. Si las series o los canales no aparecen, avisá.");
+    if(sinCategoria.length) log("ℹ Sin categoría asignada (asignalas en admin.html → Categorías): " + sinCategoria.join(", "));
+    btn.textContent = "Listo";
+  }catch(err){
+    console.error(err);
+    log("✕ Error: " + (err.code === "PERMISSION_DENIED" || /permission/i.test(err.message)
+      ? "no tenés permiso para escribir. Iniciá sesión con la cuenta admin." : (err.message || err)));
+    btn.disabled = false;
+    btn.textContent = "Reintentar";
   }
-  btn.textContent = "Listo";
 });
 </script>
 </body>
