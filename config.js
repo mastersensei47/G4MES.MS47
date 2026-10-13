@@ -8,13 +8,13 @@ window.MS47 = {
 
   // Firebase (Realtime Database + Authentication)
   firebaseConfig: {
-    apiKey: "AIzaSyBjQB3yJdJPc44qvmge-H_961QJ1s_kh7E",
-    authDomain: "tv-fulvo.firebaseapp.com",
-    projectId: "tv-fulvo",
-    storageBucket: "tv-fulvo.firebasestorage.app",
-    messagingSenderId: "733955226142",
-    appId: "1:733955226142:web:d49871efff59452b604c0f",
-    databaseURL: "https://tv-fulvo-default-rtdb.firebaseio.com"
+    apiKey: "AIzaSyAaofk2PwrBCDAgkawSH9VTOpfE9dRNvAY",
+    authDomain: "ms47admin.firebaseapp.com",
+    projectId: "ms47admin",
+    storageBucket: "ms47admin.firebasestorage.app",
+    messagingSenderId: "1006110737647",
+    appId: "1:1006110737647:web:3aa0c5fa55b7838252471a",
+    databaseURL: "https://ms47admin-default-rtdb.firebaseio.com"
   },
 
   // API key de YouTube Data API (para las playlists de las categorías).
