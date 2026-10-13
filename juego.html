@@ -143,19 +143,12 @@ main.fade-in{animation:fadeIn 0.5s ease;}
   <img id="lightbox-img" src="" alt="">
 </div>
 
+<script src="config.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyBjQB3yJdJPc44qvmge-H_961QJ1s_kh7E",
-    authDomain: "tv-fulvo.firebaseapp.com",
-    projectId: "tv-fulvo",
-    storageBucket: "tv-fulvo.firebasestorage.app",
-    messagingSenderId: "733955226142",
-    appId: "1:733955226142:web:d49871efff59452b604c0f",
-    databaseURL: "https://tv-fulvo-default-rtdb.firebaseio.com"
-};
+const firebaseConfig = window.MS47.firebaseConfig;
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
