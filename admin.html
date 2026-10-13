@@ -466,7 +466,7 @@ import { getDatabase, ref, get, set, remove, update } from "https://www.gstatic.
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const { firebaseConfig, CLOUDINARY } = window.MS47;
-const { DEFAULT_CONFIG, DEFAULT_CATEGORIAS, FNAF_JUEGO, SOCIALES, mezclarConfig } = window.MS47_DEFAULTS;
+const { DEFAULT_CONFIG, DEFAULT_CATEGORIAS, FNAF_JUEGO, JUEGOS_VIEJOS, CATEGORIA_JUEGOS_VIEJOS, SOCIALES, mezclarConfig } = window.MS47_DEFAULTS;
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
@@ -1375,6 +1375,7 @@ document.getElementById("btnImportarIniciales").addEventListener("click", async 
     const [c, cfg, f] = await Promise.all([
       get(ref(db, "categorias")), get(ref(db, "config")), get(ref(db, "paginasJuegos/fnaf-security-breach"))
     ]);
+    const sJ = (await get(ref(db, "paginasJuegos"))).val() || {};
     const existentes = c.val() || {};
     const cfgActual = cfg.val() || {};
     const up = {};
@@ -1386,11 +1387,23 @@ document.getElementById("btnImportarIniciales").addEventListener("click", async 
       if(cfgActual[k] === undefined) up["config/" + k] = DEFAULT_CONFIG[k];
     });
     up["config/inicializado"] = true;
+    // Juegos de la versión vieja: se crean los que falten y se ubican en su categoría
+    let juegosNuevos = 0;
+    const cats = {};
+    Object.keys(DEFAULT_CATEGORIAS).forEach(k => { cats[k] = JSON.parse(JSON.stringify(existentes[k] || DEFAULT_CATEGORIAS[k])); });
+    Object.keys(JUEGOS_VIEJOS).forEach(slug => {
+      if(!sJ[slug]){ up["paginasJuegos/" + slug] = { ...JUEGOS_VIEJOS[slug], actualizado: Date.now() }; juegosNuevos++; }
+      const c = cats[CATEGORIA_JUEGOS_VIEJOS[slug]];
+      if(c){
+        c.items = Array.isArray(c.items) ? c.items : [];
+        if(!c.items.some(it => it.slug === slug)){ c.items.push({ tipo: "juego", slug }); up["categorias/" + CATEGORIA_JUEGOS_VIEJOS[slug]] = c; }
+      }
+    });
     let fnaf = false;
     if(!f.exists()){ up["paginasJuegos/fnaf-security-breach"] = { ...FNAF_JUEGO, actualizado: Date.now() }; fnaf = true; }
 
     await update(ref(db), up);
-    setMsg(iMsg, "ok", `Listo: ${nuevas} categorías nuevas${fnaf ? ", página de FNAF creada" : ""} y ajustes cargados.`);
+    setMsg(iMsg, "ok", `Listo: ${nuevas} categorías nuevas${fnaf ? ", página de FNAF creada" : ""}, ${juegosNuevos} juegos nuevos y ajustes cargados.`);
     await cargarCategorias();
   }catch(err){
     console.error(err);
