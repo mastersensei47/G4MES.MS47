@@ -119,6 +119,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, set, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBjQB3yJdJPc44qvmge-H_961QJ1s_kh7E",
@@ -132,6 +133,9 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const auth = getAuth(app);
+    let usuarioAdmin = null;
+    onAuthStateChanged(auth, (u) => { usuarioAdmin = u; if(!u) document.getElementById('admin-panel').style.display = 'none'; });
     let globalData = {};
     let currentFilter = 'all';
 
@@ -199,13 +203,16 @@
         renderAdminList();
     }
 
-    window.checkAdmin = () => { if(prompt("Clave:") === "ms47admin") document.getElementById('admin-panel').style.display='block'; };
+    window.checkAdmin = () => {
+        if(usuarioAdmin) document.getElementById('admin-panel').style.display='block';
+        else alert("Para administrar los canales primero iniciá sesión en admin.html y volvé a esta página.");
+    };
     window.closeAdmin = () => { document.getElementById('admin-panel').style.display='none'; reset(); };
     
     window.saveChannel = () => {
         const id = document.getElementById('f-id').value;
         const obj = { category: document.getElementById('f-cat').value, name: document.getElementById('f-name').value, img: document.getElementById('f-img').value, link: document.getElementById('f-link').value, order: parseInt(document.getElementById('f-order').value) || 99 };
-        set(id ? ref(db, `canales/${id}`) : push(ref(db, 'canales')), obj).then(() => { reset(); alert("¡Canal actualizado!"); });
+        set(id ? ref(db, `canales/${id}`) : push(ref(db, 'canales')), obj).then(() => { reset(); alert("¡Canal actualizado!"); }).catch(() => alert("No se pudo guardar. Iniciá sesión en admin.html y probá de nuevo."));
     };
 
     window.prepareEdit = (id, n, i, l, c, o) => {
@@ -215,7 +222,7 @@
         document.getElementById('admin-panel').scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    window.deleteChannel = (id) => { if(confirm("¿Borrar canal?")) remove(ref(db, `canales/${id}`)); };
+    window.deleteChannel = (id) => { if(confirm("¿Borrar canal?")) remove(ref(db, `canales/${id}`)).catch(() => alert("No se pudo borrar. Iniciá sesión en admin.html y probá de nuevo.")); };
     function reset() { 
         document.getElementById('f-id').value = ""; document.getElementById('f-name').value = ""; document.getElementById('f-img').value = "";
         document.getElementById('f-link').value = ""; document.getElementById('f-order').value = ""; document.getElementById('btn-action').innerText = "GUARDAR CAMBIOS";
