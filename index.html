@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
+:root{ --accent:#ff2e2e; }
 body{
     margin:0;
     font-family:'Montserrat',sans-serif;
@@ -16,9 +17,20 @@ body{
     color:white;
 }
 
+/* ====== AVISO ====== */
+.aviso{
+    display:none;
+    background:var(--accent);
+    color:#fff;
+    text-align:center;
+    padding:10px 16px;
+    font-weight:700;
+    font-size:14px;
+}
+
 /* ====== BANNER ====== */
 .banner{
-    background:url("ms47.jpg") center/cover no-repeat;
+    background:#1a1a1a center/cover no-repeat;
     height:300px;
     display:flex;
     align-items:center;
@@ -33,10 +45,13 @@ body{
 }
 .banner h1{
     position:relative;
+    z-index:1;
+    margin:0 16px;
+    text-align:center;
     font-size:60px;
     font-weight:900;
-    color:#ff2e2e;
-    text-shadow:0 0 20px #ff0000;
+    color:var(--accent);
+    text-shadow:0 0 20px var(--accent);
 }
 
 /* ===== REDES ===== */
@@ -47,12 +62,10 @@ body{
 .redes a{
     margin:0 15px;
     font-size:22px;
-    color:#ff2e2e;
+    color:var(--accent);
     transition:0.3s;
 }
-.redes a:hover{
-    color:white;
-}
+.redes a:hover{ color:white; }
 
 /* ===== CATEGORIAS ===== */
 .categorias{
@@ -81,18 +94,24 @@ body{
     width:100%;
     height:180px;
     object-fit:cover;
+    display:block;
+    background:#262626;
 }
-.card h3{
-    padding:15px;
-}
+.card h3{ padding:15px; margin:0; }
 .card:hover{
     transform:translateY(-5px);
-    box-shadow:0 0 25px #ff2e2e;
+    box-shadow:0 0 25px var(--accent);
 }
 .card a{
     display:block;
     color:white;
     text-decoration:none;
+}
+.estado{
+    grid-column:1 / -1;
+    text-align:center;
+    color:#888;
+    padding:40px 10px;
 }
 
 /* ===== FOOTER ===== */
@@ -104,155 +123,133 @@ footer{
     font-size:14px;
     color:#aaa;
 }
+
+@media(max-width:600px){
+    .banner h1{ font-size:38px; }
+}
 </style>
 </head>
-
 <body>
 
-<div class="banner">
-    <h1>mastersensei47</h1>
+<div class="aviso" id="aviso"></div>
+
+<div class="banner" id="banner">
+    <h1 id="sitioNombre">mastersensei47</h1>
 </div>
 
-<div class="redes">
-    <a href="https://www.instagram.com/master__sensei47"><i class="fab fa-instagram"></i></a>
-    <a href="https://www.tiktok.com/@mastersensei47?is_from_webapp=1&sender_device=pc"><i class="fab fa-tiktok"></i></a>
-    <a href="https://www.youtube.com/@master-sensei47"><i class="fab fa-youtube"></i></a>
-</div>
+<div class="redes" id="redes"></div>
 
 <section class="categorias">
     <h2>🎮 Categorías</h2>
-    <div class="grid">
-
-        <div class="card">
-            <a href="minecraft.html">
-                <img src="minecraft.jpg" alt="Minecraft">
-                <h3>Minecraft & Versiones</h3>
-            </a>
-        </div>
-
-        <div class="card">
-            <a href="deportes.html">
-                <img src="deportes.jpg" alt="Deportes">
-                <h3>Deportes</h3>
-            </a>
-        </div>
-
-        <div class="card">
-            <a href="aventura.html">
-                <img src="aventura.png" alt="Aventura">
-                <h3>Aventura</h3>
-            </a>
-        </div>
-
-        <div class="card">
-            <a href="simuladores.html">
-                <img src="simuladores.png" alt="Simuladores">
-                <h3>Simuladores</h3>
-            </a>
-        </div>
-
-        <div class="card">
-            <a href="online.html">
-                <img src="online.jpg" alt="Online">
-                <h3>Juegos Online</h3>
-            </a>
-        </div>
-
-        <div class="card">
-            <a href="programas.html">
-                <img src="programas.png" alt="Programas">
-                <h3>Programas & Utilidades</h3>
-            </a>
-        </div>
-
-        <div class="card">
-            <a href="mundo-abierto.html">
-                <img src="mundo abierto.png" alt="Mundo Abierto">
-                <h3>Mundo Abierto</h3>
-            </a>
-        </div>
-
-        <div class="card">
-            <a href="terror.html">
-                <img src="r.png" alt="Terror">
-                <h3>Terror</h3>
-            </a>
-        </div>
-
-        <div class="card">
-            <a href="dinosaurios.html">
-                <img src="dinosaurios.png" alt="Dinosaurios">
-                <h3>Dinosaurios</h3>
-            </a>
-        </div>
-        
-<div class="card">
-            <a href="carreras.html">
-                <img src="carreras.png" alt="carreras">
-                <h3>carreras</h3>
-            </a>
-        </div>
-        
-<div class="card">
-            <a href="retro.html">
-                <img src="retro.jpg" alt="retro">
-                <h3>retro</h3>
-            </a>
-        </div>
-        <div class="card">
-            <a href="pelea.html">
-                <img src="pelea.png" alt="pelea">
-                <h3>PELEA</h3>
-            </a>
-        </div>
-        <div class="card">
-            <a href="cooperativo.html">
-                <img src="coop.png" alt="coperativo local">
-                <h3>coop local</h3>
-            </a>
-        </div>
-                </div>
-        <div class="card">
-            <a href="PELISERIE.html">
-                <img src="peli.jpg" alt="peliculas y series">
-                <h3>peliculas y series</h3>
-            </a>
-        </div>
+    <div class="grid" id="grid">
+        <div class="estado">Cargando categorías...</div>
     </div>
-                </div>
-        <div class="card">
-            <a href="tv y fulvo.html">
-                <img src="tf.jpg" alt="TV Y FULVO">
-                <h3>TV Y FULVO</h3>
-            </a>
-        </div>
 </section>
 
-<footer>
-© 2026 mastersensei47 - Todos los derechos reservados
-</footer>
+<footer id="footer"></footer>
 
 <!-- Acceso oculto al panel admin: no se ve casi nada, pero se puede tocar/clickear -->
 <div onclick="location.href='admin.html'"
      style="position:fixed;bottom:10px;right:10px;width:40px;height:40px;cursor:pointer;z-index:2000;opacity:0.05;">
 </div>
 
+<script src="config.js"></script>
+<script src="defaults.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const { firebaseConfig } = window.MS47;
+const D = window.MS47_DEFAULTS;
+const CACHE_KEY = "ms47_home_v1";
+
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function urlSegura(u){
+  u = String(u || "").trim();
+  return (u && !/^\s*(javascript|data|vbscript):/i.test(u)) ? u : "";
+}
+function leerCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)); }catch(e){ return null; } }
+function guardarCache(v){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify(v)); }catch(e){} }
+
+function render({ config, categorias }){
+  const cfg = D.mezclarConfig(config);
+
+  // Si la base está totalmente vacía (todavía no se cargó nada desde el admin) se usan los valores iniciales
+  const usarDefaults = !categorias && !(config && config.inicializado);
+  const cats = usarDefaults ? D.DEFAULT_CATEGORIAS : (categorias || {});
+
+  // Color de acento
+  if(/^#[0-9a-f]{3,8}$/i.test(cfg.colorAcento || "")){
+    document.documentElement.style.setProperty("--accent", cfg.colorAcento);
+  }
+
+  // Aviso
+  const aviso = document.getElementById("aviso");
+  if(cfg.aviso){ aviso.textContent = cfg.aviso; aviso.style.display = "block"; }
+  else { aviso.style.display = "none"; }
+
+  // Banner
+  const banner = document.getElementById("banner");
+  const img = urlSegura(cfg.bannerImagen);
+  banner.style.backgroundImage = img ? `url("${img.replace(/"/g, "%22")}")` : "none";
+  document.getElementById("sitioNombre").textContent = cfg.sitioNombre || "";
+
+  // Redes
+  const redes = (Array.isArray(cfg.redes) ? cfg.redes : []).filter(r => r && urlSegura(r.url));
+  document.getElementById("redes").innerHTML = redes.map(r => {
+    const s = D.SOCIALES[r.tipo] || D.SOCIALES.web;
+    return `<a href="${esc(urlSegura(r.url))}" target="_blank" rel="noopener" aria-label="${esc(s.nombre)}"><i class="${s.icono}"></i></a>`;
+  }).join("");
+
+  // Footer
+  document.getElementById("footer").textContent = cfg.footer || "";
+
+  // Categorías
+  const lista = Object.keys(cats)
+    .map(slug => ({ slug, ...cats[slug] }))
+    .filter(c => c.visible !== false)
+    .sort((a, b) => (a.orden ?? 9999) - (b.orden ?? 9999) || String(a.nombre).localeCompare(String(b.nombre)));
+
+  const grid = document.getElementById("grid");
+  if(!lista.length){
+    grid.innerHTML = `<div class="estado">Todavía no hay categorías.</div>`;
+    return;
+  }
+  grid.innerHTML = lista.map(c => {
+    const enlace = urlSegura(c.enlace);
+    const href = enlace || `categoria.html?slug=${encodeURIComponent(c.slug)}`;
+    const imagen = urlSegura(c.imagen);
+    return `
+      <div class="card">
+        <a href="${esc(href)}">
+          ${imagen ? `<img src="${esc(imagen)}" alt="${esc(c.nombre)}" loading="lazy">` : `<img alt="" style="visibility:hidden">`}
+          <h3>${esc(c.nombre)}</h3>
+        </a>
+      </div>`;
+  }).join("");
+
+  grid.querySelectorAll("img").forEach(i => i.addEventListener("error", () => { i.style.visibility = "hidden"; }));
+}
+
+async function iniciar(){
+  const cache = leerCache();
+  if(cache) render(cache);
+
+  try{
+    const db = getDatabase(initializeApp(firebaseConfig));
+    const [c, k] = await Promise.all([get(ref(db, "config")), get(ref(db, "categorias"))]);
+    const datos = { config: c.val(), categorias: k.val() };
+    render(datos);
+    guardarCache(datos);
+  }catch(err){
+    console.error(err);
+    if(!cache) render({ config: null, categorias: null });
+  }
+}
+iniciar();
+</script>
+
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
