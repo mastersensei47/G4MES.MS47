@@ -123,6 +123,7 @@ button.mini{padding:7px 10px;margin-top:0;}
     <input type="text" id="loginEmail" autocomplete="username" placeholder="tu@correo.com">
     <label>Contraseña</label>
     <input type="password" id="loginPass" autocomplete="current-password" placeholder="Tu contraseña">
+    <label class="chk" style="justify-content:center;"><input type="checkbox" id="verPass"> Mostrar contraseña</label>
     <button class="btn-primary" id="btnLogin">Entrar</button>
     <p class="msg error" id="loginMsg"></p>
   </div>
@@ -478,6 +479,7 @@ const formMsg = document.getElementById("formMsg");
 
 // ---------- Login real (Firebase Authentication) ----------
 document.getElementById("btnLogin").addEventListener("click", intentarLogin);
+document.getElementById("verPass").addEventListener("change", (e) => { document.getElementById("loginPass").type = e.target.checked ? "text" : "password"; });
 document.getElementById("loginPass").addEventListener("keydown", (e) => { if(e.key === "Enter") intentarLogin(); });
 
 async function intentarLogin(){
@@ -493,7 +495,8 @@ async function intentarLogin(){
     if(c === "auth/operation-not-allowed") loginMsg.textContent = "Falta activar Email/Contraseña en Firebase → Authentication.";
     else if(c === "auth/too-many-requests") loginMsg.textContent = "Demasiados intentos. Esperá unos minutos y probá de nuevo.";
     else if(c === "auth/network-request-failed") loginMsg.textContent = "Sin conexión. Revisá tu internet.";
-    else loginMsg.textContent = "Correo o contraseña incorrectos.";
+    else if(["auth/invalid-credential","auth/wrong-password","auth/user-not-found","auth/invalid-email"].includes(c)) loginMsg.textContent = "Correo o contraseña incorrectos.";
+    else loginMsg.textContent = "No se pudo entrar (" + (c || err.message) + ").";
   }
 }
 
