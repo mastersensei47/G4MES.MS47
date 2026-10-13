@@ -116,20 +116,13 @@
     <div class="admin-grid-list" id="admin-list"></div>
 </div>
 
+<script src="config.js"></script>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, set, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBjQB3yJdJPc44qvmge-H_961QJ1s_kh7E",
-        authDomain: "tv-fulvo.firebaseapp.com",
-        projectId: "tv-fulvo",
-        storageBucket: "tv-fulvo.firebasestorage.app",
-        messagingSenderId: "733955226142",
-        appId: "1:733955226142:web:d49871efff59452b604c0f",
-        databaseURL: "https://tv-fulvo-default-rtdb.firebaseio.com"
-    };
+    const firebaseConfig = window.MS47.firebaseConfig;
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
