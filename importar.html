@@ -53,6 +53,15 @@ a{color:#00bfff;}
     <label class="chk"><input type="checkbox" id="chkPisar"> Sobrescribir las páginas que ya existan en la base nueva</label>
     <button class="btn-primary" id="btnImportar">Importar todo</button>
     <a href="admin.html" style="font-size:14px;">Volver al admin</a>
+    <hr style="margin:24px 0;border-color:#444">
+    <h2>Respaldo completo para migrar a otra versión</h2>
+    <p style="margin:12px 0;line-height:1.5">Exporta todos los nodos de Firebase Realtime Database, incluyendo páginas, categorías, canales, configuración y otros datos existentes. No incluye archivos binarios alojados fuera de Firebase ni usuarios de Firebase Authentication.</p>
+    <button class="btn-primary" id="btnExportar">Exportar respaldo JSON</button>
+    <p style="margin-top:18px">Para restaurar el respaldo, abrí este archivo en la versión de destino conectada a su Firebase y seleccioná el JSON.</p>
+    <input type="file" id="archivoRespaldo" accept=".json,application/json" style="margin-top:12px;max-width:100%">
+    <label class="chk"><input type="checkbox" id="chkSobrescribirRespaldo"> Sobrescribir valores existentes en destino (solo claves presentes en el respaldo)</label>
+    <button class="btn-primary" id="btnRestaurar">Importar respaldo JSON</button>
+    <div id="logRespaldo" style="white-space:pre-wrap;margin-top:14px;font-size:14px"></div>
     <div id="lista" style="margin-top:15px;"></div>
     <div id="log"></div>
   </div>
@@ -542,6 +551,59 @@ document.getElementById("btnImportar").addEventListener("click", async () => {
     btn.disabled = false;
     btn.textContent = "Reintentar";
   }
+});
+
+// Respaldo completo del árbol RTDB: no depende de una lista fija de páginas.
+const estadoBackup = document.getElementById('logRespaldo');
+const informarBackup = mensaje => { estadoBackup.textContent = mensaje; };
+const clonar = obj => JSON.parse(JSON.stringify(obj));
+const objeto = v => v !== null && typeof v === 'object' && !Array.isArray(v);
+function fusionarConservando(destino, origen, sobrescribir){
+  if(!objeto(destino) || !objeto(origen)) return sobrescribir ? clonar(origen) : clonar(destino);
+  const salida = clonar(destino);
+  for(const [clave, valor] of Object.entries(origen)){
+    if(!Object.prototype.hasOwnProperty.call(salida,clave)) salida[clave] = clonar(valor);
+    else if(objeto(salida[clave]) && objeto(valor)) salida[clave] = fusionarConservando(salida[clave],valor,sobrescribir);
+    else if(sobrescribir) salida[clave] = clonar(valor);
+  }
+  return salida;
+}
+document.getElementById('btnExportar').addEventListener('click',async()=>{
+ const boton=document.getElementById('btnExportar');boton.disabled=true;
+ try{
+  informarBackup('Leyendo todos los datos de Firebase...');
+  const snapshot=await get(ref(db));
+  if(!snapshot.exists()) throw new Error('La base está vacía o no se encontraron datos.');
+  const respaldo={formato:'MS47-RTDB-BACKUP',version:1,fecha:new Date().toISOString(),datos:snapshot.val()};
+  const blob=new Blob([JSON.stringify(respaldo,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='MS47-respaldo-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  informarBackup('Respaldo descargado. Guardalo en un lugar seguro: puede contener datos privados.');
+ }catch(e){informarBackup('Error al exportar: '+e.message+' (revisá los permisos de lectura).');}
+ finally{boton.disabled=false;}
+});
+document.getElementById('btnRestaurar').addEventListener('click',async()=>{
+ const boton=document.getElementById('btnRestaurar');const archivo=document.getElementById('archivoRespaldo').files[0];
+ if(!archivo){informarBackup('Seleccioná un archivo JSON.');return;}
+ boton.disabled=true;
+ try{
+  const respaldo=JSON.parse(await archivo.text());
+  if(respaldo.formato!=='MS47-RTDB-BACKUP'||respaldo.version!==1||!objeto(respaldo.datos)) throw new Error('El archivo no es un respaldo MS47 válido.');
+  const origen=respaldo.datos;
+  if(Object.keys(origen).some(k=>k.includes('/')||k.includes('.')||k.includes('#')||k.includes('$')||k.includes('[')||k.includes(']'))) throw new Error('El respaldo contiene claves no válidas para Firebase.');
+  const sobrescribir=document.getElementById('chkSobrescribirRespaldo').checked;
+  const nodos=Object.keys(origen);
+  if(!confirm(`Se importarán ${nodos.length} nodos principales al Firebase ACTUAL. ${sobrescribir?'Se sobrescribirán valores coincidentes.':'Se conservarán los valores existentes.'} ¿Continuar?`)) return;
+  informarBackup('Leyendo destino y preparando migración...');
+  const actual=(await get(ref(db))).val()||{};
+  const fusion=fusionarConservando(actual,origen,sobrescribir);
+  const cambios={};
+  for(const clave of nodos) if(JSON.stringify(actual[clave])!==JSON.stringify(fusion[clave])) cambios[clave]=fusion[clave];
+  if(Object.keys(cambios).length) await update(ref(db),cambios);
+  informarBackup(`Importación terminada. Nodos actualizados: ${Object.keys(cambios).length} de ${nodos.length}. Los nodos ajenos al respaldo se conservaron.`);
+ }catch(e){informarBackup('Error al importar: '+e.message+' (verificá permisos y formato).');}
+ finally{boton.disabled=false;}
 });
 </script>
 </body>
