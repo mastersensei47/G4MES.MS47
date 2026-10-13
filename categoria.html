@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Categoría | MS47</title>
+<style>
+body{margin:0;background:#0f0f0f;color:white;font-family:Arial,sans-serif}
+header{position:fixed;top:0;width:100%;background:#111;padding:15px;text-align:center;font-size:22px;font-weight:bold;box-shadow:0 2px 10px rgba(0,0,0,.6);z-index:1000;box-sizing:border-box}
+.volver{position:absolute;left:15px;top:17px;font-size:14px;text-decoration:none;color:#00bfff}
+.container{padding:100px 20px 40px;max-width:1200px;margin:auto}
+.buscador{display:block;width:100%;max-width:420px;margin:0 auto 10px;padding:11px 14px;border-radius:8px;border:1px solid #2a2a2a;background:#1b1b1b;color:#fff;font-size:15px;box-sizing:border-box}
+.buscador:focus{outline:none;border-color:#00bfff}
+.conteo{text-align:center;color:#888;font-size:13px;margin-bottom:20px;min-height:16px}
+h2.seccion{font-size:18px;margin:30px 0 14px;border-left:4px solid #00bfff;padding-left:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
+.card{background:#1b1b1b;border-radius:8px;overflow:hidden;cursor:pointer;transition:.3s;position:relative;text-decoration:none;color:white;display:block}
+.card:hover{transform:scale(1.05);box-shadow:0 0 15px #00bfff}
+.card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#262626}
+.card h3{padding:10px;font-size:14px;margin:0}
+.badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.75);border-radius:6px;padding:3px 7px;font-size:12px}
+.loader{text-align:center;padding:20px;color:#888}
+.loader.error{color:#ff8a93}
+.oculto{display:none !important}
+</style>
+</head>
+<body>
+
+<header>
+<a href="index.html" class="volver">⬅ Volver</a>
+<span id="titulo">Cargando...</span>
+</header>
+
+<div class="container">
+    <input type="text" id="buscar" class="buscador" placeholder="🔍 Buscar en esta categoría..." style="display:none">
+    <div class="conteo" id="conteo"></div>
+    <div id="contenido"></div>
+    <div id="loader" class="loader">Cargando...</div>
+</div>
+
+<script src="config.js"></script>
+<script src="defaults.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const { firebaseConfig, YT_API_KEY } = window.MS47;
+const D = window.MS47_DEFAULTS;
+
+const loader = document.getElementById("loader");
+const contenido = document.getElementById("contenido");
+
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function urlSegura(u){
+  u = String(u || "").trim();
+  return (u && !/^\s*(javascript|data|vbscript):/i.test(u)) ? u : "";
+}
+function esImagen(u){ return !!u && !/youtu|\.(mp4|webm|ogg|ogv|mov|m3u8)(\?|$)/i.test(u); }
+function leer(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
+function guardar(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+
+function estado(msg, error){
+  loader.style.display = "block";
+  loader.className = "loader" + (error ? " error" : "");
+  loader.textContent = msg;
+}
+
+// Acepta el ID suelto o un link de YouTube con ?list=
+function idPlaylist(v){
+  v = String(v || "").trim();
+  const m = v.match(/[?&]list=([^&#]+)/);
+  return m ? m[1] : v;
+}
+
+// Descarga una playlist completa (con caché de 1 hora para no gastar la cuota de YouTube)
+async function cargarPlaylist(id){
+  const key = "ms47_pl_" + id;
+  const c = leer(key);
+  if(c && Date.now() - c.t < 3600 * 1000) return c.items;
+
+  try{
+    const items = [];
+    let token = "";
+    do{
+      let url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(id)}&key=${YT_API_KEY}`;
+      if(token) url += `&pageToken=${token}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if(data.error) throw new Error(data.error.message);
+      for(const it of (data.items || [])){
+        const sn = it.snippet;
+        const vid = sn && sn.resourceId && sn.resourceId.videoId;
+        if(!vid) continue;
+        if(/^(Private|Deleted) video$/i.test(sn.title)) continue;
+        const th = sn.thumbnails || {};
+        const thumb = (th.high || th.medium || th.default || {}).url || "";
+        items.push({ id: vid, title: sn.title, thumb });
+      }
+      token = data.nextPageToken || "";
+    }while(token);
+    guardar(key, { t: Date.now(), items });
+    return items;
+  }catch(err){
+    if(c) return c.items;   // si falla, se usa lo último guardado
+    throw err;
+  }
+}
+
+function miniaturaJuego(d){
+  return [d.portada, d.fondo, d.imagenIzq, d.imagenCentro, d.imagenDer, (d.galeria || [])[0], d.poster]
+    .find(esImagen) || "";
+}
+
+function tarjeta({ href, titulo, img, badge, nueva }){
+  return `
+    <a class="card" href="${esc(href)}" ${nueva ? 'target="_blank" rel="noopener"' : ""} data-t="${esc(String(titulo).toLowerCase())}">
+      ${badge ? `<span class="badge">${badge}</span>` : ""}
+      ${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : `<img alt="" style="visibility:hidden">`}
+      <h3>${esc(titulo)}</h3>
+    </a>`;
+}
+
+async function iniciar(){
+  const slug = (new URLSearchParams(location.search).get("slug") || "").trim();
+  if(!slug){ estado("Falta el parámetro ?slug= en el link.", true); return; }
+
+  let db;
+  try{ db = getDatabase(initializeApp(firebaseConfig)); }
+  catch(e){ estado("No se pudo conectar con la base de datos.", true); return; }
+
+  // 1) Categoría
+  let cat = null;
+  let usarDefault = false;
+  try{
+    cat = (await get(ref(db, "categorias/" + slug))).val();
+    if(!cat){
+      const ini = (await get(ref(db, "config/inicializado"))).val();
+      usarDefault = !ini;
+    }
+  }catch(err){
+    console.error(err);
+    usarDefault = true;
+  }
+  if(!cat && usarDefault && D.DEFAULT_CATEGORIAS[slug]) cat = D.DEFAULT_CATEGORIAS[slug];
+
+  if(!cat){ document.getElementById("titulo").textContent = "No encontrada"; estado("Esta categoría no existe o fue eliminada.", true); return; }
+  if(cat.visible === false){ /* oculta de la home, pero el link directo sigue andando */ }
+
+  const titulo = `${cat.icono ? cat.icono + " " : ""}${cat.nombre || slug}`;
+  document.getElementById("titulo").textContent = titulo;
+  document.title = `${cat.nombre || slug} | MS47`;
+
+  // 2) Juegos y series elegidos desde el admin
+  const itemsDef = Array.isArray(cat.items) ? cat.items : [];
+  const itemsCargados = (await Promise.all(itemsDef.map(async it => {
+    try{
+      const nodo = it.tipo === "serie" ? "paginasSeries/" : "paginasJuegos/";
+      const s = await get(ref(db, nodo + it.slug));
+      return s.exists() ? { tipo: it.tipo, slug: it.slug, d: s.val() } : null;
+    }catch(e){ return null; }
+  }))).filter(Boolean);
+
+  // 3) Playlists de YouTube
+  const playlists = (Array.isArray(cat.playlists) ? cat.playlists : []).map(idPlaylist).filter(Boolean);
+  estado(playlists.length ? "Cargando videos..." : "");
+  const resultados = await Promise.allSettled(playlists.map(cargarPlaylist));
+  const videos = [];
+  const vistos = new Set();
+  let errores = 0, ultimoError = "";
+  resultados.forEach(r => {
+    if(r.status === "fulfilled"){
+      r.value.forEach(v => { if(!vistos.has(v.id)){ vistos.add(v.id); videos.push(v); } });
+    }else{ errores++; ultimoError = r.reason && r.reason.message || ""; }
+  });
+
+  // 4) Armar la página
+  const hayAmbos = itemsCargados.length && videos.length;
+  let html = "";
+
+  if(itemsCargados.length){
+    if(hayAmbos) html += `<h2 class="seccion">🎮 Juegos y series</h2>`;
+    html += `<div class="grid">` + itemsCargados.map(it => {
+      const esSerie = it.tipo === "serie";
+      return tarjeta({
+        href: `${esSerie ? "serie" : "juego"}.html?slug=${encodeURIComponent(it.slug)}`,
+        titulo: it.d.titulo || it.slug,
+        img: miniaturaJuego(it.d),
+        badge: esSerie ? (it.d.tipoContenido === "pelicula" ? "🎬" : "📺") : "🎮"
+      });
+    }).join("") + `</div>`;
+  }
+
+  if(videos.length){
+    if(hayAmbos) html += `<h2 class="seccion">▶️ Videos</h2>`;
+    html += `<div class="grid">` + videos.map(v => tarjeta({
+      href: `https://www.youtube.com/watch?v=${encodeURIComponent(v.id)}`,
+      titulo: v.title, img: v.thumb, nueva: true
+    })).join("") + `</div>`;
+  }
+
+  contenido.innerHTML = html;
+  contenido.querySelectorAll("img").forEach(i => i.addEventListener("error", () => { i.style.visibility = "hidden"; }));
+
+  const total = itemsCargados.length + videos.length;
+  if(!total){
+    estado(errores ? "No se pudieron cargar los videos: " + ultimoError : "Esta categoría todavía no tiene contenido.", !!errores);
+  }else if(errores){
+    estado("Algunas playlists no se pudieron cargar: " + ultimoError, true);
+  }else{
+    loader.style.display = "none";
+  }
+
+  if(total){
+    const buscar = document.getElementById("buscar");
+    const conteo = document.getElementById("conteo");
+    buscar.style.display = "block";
+    conteo.textContent = `${total} ${total === 1 ? "elemento" : "elementos"}`;
+    buscar.addEventListener("input", () => {
+      const q = buscar.value.trim().toLowerCase();
+      let visibles = 0;
+      contenido.querySelectorAll(".card").forEach(c => {
+        const ok = !q || c.dataset.t.includes(q);
+        c.classList.toggle("oculto", !ok);
+        if(ok) visibles++;
+      });
+      conteo.textContent = q ? `${visibles} de ${total}` : `${total} ${total === 1 ? "elemento" : "elementos"}`;
+    });
+  }
+}
+iniciar();
+</script>
+</body>
+</html>
