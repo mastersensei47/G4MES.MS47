@@ -98,6 +98,20 @@ a.btn-secondary:active,a.btn-primary:active,a.btn-danger:active{transform:scale(
 .grupo-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
 .grupo-panel{display:none;}
 .grupo-panel.active{display:block;}
+
+/* ===== Novedades: categorías, ajustes, login ===== */
+.tabs{flex-wrap:wrap;}
+.chk{display:flex;align-items:center;gap:8px;margin-top:14px;color:var(--text);font-size:14px;cursor:pointer;}
+.chk input{width:auto;}
+.fila select{width:auto;flex:0 0 150px;}
+.fila select#cAddItem{flex:1;}
+.fila .num{flex:0 0 auto;font-size:12px;color:var(--muted);min-width:22px;}
+.fila .txt{flex:1;font-size:14px;word-break:break-word;}
+.fila .txt.falta{color:#ff8a93;}
+.pagina-item.oculta{opacity:0.5;}
+.chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,229,199,0.12);color:var(--accent2);margin-right:6px;}
+.chip.gris{background:rgba(255,255,255,0.08);color:var(--muted);}
+button.mini{padding:7px 10px;margin-top:0;}
 </style>
 </head>
 <body>
@@ -105,8 +119,10 @@ a.btn-secondary:active,a.btn-primary:active,a.btn-danger:active{transform:scale(
 <div id="login">
   <h1>🔒 Panel Admin MS47</h1>
   <div class="card">
-    <label>Clave de acceso</label>
-    <input type="password" id="loginPass" placeholder="Ingresá la clave">
+    <label>Correo</label>
+    <input type="text" id="loginEmail" autocomplete="username" placeholder="tu@correo.com">
+    <label>Contraseña</label>
+    <input type="password" id="loginPass" autocomplete="current-password" placeholder="Tu contraseña">
     <button class="btn-primary" id="btnLogin">Entrar</button>
     <p class="msg error" id="loginMsg"></p>
   </div>
@@ -121,6 +137,8 @@ a.btn-secondary:active,a.btn-primary:active,a.btn-danger:active{transform:scale(
   <div class="tabs">
     <button class="tab-btn active" id="tabBtnJuegos" type="button">🎮 Juegos</button>
     <button class="tab-btn" id="tabBtnSeries" type="button">📺 Series / Capítulos</button>
+    <button class="tab-btn" id="tabBtnCategorias" type="button">📂 Categorías</button>
+    <button class="tab-btn" id="tabBtnAjustes" type="button">⚙️ Ajustes del sitio</button>
   </div>
 
   <div id="tabJuegos">
@@ -141,8 +159,13 @@ a.btn-secondary:active,a.btn-primary:active,a.btn-danger:active{transform:scale(
     <div class="grid-secciones">
 
     <details class="seccion" id="secFondo">
-      <summary>🖼️ Fondo del hero</summary>
+      <summary>🖼️ Portada y fondo del hero</summary>
       <div class="contenido-seccion">
+        <div class="grupo-media">
+          <label>Portada para las categorías (miniatura, opcional)</label>
+          <input type="text" id="fPortada" placeholder="https://...">
+          <p class="hint">Es la imagen que se ve en la tarjeta del juego dentro de su categoría. Si la dejás vacía se usa el fondo, una imagen del hero o la primera captura.</p>
+        </div>
         <div class="grupo-media">
           <label>Imagen de fondo del hero (opcional)</label>
           <input type="text" id="fFondo" placeholder="https://...">
@@ -330,67 +353,178 @@ a.btn-secondary:active,a.btn-primary:active,a.btn-danger:active{transform:scale(
 
   </div><!-- /tabSeries -->
 
+  <!-- ================= CATEGORÍAS ================= -->
+  <div id="tabCategorias" style="display:none;">
+
+  <div class="card card-ancha">
+    <h2 id="formTituloCat">Nueva categoría</h2>
+
+    <label>Nombre (el que se ve en la home)</label>
+    <input type="text" id="cNombre" placeholder="Ej: Terror">
+
+    <label>Slug (parte del link, se genera solo)</label>
+    <input type="text" id="cSlug" placeholder="terror">
+
+    <label>Icono (un emoji, se ve en el título de la categoría)</label>
+    <input type="text" id="cIcono" placeholder="🟥" style="max-width:120px;">
+
+    <label>Imagen de la tarjeta (link de imagen, o el nombre de un archivo del repositorio, ej: terror.png)</label>
+    <input type="text" id="cImagen" placeholder="https://...">
+
+    <label>Enlace especial (opcional)</label>
+    <input type="text" id="cEnlace" placeholder="Ej: tv y fulvo.html o https://...">
+    <p class="hint">Si lo completás, al tocar la tarjeta se va a ese link en vez de abrir la página de la categoría.</p>
+
+    <label class="chk"><input type="checkbox" id="cVisible" checked> Mostrar esta categoría en la home</label>
+
+    <div class="grid-secciones">
+
+    <details class="seccion" id="secPlaylists" open>
+      <summary>▶️ Playlists de YouTube</summary>
+      <div class="contenido-seccion">
+        <p class="hint">Pegá el link de la playlist o solo su ID. Todos los videos de la playlist aparecen en la categoría. Podés agregar varias.</p>
+        <div id="cPlaylistsList"></div>
+        <button class="btn-secondary" id="btnAddPlaylist" type="button">+ Agregar playlist</button>
+      </div>
+    </details>
+
+    <details class="seccion" id="secItems" open>
+      <summary>🎮 Juegos y series de esta categoría</summary>
+      <div class="contenido-seccion">
+        <p class="hint">Elegí páginas que ya creaste en las pestañas Juegos y Series. Aparecen primero, con su portada. Usá las flechas para ordenarlas.</p>
+        <div class="fila">
+          <select id="cAddItem"></select>
+          <button class="btn-secondary" id="btnAddItem" type="button">Agregar</button>
+        </div>
+        <div id="cItemsList" style="margin-top:12px;"></div>
+      </div>
+    </details>
+
+    </div><!-- /grid-secciones -->
+
+    <div>
+      <button class="btn-primary" id="btnGuardarCat" type="button">Guardar categoría</button>
+      <button class="btn-secondary" id="btnCancelarCat" type="button" style="display:none;">Cancelar edición</button>
+    </div>
+    <p class="msg" id="cMsg"></p>
+  </div>
+
+  <h2>Categorías existentes</h2>
+  <p class="hint" style="margin:-6px 0 12px;">El orden de esta lista es el orden de la home. 👁 muestra u oculta la categoría sin borrarla.</p>
+  <div id="listaCategorias"></div>
+
+  <div class="card card-ancha">
+    <h2>🧰 Contenido inicial</h2>
+    <p class="hint">Copia a la base de datos las categorías, ajustes y la página de FNAF que antes estaban en el código. Solo agrega lo que falta: no pisa nada de lo que ya cargaste. Usalo una vez al empezar.</p>
+    <button class="btn-secondary" id="btnImportarIniciales" type="button">Cargar contenido inicial</button>
+    <p class="msg" id="iMsg"></p>
+  </div>
+
+  </div><!-- /tabCategorias -->
+
+  <!-- ================= AJUSTES ================= -->
+  <div id="tabAjustes" style="display:none;">
+
+  <div class="card card-ancha">
+    <h2>Ajustes de la página de inicio</h2>
+
+    <label>Nombre del sitio (título grande del banner)</label>
+    <input type="text" id="aNombre" placeholder="mastersensei47">
+
+    <label>Imagen del banner (link, o nombre de un archivo del repositorio)</label>
+    <input type="text" id="aBanner" placeholder="ms47.jpg">
+
+    <label>Color de acento</label>
+    <input type="color" id="aColor" value="#ff2e2e" style="width:70px;height:40px;padding:2px;border-radius:8px;border:1px solid var(--line);background:var(--card2);cursor:pointer;">
+
+    <label>Aviso en la parte de arriba (opcional, se ve una barra de color)</label>
+    <input type="text" id="aAviso" placeholder="Ej: Nuevos juegos agregados esta semana 🔥">
+
+    <label>Texto del pie de página</label>
+    <input type="text" id="aFooter" placeholder="© 2026 ...">
+
+    <label>Redes sociales</label>
+    <div id="redesList"></div>
+    <button class="btn-secondary" id="btnAddRed" type="button">+ Agregar red</button>
+
+    <div>
+      <button class="btn-primary" id="btnGuardarAjustes" type="button">Guardar ajustes</button>
+    </div>
+    <p class="msg" id="aMsg"></p>
+  </div>
+
+  </div><!-- /tabAjustes -->
+
 </div>
 
+<script src="config.js"></script>
+<script src="defaults.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, get, set, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, get, set, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyBjQB3yJdJPc44qvmge-H_961QJ1s_kh7E",
-    authDomain: "tv-fulvo.firebaseapp.com",
-    projectId: "tv-fulvo",
-    storageBucket: "tv-fulvo.firebasestorage.app",
-    messagingSenderId: "733955226142",
-    appId: "1:733955226142:web:d49871efff59452b604c0f",
-    databaseURL: "https://tv-fulvo-default-rtdb.firebaseio.com"
-};
+const { firebaseConfig, CLOUDINARY } = window.MS47;
+const { DEFAULT_CONFIG, DEFAULT_CATEGORIAS, FNAF_JUEGO, SOCIALES, mezclarConfig } = window.MS47_DEFAULTS;
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-
-// ⚠️ Cambiá esta clave por la que quieras usar para entrar al panel
-const CLAVE_ADMIN = "ms47admin";
+const auth = getAuth(app);
 
 const loginDiv = document.getElementById("login");
 const panelDiv = document.getElementById("panel");
 const loginMsg = document.getElementById("loginMsg");
 const formMsg = document.getElementById("formMsg");
 
+// ---------- Login real (Firebase Authentication) ----------
 document.getElementById("btnLogin").addEventListener("click", intentarLogin);
 document.getElementById("loginPass").addEventListener("keydown", (e) => { if(e.key === "Enter") intentarLogin(); });
 
-function intentarLogin(){
+async function intentarLogin(){
+  const email = document.getElementById("loginEmail").value.trim();
   const pass = document.getElementById("loginPass").value;
-  if(pass === CLAVE_ADMIN){
-    loginDiv.style.display = "none";
-    panelDiv.style.display = "block";
-    cargarLista();
-  }else{
-    loginMsg.textContent = "Clave incorrecta.";
+  loginMsg.textContent = "";
+  if(!email || !pass){ loginMsg.textContent = "Completá el correo y la contraseña."; return; }
+  try{
+    await signInWithEmailAndPassword(auth, email, pass);
+  }catch(err){
+    console.error(err);
+    const c = err.code || "";
+    if(c === "auth/operation-not-allowed") loginMsg.textContent = "Falta activar Email/Contraseña en Firebase → Authentication.";
+    else if(c === "auth/too-many-requests") loginMsg.textContent = "Demasiados intentos. Esperá unos minutos y probá de nuevo.";
+    else if(c === "auth/network-request-failed") loginMsg.textContent = "Sin conexión. Revisá tu internet.";
+    else loginMsg.textContent = "Correo o contraseña incorrectos.";
   }
 }
 
-document.getElementById("btnLogout").addEventListener("click", () => {
-  panelDiv.style.display = "none";
-  loginDiv.style.display = "block";
-  document.getElementById("loginPass").value = "";
+let panelIniciado = false;
+onAuthStateChanged(auth, (user) => {
+  if(user){
+    loginDiv.style.display = "none";
+    panelDiv.style.display = "block";
+    if(!panelIniciado){ panelIniciado = true; cargarLista(); }
+  }else{
+    panelIniciado = false;
+    panelDiv.style.display = "none";
+    loginDiv.style.display = "block";
+    document.getElementById("loginPass").value = "";
+  }
 });
 
+document.getElementById("btnLogout").addEventListener("click", () => signOut(auth));
+
 // ---------- Tabs ----------
-document.getElementById("tabBtnJuegos").addEventListener("click", () => {
-  document.getElementById("tabJuegos").style.display = "block";
-  document.getElementById("tabSeries").style.display = "none";
-  document.getElementById("tabBtnJuegos").classList.add("active");
-  document.getElementById("tabBtnSeries").classList.remove("active");
-});
-document.getElementById("tabBtnSeries").addEventListener("click", () => {
-  document.getElementById("tabJuegos").style.display = "none";
-  document.getElementById("tabSeries").style.display = "block";
-  document.getElementById("tabBtnSeries").classList.add("active");
-  document.getElementById("tabBtnJuegos").classList.remove("active");
-  cargarListaSeries();
-});
+const TABS = { Juegos: "tabJuegos", Series: "tabSeries", Categorias: "tabCategorias", Ajustes: "tabAjustes" };
+function mostrarTab(nombre){
+  Object.keys(TABS).forEach(k => {
+    document.getElementById(TABS[k]).style.display = (k === nombre) ? "block" : "none";
+    document.getElementById("tabBtn" + k).classList.toggle("active", k === nombre);
+  });
+  if(nombre === "Series") cargarListaSeries();
+  if(nombre === "Categorias") cargarCategorias();
+  if(nombre === "Ajustes") cargarAjustes();
+}
+Object.keys(TABS).forEach(k => document.getElementById("tabBtn" + k).addEventListener("click", () => mostrarTab(k)));
 
 // ---------- Helpers de filas dinámicas ----------
 function crearFilaSimple(contenedorId, valor=""){
@@ -449,7 +583,7 @@ document.getElementById("fTitulo").addEventListener("input", (e) => {
 let editandoSlug = null;
 
 function limpiarFormulario(){
-  ["fTitulo","fSlug","fGrupo","fFondo","fFondoVideo","fVideoIzq","fVideoCentro","fVideoDer","fImagenIzq","fImagenCentro","fImagenDer","fPeso","fVerificacion"].forEach(id => document.getElementById(id).value = "");
+  ["fTitulo","fSlug","fGrupo","fFondo","fPortada","fFondoVideo","fVideoIzq","fVideoCentro","fVideoDer","fImagenIzq","fImagenCentro","fImagenDer","fPeso","fVerificacion"].forEach(id => document.getElementById(id).value = "");
   ["fModoIzq","fModoCentro","fModoDer","fFondoModo"].forEach(id => document.getElementById(id).value = "hover");
   document.getElementById("fSlug").readOnly = false;
   ["descargasList","contenidoList","requisitosList","infoJuegoList","galeriaList"].forEach(id => document.getElementById(id).innerHTML = "");
@@ -483,6 +617,7 @@ document.getElementById("btnGuardar").addEventListener("click", async () => {
     titulo,
     grupo: document.getElementById("fGrupo").value.trim(),
     actualizado: Date.now(),
+    portada: document.getElementById("fPortada").value.trim(),
     fondo: document.getElementById("fFondo").value.trim(),
     fondoVideo: document.getElementById("fFondoVideo").value.trim(),
     fondoModo: document.getElementById("fFondoModo").value,
@@ -527,7 +662,7 @@ document.getElementById("btnGuardar").addEventListener("click", async () => {
 
 function crearItemPagina(slug, d){
   const link = `${location.origin}${location.pathname.replace("admin.html","juego.html")}?slug=${slug}`;
-  const miniatura = d.fondo || d.imagenIzq || d.imagenCentro || d.imagenDer || (d.galeria && d.galeria[0]) || "";
+  const miniatura = d.portada || d.fondo || d.imagenIzq || d.imagenCentro || d.imagenDer || (d.galeria && d.galeria[0]) || "";
   const item = document.createElement("div");
   item.className = "pagina-item";
   item.innerHTML = `
@@ -641,6 +776,7 @@ function cargarParaEditar(slug, d){
   document.getElementById("fSlug").readOnly = true;
   document.getElementById("fGrupo").value = d.grupo || "";
   document.getElementById("fFondo").value = d.fondo || "";
+  document.getElementById("fPortada").value = d.portada || "";
   document.getElementById("fFondoVideo").value = d.fondoVideo || "";
   document.getElementById("fFondoModo").value = d.fondoModo || "hover";
   document.getElementById("fVideoIzq").value = d.videoIzq || "";
@@ -670,7 +806,7 @@ function cargarParaEditar(slug, d){
   document.getElementById("galeriaList").innerHTML = "";
   (d.galeria || []).forEach(v => crearFilaSimple("galeriaList", v));
 
-  document.getElementById("secFondo").open = !!(d.fondo || d.fondoVideo);
+  document.getElementById("secFondo").open = !!(d.portada || d.fondo || d.fondoVideo);
   document.getElementById("secVideos").open = !!(d.videoIzq || d.videoCentro || d.videoDer || d.imagenIzq || d.imagenCentro || d.imagenDer);
   document.getElementById("secDescargas").open = true;
   document.getElementById("secDetalles").open = !!(d.verificacion || (d.contenido||[]).length || (d.requisitos||[]).length || (d.infoJuego||[]).length);
@@ -940,6 +1076,387 @@ async function eliminarSerie(slug){
     alert("Error al eliminar la serie.");
   }
 }
+
+// =====================================================================
+//  NOVEDADES: helpers, subida de imágenes, categorías y ajustes del sitio
+// =====================================================================
+
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function urlSegura(u){
+  u = String(u || "").trim();
+  return !/^\s*(javascript|data|vbscript):/i.test(u);
+}
+function setMsg(el, tipo, texto){ el.className = "msg" + (tipo ? " " + tipo : ""); el.textContent = texto; }
+function errorLegible(err){
+  const t = (err && (err.code || err.message)) || String(err);
+  if(/permission/i.test(t)) return "Permiso denegado. Revisá que las reglas de Firebase tengan tu correo (ver LEEME.md).";
+  return "Ocurrió un error: " + t;
+}
+function esImagenUrl(u){ return !!u && !/youtu|\.(mp4|webm|ogg|ogv|mov|m3u8)(\?|$)/i.test(u); }
+
+// ---------- Subida opcional de imágenes (Cloudinary) ----------
+const subidaActiva = !!(CLOUDINARY && CLOUDINARY.cloudName && CLOUDINARY.uploadPreset);
+
+async function subirImagen(file){
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("upload_preset", CLOUDINARY.uploadPreset);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(CLOUDINARY.cloudName)}/image/upload`, { method: "POST", body: fd });
+  const data = await res.json();
+  if(!data.secure_url) throw new Error((data.error && data.error.message) || "No se pudo subir la imagen");
+  return data.secure_url;
+}
+
+function agregarBotonSubida(inputId){
+  if(!subidaActiva) return;
+  const input = document.getElementById(inputId);
+  if(!input) return;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "btn-secondary";
+  btn.textContent = "📤 Subir imagen";
+  const file = document.createElement("input");
+  file.type = "file"; file.accept = "image/*"; file.style.display = "none";
+  btn.addEventListener("click", () => file.click());
+  file.addEventListener("change", async () => {
+    if(!file.files[0]) return;
+    const textoOriginal = btn.textContent;
+    btn.textContent = "Subiendo..."; btn.disabled = true;
+    try{ input.value = await subirImagen(file.files[0]); }
+    catch(err){ alert("Error al subir: " + err.message); }
+    btn.textContent = textoOriginal; btn.disabled = false; file.value = "";
+  });
+  input.insertAdjacentElement("afterend", btn);
+  btn.insertAdjacentElement("afterend", file);
+}
+["fPortada", "cImagen", "aBanner"].forEach(agregarBotonSubida);
+
+// =====================================================================
+//  CATEGORÍAS
+// =====================================================================
+let categoriasData = {};
+let juegosIdx = {};
+let seriesIdx = {};
+let editandoCat = null;
+let itemsSel = [];   // [{tipo:"juego"|"serie", slug}]
+const cMsg = document.getElementById("cMsg");
+const iMsg = document.getElementById("iMsg");
+
+document.getElementById("cNombre").addEventListener("input", (e) => {
+  const s = document.getElementById("cSlug");
+  if(!s.readOnly) s.value = slugify(e.target.value);
+});
+document.getElementById("btnAddPlaylist").addEventListener("click", () => crearFilaSimple("cPlaylistsList"));
+
+function ordenarCats(){
+  return Object.keys(categoriasData).sort((a, b) =>
+    (categoriasData[a].orden ?? 9999) - (categoriasData[b].orden ?? 9999) ||
+    String(categoriasData[a].nombre || a).localeCompare(String(categoriasData[b].nombre || b))
+  );
+}
+
+function llenarSelectorItems(){
+  const sel = document.getElementById("cAddItem");
+  const op = (tipo, idx) => Object.keys(idx)
+    .sort((a, b) => String(idx[a].titulo || a).localeCompare(String(idx[b].titulo || b)))
+    .map(k => `<option value="${tipo}:${esc(k)}">${esc(idx[k].titulo || k)}</option>`).join("");
+  sel.innerHTML = `<option value="">— Elegí un juego o serie —</option>`
+    + `<optgroup label="🎮 Juegos">${op("juego", juegosIdx)}</optgroup>`
+    + `<optgroup label="📺 Series y películas">${op("serie", seriesIdx)}</optgroup>`;
+}
+
+function tituloItem(it){
+  const idx = it.tipo === "serie" ? seriesIdx : juegosIdx;
+  return idx[it.slug] ? (idx[it.slug].titulo || it.slug) : null;
+}
+
+function renderItemsSel(){
+  const cont = document.getElementById("cItemsList");
+  cont.innerHTML = "";
+  if(!itemsSel.length){ cont.innerHTML = `<p class="hint">Todavía no agregaste ninguno.</p>`; return; }
+  itemsSel.forEach((it, i) => {
+    const titulo = tituloItem(it);
+    const fila = document.createElement("div");
+    fila.className = "fila";
+    fila.innerHTML = `
+      <span class="num">${i + 1}.</span>
+      <span class="txt ${titulo ? "" : "falta"}">${it.tipo === "serie" ? "📺" : "🎮"} ${esc(titulo || it.slug + " (ya no existe)")}</span>
+      <button class="btn-secondary mini" type="button" data-a="up">↑</button>
+      <button class="btn-secondary mini" type="button" data-a="down">↓</button>
+      <button class="btn-danger mini" type="button" data-a="del">✕</button>`;
+    fila.querySelector('[data-a="up"]').addEventListener("click", () => { if(i > 0){ [itemsSel[i-1], itemsSel[i]] = [itemsSel[i], itemsSel[i-1]]; renderItemsSel(); } });
+    fila.querySelector('[data-a="down"]').addEventListener("click", () => { if(i < itemsSel.length - 1){ [itemsSel[i+1], itemsSel[i]] = [itemsSel[i], itemsSel[i+1]]; renderItemsSel(); } });
+    fila.querySelector('[data-a="del"]').addEventListener("click", () => { itemsSel.splice(i, 1); renderItemsSel(); });
+    cont.appendChild(fila);
+  });
+}
+
+document.getElementById("btnAddItem").addEventListener("click", () => {
+  const sel = document.getElementById("cAddItem");
+  if(!sel.value) return;
+  const pos = sel.value.indexOf(":");
+  const tipo = sel.value.slice(0, pos), slug = sel.value.slice(pos + 1);
+  if(!itemsSel.some(x => x.tipo === tipo && x.slug === slug)) itemsSel.push({ tipo, slug });
+  sel.value = "";
+  renderItemsSel();
+});
+
+async function cargarCategorias(){
+  const cont = document.getElementById("listaCategorias");
+  cont.innerHTML = `<p class="hint">Cargando...</p>`;
+  try{
+    const [c, j, s] = await Promise.all([get(ref(db, "categorias")), get(ref(db, "paginasJuegos")), get(ref(db, "paginasSeries"))]);
+    categoriasData = c.val() || {};
+    juegosIdx = j.val() || {};
+    seriesIdx = s.val() || {};
+    llenarSelectorItems();
+    renderItemsSel();
+    renderListaCategorias();
+  }catch(err){
+    console.error(err);
+    cont.innerHTML = `<p class="msg error">${esc(errorLegible(err))}</p>`;
+  }
+}
+
+function renderListaCategorias(){
+  const cont = document.getElementById("listaCategorias");
+  const orden = ordenarCats();
+  if(!orden.length){
+    cont.innerHTML = `<p class="hint">Todavía no hay categorías. Creá la primera arriba, o usá "Cargar contenido inicial" más abajo.</p>`;
+    return;
+  }
+  cont.innerHTML = "";
+  orden.forEach((slug, i) => {
+    const d = categoriasData[slug];
+    const visible = d.visible !== false;
+    const nPl = (d.playlists || []).length;
+    const nIt = (d.items || []).length;
+    const miniatura = esImagenUrl(d.imagen) ? d.imagen : "";
+    const link = `${location.origin}${location.pathname.replace("admin.html", "categoria.html")}?slug=${slug}`;
+    const item = document.createElement("div");
+    item.className = "pagina-item" + (visible ? "" : " oculta");
+    item.innerHTML = `
+      ${miniatura ? `<img class="mini-thumb" src="${esc(miniatura)}" alt="">` : ""}
+      <div class="pagina-info">
+        <div class="titulo">${esc(d.icono || "")} ${esc(d.nombre || slug)}</div>
+        <div style="margin-top:6px;">
+          <span class="chip">${nIt} juegos/series</span>
+          <span class="chip">${nPl} playlists</span>
+          ${d.enlace ? `<span class="chip gris">enlace especial</span>` : ""}
+          ${visible ? "" : `<span class="chip gris">oculta</span>`}
+        </div>
+        <div class="link">${esc(link)}</div>
+      </div>
+      <div>
+        <button class="btn-secondary mini" type="button" data-a="up" ${i === 0 ? "disabled" : ""}>↑</button>
+        <button class="btn-secondary mini" type="button" data-a="down" ${i === orden.length - 1 ? "disabled" : ""}>↓</button>
+        <button class="btn-secondary mini" type="button" data-a="vis">${visible ? "👁 Ocultar" : "👁 Mostrar"}</button>
+        <a class="btn-secondary" href="${esc(link)}" target="_blank" rel="noopener">↗ Abrir</a>
+        <button class="btn-secondary" type="button" data-a="edit">Editar</button>
+        <button class="btn-danger" type="button" data-a="del">Eliminar</button>
+      </div>`;
+    item.querySelector('[data-a="up"]').addEventListener("click", () => moverCategoria(slug, -1));
+    item.querySelector('[data-a="down"]').addEventListener("click", () => moverCategoria(slug, 1));
+    item.querySelector('[data-a="vis"]').addEventListener("click", () => alternarVisible(slug));
+    item.querySelector('[data-a="edit"]').addEventListener("click", () => cargarCategoriaParaEditar(slug));
+    item.querySelector('[data-a="del"]').addEventListener("click", () => eliminarCategoria(slug));
+    cont.appendChild(item);
+  });
+}
+
+async function moverCategoria(slug, dir){
+  const orden = ordenarCats();
+  const i = orden.indexOf(slug), j = i + dir;
+  if(i < 0 || j < 0 || j >= orden.length) return;
+  [orden[i], orden[j]] = [orden[j], orden[i]];
+  const up = {};
+  orden.forEach((s, k) => { up[`categorias/${s}/orden`] = (k + 1) * 10; });
+  try{ await update(ref(db), up); await cargarCategorias(); }
+  catch(err){ console.error(err); alert(errorLegible(err)); }
+}
+
+async function alternarVisible(slug){
+  const actual = categoriasData[slug].visible !== false;
+  try{ await update(ref(db, "categorias/" + slug), { visible: !actual }); await cargarCategorias(); }
+  catch(err){ console.error(err); alert(errorLegible(err)); }
+}
+
+function limpiarFormularioCat(){
+  ["cNombre", "cSlug", "cIcono", "cImagen", "cEnlace"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("cSlug").readOnly = false;
+  document.getElementById("cVisible").checked = true;
+  document.getElementById("cPlaylistsList").innerHTML = "";
+  itemsSel = [];
+  renderItemsSel();
+  editandoCat = null;
+  document.getElementById("formTituloCat").textContent = "Nueva categoría";
+  document.getElementById("btnCancelarCat").style.display = "none";
+  setMsg(cMsg, "", "");
+}
+document.getElementById("btnCancelarCat").addEventListener("click", limpiarFormularioCat);
+
+function cargarCategoriaParaEditar(slug){
+  const d = categoriasData[slug];
+  editandoCat = slug;
+  document.getElementById("formTituloCat").textContent = "Editando: " + (d.nombre || slug);
+  document.getElementById("cNombre").value = d.nombre || "";
+  document.getElementById("cSlug").value = slug;
+  document.getElementById("cSlug").readOnly = true;
+  document.getElementById("cIcono").value = d.icono || "";
+  document.getElementById("cImagen").value = d.imagen || "";
+  document.getElementById("cEnlace").value = d.enlace || "";
+  document.getElementById("cVisible").checked = d.visible !== false;
+  document.getElementById("cPlaylistsList").innerHTML = "";
+  (d.playlists || []).forEach(p => crearFilaSimple("cPlaylistsList", p));
+  itemsSel = (d.items || []).map(x => ({ tipo: x.tipo, slug: x.slug }));
+  renderItemsSel();
+  document.getElementById("btnCancelarCat").style.display = "inline-block";
+  setMsg(cMsg, "", "");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+document.getElementById("btnGuardarCat").addEventListener("click", async () => {
+  setMsg(cMsg, "", "");
+  const nombre = document.getElementById("cNombre").value.trim();
+  const slug = slugify(document.getElementById("cSlug").value.trim());
+  if(!nombre || !slug){ setMsg(cMsg, "error", "Poné al menos un nombre (el slug se genera solo)."); return; }
+
+  const enlace = document.getElementById("cEnlace").value.trim();
+  if(enlace && !urlSegura(enlace)){ setMsg(cMsg, "error", "Ese enlace no es válido."); return; }
+
+  try{
+    if(!editandoCat){
+      const existente = await get(ref(db, "categorias/" + slug));
+      if(existente.exists()){ setMsg(cMsg, "error", "Ya existe una categoría con ese slug. Cambiá el nombre o el slug."); return; }
+    }
+    // Orden: al crear va al final; al editar se mantiene
+    let orden;
+    if(editandoCat) orden = categoriasData[editandoCat].orden ?? 9999;
+    else orden = Object.values(categoriasData).reduce((m, c) => Math.max(m, c.orden ?? 0), 0) + 10;
+
+    const data = {
+      nombre,
+      icono: document.getElementById("cIcono").value.trim(),
+      imagen: document.getElementById("cImagen").value.trim(),
+      enlace,
+      visible: document.getElementById("cVisible").checked,
+      orden,
+      playlists: leerFilasSimples("cPlaylistsList"),
+      items: itemsSel
+    };
+    await set(ref(db, "categorias/" + slug), data);
+    setMsg(cMsg, "ok", "¡Categoría guardada! Link: categoria.html?slug=" + slug);
+    limpiarFormularioCat();
+    setMsg(cMsg, "ok", "¡Categoría guardada! Link: categoria.html?slug=" + slug);
+    await cargarCategorias();
+  }catch(err){
+    console.error(err);
+    setMsg(cMsg, "error", errorLegible(err));
+  }
+});
+
+async function eliminarCategoria(slug){
+  const d = categoriasData[slug];
+  if(!confirm(`¿Eliminar la categoría "${d.nombre || slug}"? Los juegos y series NO se borran, solo la categoría. No se puede deshacer.`)) return;
+  try{ await remove(ref(db, "categorias/" + slug)); await cargarCategorias(); }
+  catch(err){ console.error(err); alert(errorLegible(err)); }
+}
+
+// ---------- Cargar contenido inicial (categorías, ajustes y FNAF) ----------
+document.getElementById("btnImportarIniciales").addEventListener("click", async () => {
+  if(!confirm("Se van a cargar las categorías, los ajustes y la página de FNAF que faltan. No se pisa nada de lo que ya tengas. ¿Seguir?")) return;
+  setMsg(iMsg, "", "Cargando...");
+  try{
+    const [c, cfg, f] = await Promise.all([
+      get(ref(db, "categorias")), get(ref(db, "config")), get(ref(db, "paginasJuegos/fnaf-security-breach"))
+    ]);
+    const existentes = c.val() || {};
+    const cfgActual = cfg.val() || {};
+    const up = {};
+    let nuevas = 0;
+    Object.keys(DEFAULT_CATEGORIAS).forEach(k => {
+      if(!existentes[k]){ up["categorias/" + k] = DEFAULT_CATEGORIAS[k]; nuevas++; }
+    });
+    Object.keys(DEFAULT_CONFIG).forEach(k => {
+      if(cfgActual[k] === undefined) up["config/" + k] = DEFAULT_CONFIG[k];
+    });
+    up["config/inicializado"] = true;
+    let fnaf = false;
+    if(!f.exists()){ up["paginasJuegos/fnaf-security-breach"] = { ...FNAF_JUEGO, actualizado: Date.now() }; fnaf = true; }
+
+    await update(ref(db), up);
+    setMsg(iMsg, "ok", `Listo: ${nuevas} categorías nuevas${fnaf ? ", página de FNAF creada" : ""} y ajustes cargados.`);
+    await cargarCategorias();
+  }catch(err){
+    console.error(err);
+    setMsg(iMsg, "error", errorLegible(err));
+  }
+});
+
+// =====================================================================
+//  AJUSTES DEL SITIO
+// =====================================================================
+const aMsg = document.getElementById("aMsg");
+
+function crearFilaRed(tipo = "instagram", url = ""){
+  const cont = document.getElementById("redesList");
+  const fila = document.createElement("div");
+  fila.className = "fila";
+  const opciones = Object.keys(SOCIALES).map(k => `<option value="${k}" ${k === tipo ? "selected" : ""}>${esc(SOCIALES[k].nombre)}</option>`).join("");
+  fila.innerHTML = `<select class="rTipo">${opciones}</select>
+    <input type="text" class="rUrl" placeholder="https://..." value="${esc(url)}">
+    <button class="btn-danger" type="button">✕</button>`;
+  fila.querySelector("button").addEventListener("click", () => fila.remove());
+  cont.appendChild(fila);
+}
+document.getElementById("btnAddRed").addEventListener("click", () => crearFilaRed());
+
+async function cargarAjustes(){
+  setMsg(aMsg, "", "");
+  try{
+    const s = await get(ref(db, "config"));
+    const c = mezclarConfig(s.val());
+    document.getElementById("aNombre").value = c.sitioNombre || "";
+    document.getElementById("aBanner").value = c.bannerImagen || "";
+    document.getElementById("aColor").value = /^#[0-9a-f]{6}$/i.test(c.colorAcento || "") ? c.colorAcento : "#ff2e2e";
+    document.getElementById("aAviso").value = c.aviso || "";
+    document.getElementById("aFooter").value = c.footer || "";
+    document.getElementById("redesList").innerHTML = "";
+    (Array.isArray(c.redes) ? c.redes : []).forEach(r => crearFilaRed(r.tipo, r.url));
+  }catch(err){
+    console.error(err);
+    setMsg(aMsg, "error", errorLegible(err));
+  }
+}
+
+document.getElementById("btnGuardarAjustes").addEventListener("click", async () => {
+  setMsg(aMsg, "", "");
+  const redes = [];
+  let invalida = false;
+  document.querySelectorAll("#redesList .fila").forEach(f => {
+    const url = f.querySelector(".rUrl").value.trim();
+    if(!url) return;
+    if(!urlSegura(url)){ invalida = true; return; }
+    redes.push({ tipo: f.querySelector(".rTipo").value, url });
+  });
+  if(invalida){ setMsg(aMsg, "error", "Hay un link de red social que no es válido."); return; }
+  try{
+    await update(ref(db, "config"), {
+      sitioNombre: document.getElementById("aNombre").value.trim(),
+      bannerImagen: document.getElementById("aBanner").value.trim(),
+      colorAcento: document.getElementById("aColor").value,
+      aviso: document.getElementById("aAviso").value.trim(),
+      footer: document.getElementById("aFooter").value.trim(),
+      redes
+    });
+    setMsg(aMsg, "ok", "¡Ajustes guardados! Ya se ven en la home.");
+  }catch(err){
+    console.error(err);
+    setMsg(aMsg, "error", errorLegible(err));
+  }
+});
 </script>
 </body>
 </html>
