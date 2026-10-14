@@ -70,6 +70,7 @@ main.fade-in{ animation:fadeIn 0.5s ease; }
 .badge-tipo.youtube{ background:var(--accent); }
 .badge-tipo.drive{ background:#1a73e8; }
 .badge-tipo.archivo{ background:#666; }
+.badge-tipo.embed{ background:#7b3fe4; }
 
 .bloque-titulo{ display:flex; align-items:center; gap:10px; margin:6px 0 14px; }
 .bloque-titulo h2{ font-size:15px; font-weight:700; color:var(--text); }
@@ -79,6 +80,20 @@ main.fade-in{ animation:fadeIn 0.5s ease; }
 .cap-btn{ background:var(--card2); border:1px solid var(--line); color:var(--text); padding:13px 6px; text-align:center; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px; transition:0.2s; }
 .cap-btn:hover{ filter:brightness(1.2); border-color:var(--accent2); }
 .cap-btn.active{ color:#fff; background:var(--accent); border-color:var(--accent); box-shadow:0 6px 18px rgba(255,43,61,0.4); }
+
+/* ===== SAGA / SUGERENCIAS ===== */
+.bloque-extra{ margin-top:30px; }
+.carrusel{ display:flex; gap:12px; overflow-x:auto; padding:4px 2px 10px; scroll-snap-type:x proximity; }
+.mini-card{ flex:0 0 120px; scroll-snap-align:start; text-decoration:none; color:var(--text); display:block; }
+.mini-card .mini-img{ width:100%; aspect-ratio:2/3; border-radius:10px; overflow:hidden; background:var(--card2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:30px; transition:0.2s; }
+.mini-card .mini-img img{ width:100%; height:100%; object-fit:cover; display:block; }
+.mini-card:hover .mini-img{ border-color:var(--accent2); transform:translateY(-2px); }
+.mini-card.actual .mini-img{ border-color:var(--accent); box-shadow:0 6px 18px rgba(255,43,61,0.4); }
+.mini-card.actual{ cursor:default; }
+.mini-card.actual:hover .mini-img{ transform:none; border-color:var(--accent); }
+.mini-et{ margin-top:7px; font-size:13px; font-weight:700; line-height:1.25; }
+.mini-sub{ margin-top:2px; font-size:11px; color:var(--muted); line-height:1.25; }
+.mini-aqui{ color:var(--accent); font-weight:700; }
 
 @media(min-width:769px){ .grid-capitulos{ grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); } }
 
@@ -129,6 +144,10 @@ function esc(str){
   return div.innerHTML;
 }
 
+function attr(str){
+  return String(str == null ? "" : str).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function renderReproductor(cap, autoplay){
   if(cap.tipo === "youtube"){
     return `<iframe id="video-player" src="https://www.youtube.com/embed/${cap.id}?rel=0${autoplay ? "&autoplay=1" : ""}" allowfullscreen></iframe>`;
@@ -136,12 +155,18 @@ function renderReproductor(cap, autoplay){
   if(cap.tipo === "archivo"){
     return `<video id="video-player" src="${cap.id}" controls playsinline ${autoplay ? "autoplay" : ""}></video>`;
   }
+  if(cap.tipo === "embed"){
+    // Cualquier enlace embebible (solo http/https) dentro de un iframe
+    if(!/^https?:\/\//i.test(cap.id || "")) return "";
+    return `<iframe id="video-player" src="${attr(cap.id)}" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>`;
+  }
   return `<iframe id="video-player" src="https://drive.google.com/file/d/${cap.id}/preview?t=${Date.now()}" allowfullscreen></iframe>`;
 }
 
 function badgeInfo(tipo){
   if(tipo === "youtube") return { clase:"youtube", texto:"YouTube" };
   if(tipo === "archivo") return { clase:"archivo", texto:"Video" };
+  if(tipo === "embed") return { clase:"embed", texto:"Embed" };
   return { clase:"drive", texto:"Drive" };
 }
 
@@ -196,6 +221,58 @@ window.cambiarCapitulo = function(index){
 
   document.querySelector(".reproductor-box").scrollIntoView({ behavior:"smooth", block:"start" });
 };
+
+function miniCard(slug, d, etiqueta, sub, actual){
+  const img = d.poster || d.fondo || "";
+  const cuerpo = `<div class="mini-img">${img && !/\.(mp4|webm|ogg|ogv|mov|m3u8)(\?.*)?$/i.test(img) && !/youtu\.be|youtube\.com/i.test(img) ? `<img src="${attr(img)}" alt="" loading="lazy">` : (d.tipo === "pelicula" ? "🎬" : "📺")}</div>
+      <div class="mini-et">${esc(etiqueta)}</div>
+      ${sub ? `<div class="mini-sub ${actual ? "mini-aqui" : ""}">${esc(sub)}</div>` : ""}`;
+  if(actual) return `<div class="mini-card actual">${cuerpo}</div>`;
+  return `<a class="mini-card" href="serie.html?slug=${encodeURIComponent(slug)}">${cuerpo}</a>`;
+}
+
+// Apartados «Temporadas» (misma saga) y «Te puede interesar» (sugerencias).
+// Si algo falla o no hay datos, simplemente no se muestran.
+async function bloquesExtra(slug, s){
+  const saga = (s.saga || "").trim();
+  const sugs = Array.isArray(s.sugerencias) ? s.sugerencias : Object.values(s.sugerencias || {});
+  if(!saga && sugs.length === 0) return "";
+
+  let todas = {};
+  try{
+    const snap = await get(ref(db, "paginasSeries"));
+    todas = snap.val() || {};
+  }catch(e){ console.warn("No se pudieron leer las demás series", e); return ""; }
+
+  let html = "";
+
+  if(saga){
+    const clave = saga.toLowerCase();
+    const hermanas = Object.keys(todas)
+      .filter(sl => ((todas[sl] && todas[sl].saga) || "").trim().toLowerCase() === clave)
+      .sort((x, y) => {
+        const ox = Number.isFinite(todas[x].sagaOrden) ? todas[x].sagaOrden : 9999;
+        const oy = Number.isFinite(todas[y].sagaOrden) ? todas[y].sagaOrden : 9999;
+        return ox - oy || (todas[x].titulo || x).localeCompare(todas[y].titulo || y);
+      });
+    if(hermanas.length > 1){
+      const cards = hermanas.map(sl => {
+        const d = todas[sl];
+        const et = d.sagaEtiqueta || d.titulo || sl;
+        const sub = sl === slug ? "● Estás aquí" : (d.sagaEtiqueta && d.titulo ? d.titulo : "");
+        return miniCard(sl, d, et, sub, sl === slug);
+      }).join("");
+      html += `<div class="bloque-extra"><div class="bloque-titulo"><h2>🗂️ Temporadas · ${esc(saga)}</h2><div class="linea"></div></div><div class="carrusel">${cards}</div></div>`;
+    }
+  }
+
+  const sugVal = sugs.filter(sl => sl && sl !== slug && todas[sl]);
+  if(sugVal.length){
+    const cards = sugVal.map(sl => miniCard(sl, todas[sl], todas[sl].titulo || sl, todas[sl].tipo === "pelicula" ? "Película" : "Serie", false)).join("");
+    html += `<div class="bloque-extra"><div class="bloque-titulo"><h2>🍿 Te puede interesar</h2><div class="linea"></div></div><div class="carrusel">${cards}</div></div>`;
+  }
+  return html;
+}
 
 async function cargarSerie(){
   const params = new URLSearchParams(window.location.search);
@@ -271,6 +348,7 @@ async function cargarSerie(){
       });
       cuerpoHtml += `<div class="bloque-titulo"><h2>Capítulos</h2><div class="linea"></div></div><div class="grid-capitulos">${botonesHtml}</div>`;
     }
+    cuerpoHtml += await bloquesExtra(slug, s);
     cuerpoHtml += `</div>`;
 
     main.innerHTML = fichaHtml + cuerpoHtml;
