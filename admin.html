@@ -105,6 +105,7 @@ a.btn-secondary:active,a.btn-primary:active,a.btn-danger:active{transform:scale(
 .chk input{width:auto;}
 .fila select{width:auto;flex:0 0 150px;}
 .fila select#cAddItem{flex:1;}
+.fila select#sAddSugerencia{flex:1;}
 .fila .num{flex:0 0 auto;font-size:12px;color:var(--muted);min-width:22px;}
 .fila .txt{flex:1;font-size:14px;word-break:break-word;}
 .fila .txt.falta{color:#ff8a93;}
@@ -423,9 +424,32 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
     <details class="seccion" id="secCapitulos" open>
       <summary>🎬 Capítulos</summary>
       <div class="contenido-seccion">
-        <p class="hint">Pegá el link normal de YouTube (podés usar videos "no listados", funcionan igual), el link para compartir de Google Drive, o un link directo a un video (.mp4/.webm, como los trailers de Steam). Se detecta solo cuál es cuál. Si es una película, cargá un solo capítulo.</p>
+        <p class="hint">Pegá el link normal de YouTube (podés usar videos "no listados", funcionan igual), el link para compartir de Google Drive, un link directo a un video (.mp4/.webm, como los trailers de Steam) o <b>cualquier otro enlace para embeber</b> (por ejemplo <code>https://pagina.net/embed-abc123.html</code>, Vimeo, Dailymotion, etc.). También podés pegar el código <code>&lt;iframe ...&gt;</code> completo. Se detecta solo cuál es cuál. Si es una película, cargá un solo capítulo.</p>
         <div id="capitulosList"></div>
         <button class="btn-secondary" id="btnAddCapitulo" type="button">+ Agregar capítulo</button>
+      </div>
+    </details>
+
+    <details class="seccion" id="secSaga">
+      <summary>🗂️ Saga, temporadas y sugerencias</summary>
+      <div class="contenido-seccion">
+        <label>Saga (opcional)</label>
+        <input type="text" id="sSaga" list="listaSagas" placeholder="Ej: Harry Potter, Stranger Things...">
+        <datalist id="listaSagas"></datalist>
+        <p class="hint">Poné el <b>mismo nombre de saga</b> en cada serie o película que pertenezca a ella. En cada página aparece el apartado «Temporadas» con todas las de la saga, ordenadas.</p>
+
+        <div class="fila">
+          <input type="text" id="sSagaEtiqueta" placeholder="Nombre dentro de la saga (ej: Temporada 2, Parte 1)">
+          <input type="number" id="sSagaOrden" placeholder="Orden (1, 2, 3…)" style="flex:0 0 150px;" min="0" step="1">
+        </div>
+
+        <label>Sugerencias (opcional)</label>
+        <p class="hint">Series o películas que se muestran abajo como «Te puede interesar». Si no elegís ninguna, el apartado no aparece.</p>
+        <div class="fila">
+          <select id="sAddSugerencia"></select>
+          <button class="btn-secondary" id="btnAddSugerencia" type="button">+ Agregar</button>
+        </div>
+        <div id="sugerenciasList"></div>
       </div>
     </details>
 
@@ -994,9 +1018,15 @@ document.getElementById("sTitulo").addEventListener("input", (e) => {
   if(!slugInput.readOnly) slugInput.value = slugify(e.target.value);
 });
 
-// Detecta si el link pegado es de YouTube, Google Drive o un video directo (.mp4/.webm/etc) y saca el ID/URL limpio
+// Detecta si el link pegado es de YouTube, Google Drive, un video directo (.mp4/.webm/etc)
+// o cualquier otro enlace para embeber (iframe), y saca el ID/URL limpio
 function parseVideoInput(valor){
   valor = (valor || "").trim();
+  // Si pegaron el código <iframe ... src="..."> completo, nos quedamos con el src
+  const mIframe = valor.match(/<iframe[^>]+src\s*=\s*["']([^"']+)["']/i);
+  if(mIframe) valor = mIframe[1].trim().replace(/&amp;/g, "&");
+  if(valor.startsWith("//")) valor = "https:" + valor;
+
   if(/youtu\.be|youtube\.com/i.test(valor)){
     const watchMatch = valor.match(/[?&]v=([^&]+)/);
     const shortMatch = valor.match(/youtu\.be\/([^?&]+)/);
@@ -1016,6 +1046,13 @@ function parseVideoInput(valor){
   if(/^https?:\/\//i.test(valor) && /\.(mp4|webm|ogg|ogv|mov|m3u8)(\?.*)?$/i.test(valor)){
     return { tipo: "archivo", id: valor };
   }
+  // Vimeo y Dailymotion: los pasamos a su link de embed
+  const mVimeo = valor.match(/^https?:\/\/(?:www\.)?vimeo\.com\/(?:video\/)?(\d+)/i);
+  if(mVimeo) return { tipo: "embed", id: "https://player.vimeo.com/video/" + mVimeo[1] };
+  const mDaily = valor.match(/^https?:\/\/(?:www\.)?dailymotion\.com\/(?:embed\/)?video\/([a-zA-Z0-9]+)/i);
+  if(mDaily) return { tipo: "embed", id: "https://www.dailymotion.com/embed/video/" + mDaily[1] };
+  // Cualquier otro enlace http(s): se embebe tal cual en un iframe
+  if(/^https?:\/\//i.test(valor)) return { tipo: "embed", id: valor };
   // Sin dominio reconocido: si parece un ID de YouTube (11 caracteres), lo tratamos como tal
   if(/^[a-zA-Z0-9_-]{11}$/.test(valor)) return { tipo: "youtube", id: valor };
   // Si no, asumimos que es directamente un ID de Drive
@@ -1028,7 +1065,7 @@ function crearFilaCapitulo(label="", valor=""){
   fila.className = "fila";
   fila.innerHTML = `
     <input type="text" placeholder="Nombre (ej: Capítulo 1)" value="${(label||"").replace(/"/g,'&quot;')}" class="cLabel" style="max-width:160px;">
-    <input type="text" placeholder="Link de YouTube o de Drive" value="${(valor||"").replace(/"/g,'&quot;')}" class="cValor">
+    <input type="text" placeholder="Link de YouTube, Drive, embed o cualquier video" value="${(valor||"").replace(/"/g,'&quot;')}" class="cValor">
     <button class="btn-danger" type="button">✕</button>`;
   fila.querySelector("button").addEventListener("click", () => fila.remove());
   cont.appendChild(fila);
@@ -1050,7 +1087,7 @@ function leerCapitulos(){
   return out;
 }
 
-let editandoSlugSerie = null;
+var editandoSlugSerie = null;
 const formMsgSerie = document.getElementById("formMsgSerie");
 
 function limpiarFormularioSerie(){
@@ -1064,6 +1101,12 @@ function limpiarFormularioSerie(){
   document.getElementById("sAnio").value = "";
   document.getElementById("sGenero").value = "";
   document.getElementById("sSinopsis").value = "";
+  document.getElementById("sSaga").value = "";
+  document.getElementById("sSagaEtiqueta").value = "";
+  document.getElementById("sSagaOrden").value = "";
+  sugerenciasSel = [];
+  renderSugerencias();
+  document.getElementById("secSaga").open = false;
   document.getElementById("capitulosList").innerHTML = "";
   document.getElementById("formTituloSerie").textContent = "Nueva serie";
   document.getElementById("btnCancelarSerie").style.display = "none";
@@ -1113,6 +1156,10 @@ document.getElementById("btnGuardarSerie").addEventListener("click", async () =>
       anio: document.getElementById("sAnio").value.trim(),
       genero: document.getElementById("sGenero").value.trim(),
       sinopsis: document.getElementById("sSinopsis").value.trim(),
+      saga: document.getElementById("sSaga").value.trim(),
+      sagaEtiqueta: document.getElementById("sSagaEtiqueta").value.trim(),
+      sagaOrden: (document.getElementById("sSagaOrden").value.trim() !== "" && !isNaN(Number(document.getElementById("sSagaOrden").value))) ? Number(document.getElementById("sSagaOrden").value) : null,
+      sugerencias: sugerenciasSel.filter(sl => sl !== slug),
       capitulos
     });
     formMsgSerie.className = "msg ok";
@@ -1165,12 +1212,52 @@ async function cargarListaSeries(){
 }
 
 function textoSerie(slug, s){
-  return [slug, s.titulo, s.grupo, s.genero, s.anio, s.sinopsis, (s.capitulos || []).map(c => c && c.label).join(" ")].join(" ");
+  return [slug, s.titulo, s.grupo, s.saga, s.sagaEtiqueta, s.genero, s.anio, s.sinopsis, (s.capitulos || []).map(c => c && c.label).join(" ")].join(" ");
 }
+
+// ---- Sugerencias de la serie que se está editando ----
+let sugerenciasSel = [];
+
+function llenarAyudasSeries(){
+  const data = INDICE.series || {};
+  const slugs = Object.keys(data);
+  // Sagas ya usadas (para autocompletar y no escribirlas distinto)
+  const sagas = [...new Set(slugs.map(s => (data[s].saga || "").trim()).filter(Boolean))].sort();
+  document.getElementById("listaSagas").innerHTML = sagas.map(g => `<option value="${esc(g)}">`).join("");
+  // Select de sugerencias: todas menos la que se edita y las ya elegidas
+  const sel = document.getElementById("sAddSugerencia");
+  const disponibles = slugs
+    .filter(sl => sl !== editandoSlugSerie && !sugerenciasSel.includes(sl))
+    .sort((x, y) => (data[x].titulo || x).localeCompare(data[y].titulo || y));
+  sel.innerHTML = `<option value="">— Elegí una serie o película —</option>` +
+    disponibles.map(sl => `<option value="${esc(sl)}">${data[sl].tipo === "pelicula" ? "🎬" : "📺"} ${esc(data[sl].titulo || sl)}</option>`).join("");
+}
+
+function renderSugerencias(){
+  const cont = document.getElementById("sugerenciasList");
+  cont.innerHTML = "";
+  sugerenciasSel.forEach((sl, i) => {
+    const d = (INDICE.series || {})[sl];
+    const fila = document.createElement("div");
+    fila.className = "fila";
+    fila.innerHTML = `<span class="txt ${d ? "" : "falta"}">${d ? (d.tipo === "pelicula" ? "🎬" : "📺") : "⚠️"} ${esc(d ? (d.titulo || sl) : sl + " (ya no existe)")}</span><button class="btn-danger" type="button">✕</button>`;
+    fila.querySelector("button").addEventListener("click", () => { sugerenciasSel.splice(i, 1); renderSugerencias(); });
+    cont.appendChild(fila);
+  });
+  llenarAyudasSeries();
+}
+
+document.getElementById("btnAddSugerencia").addEventListener("click", () => {
+  const sel = document.getElementById("sAddSugerencia");
+  if(!sel.value) return;
+  sugerenciasSel.push(sel.value);
+  renderSugerencias();
+});
 
 function renderListaSeries(){
   const cont = document.getElementById("listaSeries");
   const data = INDICE.series || {};
+  llenarAyudasSeries();
   const slugs = Object.keys(data);
   if(slugs.length === 0){
     cont.innerHTML = "<p>No hay series creadas todavía.</p>";
@@ -1231,13 +1318,19 @@ function cargarSerieParaEditar(slug, s){
   document.getElementById("sAnio").value = s.anio || "";
   document.getElementById("sGenero").value = s.genero || "";
   document.getElementById("sSinopsis").value = s.sinopsis || "";
+  document.getElementById("sSaga").value = s.saga || "";
+  document.getElementById("sSagaEtiqueta").value = s.sagaEtiqueta || "";
+  document.getElementById("sSagaOrden").value = (s.sagaOrden === undefined || s.sagaOrden === null) ? "" : s.sagaOrden;
+  sugerenciasSel = Array.isArray(s.sugerencias) ? s.sugerencias.filter(Boolean) : Object.values(s.sugerencias || {}).filter(Boolean);
+  renderSugerencias();
+  document.getElementById("secSaga").open = !!(s.saga || sugerenciasSel.length);
 
   document.getElementById("capitulosList").innerHTML = "";
   (s.capitulos || []).forEach(cap => {
     // Reconstruimos un link "de referencia" para mostrarlo en el input al editar
     let valorMostrado;
     if(cap.tipo === "youtube") valorMostrado = `https://youtu.be/${cap.id}`;
-    else if(cap.tipo === "archivo") valorMostrado = cap.id;
+    else if(cap.tipo === "archivo" || cap.tipo === "embed") valorMostrado = cap.id;
     else valorMostrado = `https://drive.google.com/file/d/${cap.id}/view`;
     crearFilaCapitulo(cap.label, valorMostrado);
   });
