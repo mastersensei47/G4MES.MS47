@@ -112,6 +112,64 @@ a.btn-secondary:active,a.btn-primary:active,a.btn-danger:active{transform:scale(
 .chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,229,199,0.12);color:var(--accent2);margin-right:6px;}
 .chip.gris{background:rgba(255,255,255,0.08);color:var(--muted);}
 button.mini{padding:7px 10px;margin-top:0;}
+
+/* ===== Buscador global ===== */
+.busq-wrap{position:relative;flex:1;min-width:230px;max-width:480px;}
+.busq-wrap input{width:100%;padding:10px 14px;border-radius:22px;background:var(--card);}
+.busq-res{display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--card);border:1px solid #3a3a40;border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,0.6);z-index:3000;max-height:min(70vh,460px);overflow:auto;padding:6px;}
+.busq-res.abierto{display:block;}
+.busq-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;}
+.busq-item:hover,.busq-item.sel{background:rgba(255,255,255,0.07);}
+.busq-ico{font-size:17px;flex-shrink:0;width:24px;text-align:center;}
+.busq-tit{font-weight:600;font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.busq-sub{font-size:11px;color:var(--muted);flex-shrink:0;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.busq-vacio{padding:14px;text-align:center;color:var(--muted);font-size:13px;}
+.busq-cab{font-size:10px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:var(--accent2);padding:8px 10px 4px;}
+kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--muted);}
+.filtro-lista{margin:0 0 12px;border-radius:22px !important;padding:10px 16px !important;}
+.filtro-info{font-size:12px;color:var(--muted);margin:-4px 0 12px 6px;}
+
+/* ===== Apartados extra ===== */
+.apartado-card{position:relative;}
+.apartado-card .ap-cab{margin-top:0;}
+.apartado-card .ap-cab input{font-weight:600;}
+.ap-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0 12px;}
+.apartado-card textarea{min-height:90px;}
+
+/* ===== Estética ===== */
+.est-layout{display:grid;grid-template-columns:270px minmax(0,1fr);gap:18px;align-items:start;margin-top:10px;}
+@media(max-width:820px){.est-layout{grid-template-columns:1fr;}}
+.est-lista{max-height:560px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--card2);padding:6px;}
+.est-grupo{font-size:10px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:var(--accent2);padding:10px 8px 4px;}
+.est-item{display:flex;align-items:center;gap:8px;width:100%;margin:0;padding:8px 9px;border-radius:8px;background:transparent;color:var(--text);font-weight:600;font-size:13px;text-align:left;border:1px solid transparent;}
+.est-item:hover{background:rgba(255,255,255,0.06);}
+.est-item.activo{background:rgba(255,43,61,0.14);border-color:rgba(255,43,61,0.45);}
+.est-item .nom{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.est-item .chip{margin:0;font-size:10px;padding:2px 7px;white-space:nowrap;}
+.est-item .chip.alerta{background:rgba(255,170,0,0.15);color:#ffc15a;}
+.est-titulo{font-family:'Poppins',Arial,sans-serif;font-size:17px;margin-bottom:4px;}
+.est-modo{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:12px;}
+.est-modo label.chk{margin-top:8px;}
+.est-modo label.chk:first-child{margin-top:0;}
+.est-herr{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;}
+.est-herr button,.est-herr select{margin:0;}
+.est-herr select{width:auto;max-width:230px;}
+.est-preview{margin-top:14px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#000;}
+.est-preview iframe{display:block;width:100%;height:330px;border:none;background:#000;}
+.est-preview-cab{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;font-size:12px;color:var(--muted);background:var(--card2);border-bottom:1px solid var(--line);}
+.est-campo{display:grid;grid-template-columns:minmax(150px,42%) minmax(0,1fr);gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.06);}
+.est-campo:last-child{border-bottom:none;}
+.est-campo.apagado .est-ctl{opacity:0.45;}
+.est-chk{display:flex;align-items:center;gap:8px;margin:0;font-size:13px;color:var(--text);cursor:pointer;font-weight:600;}
+.est-chk input{width:auto;flex-shrink:0;}
+.est-ctl{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap;}
+.est-ctl input[type=color]{width:46px;height:34px;padding:2px;border-radius:8px;border:1px solid var(--line);background:var(--card2);cursor:pointer;}
+.est-ctl input[type=range]{flex:1;min-width:110px;accent-color:var(--accent);}
+.est-ctl textarea,.est-ctl input[type=text],.est-ctl select{flex:1;min-width:120px;}
+.est-ctl .est-val{font-size:12px;color:var(--muted);min-width:46px;}
+.est-ctl code{font-size:11px;color:var(--muted);}
+.est-ctl textarea{min-height:110px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;}
+@media(max-width:560px){.est-campo{grid-template-columns:1fr;gap:6px;}}
 </style>
 </head>
 <body>
@@ -132,13 +190,18 @@ button.mini{padding:7px 10px;margin-top:0;}
 <div id="panel">
   <div class="topbar">
     <h1>Panel Admin MS47</h1>
-    <button class="btn-secondary" id="btnLogout">Bloquear panel</button>
+    <div class="busq-wrap">
+      <input type="text" id="busqGlobal" autocomplete="off" placeholder="🔍 Buscar juegos, series, categorías, ajustes…  ( / )">
+      <div class="busq-res" id="busqRes"></div>
+    </div>
+    <button class="btn-secondary" id="btnLogout" style="margin:0;">Bloquear panel</button>
   </div>
 
   <div class="tabs">
     <button class="tab-btn active" id="tabBtnJuegos" type="button">🎮 Juegos</button>
     <button class="tab-btn" id="tabBtnSeries" type="button">📺 Series / Capítulos</button>
     <button class="tab-btn" id="tabBtnCategorias" type="button">📂 Categorías</button>
+    <button class="tab-btn" id="tabBtnEstetica" type="button">🎨 Estética</button>
     <button class="tab-btn" id="tabBtnAjustes" type="button">⚙️ Ajustes del sitio</button>
   </div>
 
@@ -247,26 +310,51 @@ button.mini{padding:7px 10px;margin-top:0;}
     <details class="seccion" id="secDetalles">
       <summary>📋 Verificación y detalles</summary>
       <div class="contenido-seccion">
+        <p class="hint">Cada apartado puede tener otro nombre en la página (podés incluir un emoji). Si dejás el nombre vacío se usa el original.</p>
+
+        <p class="subgrupo-titulo" style="margin-top:14px;">Verificación</p>
+        <label>Nombre del apartado</label>
+        <input type="text" id="fTituloVerif" placeholder="🎞️ Verificación">
         <label>Link de verificación (YouTube, Drive o video directo, opcional)</label>
         <input type="text" id="fVerificacion" placeholder="https://drive.google.com/file/d/.../view">
 
-        <label>Contenido / DLCs (una línea por ítem, opcional)</label>
+        <p class="subgrupo-titulo">Contenido / DLCs</p>
+        <label>Nombre del apartado</label>
+        <input type="text" id="fTituloContenido" placeholder="🔥 Contenido / DLCs">
+        <label>Líneas (una por ítem, opcional)</label>
         <div id="contenidoList"></div>
         <button class="btn-secondary" id="btnAddContenido" type="button">+ Agregar línea</button>
 
-        <label>Requisitos del sistema (una línea por ítem, opcional)</label>
+        <p class="subgrupo-titulo">Requisitos del sistema</p>
+        <label>Nombre del apartado</label>
+        <input type="text" id="fTituloReq" placeholder="🖥️ Requisitos del sistema">
+        <label>Líneas (una por ítem, opcional)</label>
         <div id="requisitosList"></div>
         <button class="btn-secondary" id="btnAddRequisito" type="button">+ Agregar línea</button>
 
-        <label>Información del juego (una línea por ítem, opcional)</label>
+        <p class="subgrupo-titulo">Información del juego</p>
+        <label>Nombre del apartado</label>
+        <input type="text" id="fTituloInfo" placeholder="🎮 Información del juego">
+        <label>Líneas (una por ítem, opcional)</label>
         <div id="infoJuegoList"></div>
         <button class="btn-secondary" id="btnAddInfo" type="button">+ Agregar línea</button>
+      </div>
+    </details>
+
+    <details class="seccion" id="secApartados">
+      <summary>➕ Apartados extra (información específica)</summary>
+      <div class="contenido-seccion">
+        <p class="hint">Creá los apartados que quieras con información sobre algo en particular del juego: cómo instalarlo, solución de errores, mods, trucos, un video tutorial, enlaces útiles, etc. Cada uno tiene su propio nombre, formato y lugar en la página.</p>
+        <div id="apartadosList"></div>
+        <button class="btn-secondary" id="btnAddApartado" type="button">+ Agregar apartado</button>
       </div>
     </details>
 
     <details class="seccion" id="secGaleria">
       <summary>📸 Galería de capturas</summary>
       <div class="contenido-seccion">
+        <label>Nombre del apartado de capturas</label>
+        <input type="text" id="fTituloGaleria" placeholder="📸 Capturas del juego">
         <label>Galería (una URL de imagen por fila, opcional)</label>
         <div id="galeriaList"></div>
         <button class="btn-secondary" id="btnAddImg" type="button">+ Agregar imagen</button>
@@ -283,6 +371,7 @@ button.mini{padding:7px 10px;margin-top:0;}
   </div>
 
   <h2>Páginas existentes</h2>
+  <input type="text" id="filtroJuegos" class="filtro-lista" autocomplete="off" placeholder="🔍 Filtrar juegos por nombre, grupo, descarga, contenido…">
   <div id="listaPaginas"></div>
 
   </div><!-- /tabJuegos -->
@@ -350,6 +439,7 @@ button.mini{padding:7px 10px;margin-top:0;}
   </div>
 
   <h2>Series existentes</h2>
+  <input type="text" id="filtroSeries" class="filtro-lista" autocomplete="off" placeholder="🔍 Filtrar series por nombre, grupo, género, capítulo…">
   <div id="listaSeries"></div>
 
   </div><!-- /tabSeries -->
@@ -412,6 +502,7 @@ button.mini{padding:7px 10px;margin-top:0;}
 
   <h2>Categorías existentes</h2>
   <p class="hint" style="margin:-6px 0 12px;">El orden de esta lista es el orden de la home. 👁 muestra u oculta la categoría sin borrarla.</p>
+  <input type="text" id="filtroCategorias" class="filtro-lista" autocomplete="off" placeholder="🔍 Filtrar categorías…">
   <div id="listaCategorias"></div>
 
   <div class="card card-ancha">
@@ -422,6 +513,21 @@ button.mini{padding:7px 10px;margin-top:0;}
   </div>
 
   </div><!-- /tabCategorias -->
+
+  <!-- ================= ESTÉTICA ================= -->
+  <div id="tabEstetica" style="display:none;">
+  <div class="card card-ancha">
+    <h2>🎨 Estética del sitio</h2>
+    <p class="hint">Definí cómo se ve cada página. Se aplica en este orden (gana lo último): <b>estética general</b> → <b>por tipo</b> (todos los juegos, todas las series…) → <b>página puntual</b>. En cada nivel tildás solo los ajustes que querés cambiar; lo que no tildás se hereda. Una página también puede <b>no heredar nada</b> y partir de su diseño original.</p>
+    <div class="est-layout">
+      <div>
+        <input type="text" id="estBuscar" class="filtro-lista" style="margin-bottom:8px;" autocomplete="off" placeholder="🔍 Buscar página…">
+        <div class="est-lista" id="estLista"><p class="hint" style="padding:10px;">Cargando…</p></div>
+      </div>
+      <div id="estEditor"><p class="hint">← Elegí a la izquierda qué querés personalizar.</p></div>
+    </div>
+  </div>
+  </div><!-- /tabEstetica -->
 
   <!-- ================= AJUSTES ================= -->
   <div id="tabAjustes" style="display:none;">
@@ -436,6 +542,7 @@ button.mini{padding:7px 10px;margin-top:0;}
     <input type="text" id="aBanner" placeholder="ms47.jpg">
 
     <label>Color de acento</label>
+    <p class="hint" style="margin:0 0 6px;">Si en la pestaña 🎨 Estética definís un «color principal» que llegue a la home, ese manda sobre este.</p>
     <input type="color" id="aColor" value="#ff2e2e" style="width:70px;height:40px;padding:2px;border-radius:8px;border:1px solid var(--line);background:var(--card2);cursor:pointer;">
 
     <label>Aviso en la parte de arriba (opcional, se ve una barra de color)</label>
@@ -460,6 +567,7 @@ button.mini{padding:7px 10px;margin-top:0;}
 
 <script src="config.js"></script>
 <script src="defaults.js"></script>
+<script src="estilo.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, get, set, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -471,6 +579,10 @@ const { DEFAULT_CONFIG, DEFAULT_CATEGORIAS, FNAF_JUEGO, JUEGOS_VIEJOS, CATEGORIA
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
+
+// Copia en memoria de todo lo que se carga (la usan el buscador y la pestaña Estética)
+const INDICE = { juegos: {}, series: {}, categorias: {} };
+let temasData = {};   // config/temas
 
 const loginDiv = document.getElementById("login");
 const panelDiv = document.getElementById("panel");
@@ -505,7 +617,7 @@ onAuthStateChanged(auth, (user) => {
   if(user){
     loginDiv.style.display = "none";
     panelDiv.style.display = "block";
-    if(!panelIniciado){ panelIniciado = true; cargarLista(); }
+    if(!panelIniciado){ panelIniciado = true; cargarLista(); cargarIndice(); }
   }else{
     panelIniciado = false;
     panelDiv.style.display = "none";
@@ -517,7 +629,7 @@ onAuthStateChanged(auth, (user) => {
 document.getElementById("btnLogout").addEventListener("click", () => signOut(auth));
 
 // ---------- Tabs ----------
-const TABS = { Juegos: "tabJuegos", Series: "tabSeries", Categorias: "tabCategorias", Ajustes: "tabAjustes" };
+const TABS = { Juegos: "tabJuegos", Series: "tabSeries", Categorias: "tabCategorias", Estetica: "tabEstetica", Ajustes: "tabAjustes" };
 function mostrarTab(nombre){
   Object.keys(TABS).forEach(k => {
     document.getElementById(TABS[k]).style.display = (k === nombre) ? "block" : "none";
@@ -525,6 +637,7 @@ function mostrarTab(nombre){
   });
   if(nombre === "Series") cargarListaSeries();
   if(nombre === "Categorias") cargarCategorias();
+  if(nombre === "Estetica") cargarEstetica();
   if(nombre === "Ajustes") cargarAjustes();
 }
 Object.keys(TABS).forEach(k => document.getElementById("tabBtn" + k).addEventListener("click", () => mostrarTab(k)));
@@ -586,11 +699,12 @@ document.getElementById("fTitulo").addEventListener("input", (e) => {
 let editandoSlug = null;
 
 function limpiarFormulario(){
-  ["fTitulo","fSlug","fGrupo","fFondo","fPortada","fFondoVideo","fVideoIzq","fVideoCentro","fVideoDer","fImagenIzq","fImagenCentro","fImagenDer","fPeso","fVerificacion"].forEach(id => document.getElementById(id).value = "");
+  ["fTitulo","fSlug","fGrupo","fFondo","fPortada","fFondoVideo","fVideoIzq","fVideoCentro","fVideoDer","fImagenIzq","fImagenCentro","fImagenDer","fPeso","fVerificacion","fTituloVerif","fTituloContenido","fTituloReq","fTituloInfo","fTituloGaleria"].forEach(id => document.getElementById(id).value = "");
   ["fModoIzq","fModoCentro","fModoDer","fFondoModo"].forEach(id => document.getElementById(id).value = "hover");
   document.getElementById("fSlug").readOnly = false;
-  ["descargasList","contenidoList","requisitosList","infoJuegoList","galeriaList"].forEach(id => document.getElementById(id).innerHTML = "");
+  ["descargasList","contenidoList","requisitosList","infoJuegoList","galeriaList","apartadosList"].forEach(id => document.getElementById(id).innerHTML = "");
   document.getElementById("formTitulo").textContent = "Nueva página";
+  document.getElementById("secApartados").open = false;
   document.getElementById("btnCancelar").style.display = "none";
   document.getElementById("secFondo").open = false;
   document.getElementById("secVideos").open = false;
@@ -636,6 +750,12 @@ document.getElementById("btnGuardar").addEventListener("click", async () => {
     pesoTitulo: document.getElementById("fPeso").value.trim(),
     descargas: leerDescargas(),
     verificacion: document.getElementById("fVerificacion").value.trim(),
+    tituloVerificacion: document.getElementById("fTituloVerif").value.trim(),
+    tituloContenido: document.getElementById("fTituloContenido").value.trim(),
+    tituloRequisitos: document.getElementById("fTituloReq").value.trim(),
+    tituloInfoJuego: document.getElementById("fTituloInfo").value.trim(),
+    tituloGaleria: document.getElementById("fTituloGaleria").value.trim(),
+    apartados: leerApartados(),
     contenido: leerFilasSimples("contenidoList"),
     requisitos: leerFilasSimples("requisitosList"),
     infoJuego: leerFilasSimples("infoJuegoList"),
@@ -669,18 +789,20 @@ function crearItemPagina(slug, d){
   const item = document.createElement("div");
   item.className = "pagina-item";
   item.innerHTML = `
-    ${miniatura ? `<img class="mini-thumb" src="${miniatura}">` : ""}
+    ${miniatura ? `<img class="mini-thumb" src="${esc(miniatura)}">` : ""}
     <div class="pagina-info">
-      <div class="titulo">${d.titulo || slug}</div>
-      <div class="link">${link}</div>
+      <div class="titulo">${esc(d.titulo || slug)}</div>
+      <div class="link">${esc(link)}</div>
     </div>
     <div>
-      <a class="btn-secondary" href="${link}" target="_blank" rel="noopener">↗ Abrir página</a>
+      <a class="btn-secondary" href="${esc(link)}" target="_blank" rel="noopener">↗ Abrir página</a>
       <button class="btn-secondary" type="button" data-accion="copiar">Copiar link</button>
+      <button class="btn-secondary" type="button" data-accion="estetica">🎨 Estética</button>
       <button class="btn-secondary" type="button" data-accion="editar">Editar</button>
       <button class="btn-danger" type="button" data-accion="eliminar">Eliminar</button>
     </div>`;
   item.querySelector('[data-accion="copiar"]').addEventListener("click", () => navigator.clipboard.writeText(link));
+  item.querySelector('[data-accion="estetica"]').addEventListener("click", () => abrirEstetica("juego__" + slug));
   item.querySelector('[data-accion="editar"]').addEventListener("click", () => cargarParaEditar(slug, d));
   item.querySelector('[data-accion="eliminar"]').addEventListener("click", () => eliminarPagina(slug));
   return item;
@@ -727,49 +849,75 @@ async function cargarLista(){
   cont.innerHTML = "Cargando...";
   try{
     const snap = await get(ref(db, "paginasJuegos"));
-    const data = snap.val() || {};
-    const slugs = Object.keys(data);
-    if(slugs.length === 0){
-      cont.innerHTML = "<p>No hay páginas creadas todavía.</p>";
-      document.getElementById("listaGruposJuegos").innerHTML = "";
-      return;
-    }
-    cont.innerHTML = "";
-
-    // Datalist de grupos ya usados, para autocompletar en el formulario
-    const gruposUnicos = [...new Set(slugs.map(s => (data[s].grupo || "").trim()).filter(Boolean))].sort();
-    document.getElementById("listaGruposJuegos").innerHTML = gruposUnicos.map(g => `<option value="${g}">`).join("");
-
-    // Sección de recientes: las ultimas 5 paginas guardadas/editadas
-    const ordenadosPorFecha = [...slugs].sort((a,b) => (data[b].actualizado||0) - (data[a].actualizado||0));
-    const recientes = ordenadosPorFecha.slice(0, 5).filter(s => data[s].actualizado);
-
-    // Resto agrupado por "grupo / carpeta", los sin grupo al final
-    const porGrupo = {};
-    slugs.forEach(slug => {
-      const g = (data[slug].grupo || "").trim() || "Sin grupo";
-      if(!porGrupo[g]) porGrupo[g] = [];
-      porGrupo[g].push(slug);
-    });
-    const nombresGrupos = Object.keys(porGrupo).filter(g => g !== "Sin grupo").sort();
-    if(porGrupo["Sin grupo"]) nombresGrupos.push("Sin grupo");
-
-    const grupos = [];
-    if(recientes.length){
-      grupos.push({ label: "🕓 Recientes", items: recientes.map(slug => crearItemPagina(slug, data[slug])) });
-    }
-    nombresGrupos.forEach(nombre => {
-      grupos.push({
-        label: nombre === "Sin grupo" ? "📄 Sin grupo" : "📁 " + nombre,
-        items: porGrupo[nombre].map(slug => crearItemPagina(slug, data[slug]))
-      });
-    });
-    renderGrupoTabs("listaPaginas", grupos);
+    INDICE.juegos = snap.val() || {};
+    renderListaJuegos();
   }catch(err){
     console.error(err);
     cont.innerHTML = "<p>Error al cargar las páginas.</p>";
   }
 }
+
+// Texto donde busca el filtro / buscador: título, slug, grupo, descargas, contenido y apartados
+function textoJuego(slug, d){
+  return [slug, d.titulo, d.grupo,
+    (d.descargas || []).map(x => x && x.label).join(" "),
+    (d.contenido || []).join(" "),
+    (d.apartados || []).map(a => a && a.titulo).join(" ")].join(" ");
+}
+
+function renderListaJuegos(){
+  const cont = document.getElementById("listaPaginas");
+  const data = INDICE.juegos || {};
+  const slugs = Object.keys(data);
+  if(slugs.length === 0){
+    cont.innerHTML = "<p>No hay páginas creadas todavía.</p>";
+    document.getElementById("listaGruposJuegos").innerHTML = "";
+    return;
+  }
+  cont.innerHTML = "";
+
+  // Datalist de grupos ya usados, para autocompletar en el formulario
+  const gruposUnicos = [...new Set(slugs.map(s => (data[s].grupo || "").trim()).filter(Boolean))].sort();
+  document.getElementById("listaGruposJuegos").innerHTML = gruposUnicos.map(g => `<option value="${esc(g)}">`).join("");
+
+  // Con texto en el filtro: lista plana con todos los que coinciden (sin pestañas)
+  const q = document.getElementById("filtroJuegos").value;
+  if(q.trim()){
+    const f = slugs.filter(sl => coincide(q, textoJuego(sl, data[sl])))
+      .sort((a, b) => String(data[a].titulo || a).localeCompare(String(data[b].titulo || b)));
+    cont.innerHTML = `<p class="filtro-info">${f.length} de ${slugs.length} coinciden</p>`;
+    if(!f.length){ cont.innerHTML += `<p class="hint">No hay ningún juego que coincida con «${esc(q)}».</p>`; return; }
+    f.forEach(sl => cont.appendChild(crearItemPagina(sl, data[sl])));
+    return;
+  }
+
+  // Sección de recientes: las ultimas 5 paginas guardadas/editadas
+  const ordenadosPorFecha = [...slugs].sort((a,b) => (data[b].actualizado||0) - (data[a].actualizado||0));
+  const recientes = ordenadosPorFecha.slice(0, 5).filter(s => data[s].actualizado);
+
+  // Resto agrupado por "grupo / carpeta", los sin grupo al final
+  const porGrupo = {};
+  slugs.forEach(slug => {
+    const g = (data[slug].grupo || "").trim() || "Sin grupo";
+    if(!porGrupo[g]) porGrupo[g] = [];
+    porGrupo[g].push(slug);
+  });
+  const nombresGrupos = Object.keys(porGrupo).filter(g => g !== "Sin grupo").sort();
+  if(porGrupo["Sin grupo"]) nombresGrupos.push("Sin grupo");
+
+  const grupos = [];
+  if(recientes.length){
+    grupos.push({ label: "🕓 Recientes", items: recientes.map(slug => crearItemPagina(slug, data[slug])) });
+  }
+  nombresGrupos.forEach(nombre => {
+    grupos.push({
+      label: nombre === "Sin grupo" ? "📄 Sin grupo" : "📁 " + nombre,
+      items: porGrupo[nombre].map(slug => crearItemPagina(slug, data[slug]))
+    });
+  });
+  renderGrupoTabs("listaPaginas", grupos);
+}
+document.getElementById("filtroJuegos").addEventListener("input", renderListaJuegos);
 
 function cargarParaEditar(slug, d){
   editandoSlug = slug;
@@ -793,6 +941,14 @@ function cargarParaEditar(slug, d){
   document.getElementById("fModoDer").value = d.modoDer || "hover";
   document.getElementById("fPeso").value = d.pesoTitulo || "";
   document.getElementById("fVerificacion").value = d.verificacion || "";
+  document.getElementById("fTituloVerif").value = d.tituloVerificacion || "";
+  document.getElementById("fTituloContenido").value = d.tituloContenido || "";
+  document.getElementById("fTituloReq").value = d.tituloRequisitos || "";
+  document.getElementById("fTituloInfo").value = d.tituloInfoJuego || "";
+  document.getElementById("fTituloGaleria").value = d.tituloGaleria || "";
+
+  document.getElementById("apartadosList").innerHTML = "";
+  (Array.isArray(d.apartados) ? d.apartados : []).forEach(a => crearApartado(a));
 
   document.getElementById("descargasList").innerHTML = "";
   (d.descargas || []).forEach(desc => crearFilaDescarga(desc.label, desc.url));
@@ -812,8 +968,9 @@ function cargarParaEditar(slug, d){
   document.getElementById("secFondo").open = !!(d.portada || d.fondo || d.fondoVideo);
   document.getElementById("secVideos").open = !!(d.videoIzq || d.videoCentro || d.videoDer || d.imagenIzq || d.imagenCentro || d.imagenDer);
   document.getElementById("secDescargas").open = true;
-  document.getElementById("secDetalles").open = !!(d.verificacion || (d.contenido||[]).length || (d.requisitos||[]).length || (d.infoJuego||[]).length);
-  document.getElementById("secGaleria").open = !!(d.galeria||[]).length;
+  document.getElementById("secDetalles").open = !!(d.verificacion || (d.contenido||[]).length || (d.requisitos||[]).length || (d.infoJuego||[]).length || d.tituloVerificacion || d.tituloContenido || d.tituloRequisitos || d.tituloInfoJuego);
+  document.getElementById("secApartados").open = !!(d.apartados || []).length;
+  document.getElementById("secGaleria").open = !!((d.galeria||[]).length || d.tituloGaleria);
 
   document.getElementById("btnCancelar").style.display = "inline-block";
   window.scrollTo({top:0, behavior:"smooth"});
@@ -975,18 +1132,20 @@ function crearItemSerie(slug, s){
   const item = document.createElement("div");
   item.className = "pagina-item";
   item.innerHTML = `
-    ${miniatura ? `<img class="mini-thumb" src="${miniatura}">` : ""}
+    ${miniatura ? `<img class="mini-thumb" src="${esc(miniatura)}">` : ""}
     <div class="pagina-info">
-      <div class="titulo">${s.titulo || slug} <small style="display:inline;">(${(s.capitulos||[]).length} capítulos)</small></div>
-      <div class="link">${link}</div>
+      <div class="titulo">${esc(s.titulo || slug)} <small style="display:inline;">(${(s.capitulos||[]).length} capítulos)</small></div>
+      <div class="link">${esc(link)}</div>
     </div>
     <div>
-      <a class="btn-secondary" href="${link}" target="_blank" rel="noopener">↗ Abrir página</a>
+      <a class="btn-secondary" href="${esc(link)}" target="_blank" rel="noopener">↗ Abrir página</a>
       <button class="btn-secondary" type="button" data-accion="copiar">Copiar link</button>
+      <button class="btn-secondary" type="button" data-accion="estetica">🎨 Estética</button>
       <button class="btn-secondary" type="button" data-accion="editar">Editar</button>
       <button class="btn-danger" type="button" data-accion="eliminar">Eliminar</button>
     </div>`;
   item.querySelector('[data-accion="copiar"]').addEventListener("click", () => navigator.clipboard.writeText(link));
+  item.querySelector('[data-accion="estetica"]').addEventListener("click", () => abrirEstetica("serie__" + slug));
   item.querySelector('[data-accion="editar"]').addEventListener("click", () => cargarSerieParaEditar(slug, s));
   item.querySelector('[data-accion="eliminar"]').addEventListener("click", () => eliminarSerie(slug));
   return item;
@@ -997,46 +1156,67 @@ async function cargarListaSeries(){
   cont.innerHTML = "Cargando...";
   try{
     const snap = await get(ref(db, "paginasSeries"));
-    const data = snap.val() || {};
-    const slugs = Object.keys(data);
-    if(slugs.length === 0){
-      cont.innerHTML = "<p>No hay series creadas todavía.</p>";
-      document.getElementById("listaGruposSeries").innerHTML = "";
-      return;
-    }
-    cont.innerHTML = "";
-
-    const gruposUnicos = [...new Set(slugs.map(s => (data[s].grupo || "").trim()).filter(Boolean))].sort();
-    document.getElementById("listaGruposSeries").innerHTML = gruposUnicos.map(g => `<option value="${g}">`).join("");
-
-    const ordenadosPorFecha = [...slugs].sort((a,b) => (data[b].actualizado||0) - (data[a].actualizado||0));
-    const recientes = ordenadosPorFecha.slice(0, 5).filter(s => data[s].actualizado);
-
-    const porGrupo = {};
-    slugs.forEach(slug => {
-      const g = (data[slug].grupo || "").trim() || "Sin grupo";
-      if(!porGrupo[g]) porGrupo[g] = [];
-      porGrupo[g].push(slug);
-    });
-    const nombresGrupos = Object.keys(porGrupo).filter(g => g !== "Sin grupo").sort();
-    if(porGrupo["Sin grupo"]) nombresGrupos.push("Sin grupo");
-
-    const grupos = [];
-    if(recientes.length){
-      grupos.push({ label: "🕓 Recientes", items: recientes.map(slug => crearItemSerie(slug, data[slug])) });
-    }
-    nombresGrupos.forEach(nombre => {
-      grupos.push({
-        label: nombre === "Sin grupo" ? "📄 Sin grupo" : "📁 " + nombre,
-        items: porGrupo[nombre].map(slug => crearItemSerie(slug, data[slug]))
-      });
-    });
-    renderGrupoTabs("listaSeries", grupos);
+    INDICE.series = snap.val() || {};
+    renderListaSeries();
   }catch(err){
     console.error(err);
     cont.innerHTML = "<p>Error al cargar las series.</p>";
   }
 }
+
+function textoSerie(slug, s){
+  return [slug, s.titulo, s.grupo, s.genero, s.anio, s.sinopsis, (s.capitulos || []).map(c => c && c.label).join(" ")].join(" ");
+}
+
+function renderListaSeries(){
+  const cont = document.getElementById("listaSeries");
+  const data = INDICE.series || {};
+  const slugs = Object.keys(data);
+  if(slugs.length === 0){
+    cont.innerHTML = "<p>No hay series creadas todavía.</p>";
+    document.getElementById("listaGruposSeries").innerHTML = "";
+    return;
+  }
+  cont.innerHTML = "";
+
+  const gruposUnicos = [...new Set(slugs.map(s => (data[s].grupo || "").trim()).filter(Boolean))].sort();
+  document.getElementById("listaGruposSeries").innerHTML = gruposUnicos.map(g => `<option value="${esc(g)}">`).join("");
+
+  const q = document.getElementById("filtroSeries").value;
+  if(q.trim()){
+    const f = slugs.filter(sl => coincide(q, textoSerie(sl, data[sl])))
+      .sort((a, b) => String(data[a].titulo || a).localeCompare(String(data[b].titulo || b)));
+    cont.innerHTML = `<p class="filtro-info">${f.length} de ${slugs.length} coinciden</p>`;
+    if(!f.length){ cont.innerHTML += `<p class="hint">No hay ninguna serie que coincida con «${esc(q)}».</p>`; return; }
+    f.forEach(sl => cont.appendChild(crearItemSerie(sl, data[sl])));
+    return;
+  }
+
+  const ordenadosPorFecha = [...slugs].sort((a,b) => (data[b].actualizado||0) - (data[a].actualizado||0));
+  const recientes = ordenadosPorFecha.slice(0, 5).filter(s => data[s].actualizado);
+
+  const porGrupo = {};
+  slugs.forEach(slug => {
+    const g = (data[slug].grupo || "").trim() || "Sin grupo";
+    if(!porGrupo[g]) porGrupo[g] = [];
+    porGrupo[g].push(slug);
+  });
+  const nombresGrupos = Object.keys(porGrupo).filter(g => g !== "Sin grupo").sort();
+  if(porGrupo["Sin grupo"]) nombresGrupos.push("Sin grupo");
+
+  const grupos = [];
+  if(recientes.length){
+    grupos.push({ label: "🕓 Recientes", items: recientes.map(slug => crearItemSerie(slug, data[slug])) });
+  }
+  nombresGrupos.forEach(nombre => {
+    grupos.push({
+      label: nombre === "Sin grupo" ? "📄 Sin grupo" : "📁 " + nombre,
+      items: porGrupo[nombre].map(slug => crearItemSerie(slug, data[slug]))
+    });
+  });
+  renderGrupoTabs("listaSeries", grupos);
+}
+document.getElementById("filtroSeries").addEventListener("input", renderListaSeries);
 
 function cargarSerieParaEditar(slug, s){
   editandoSlugSerie = slug;
@@ -1127,7 +1307,7 @@ function agregarBotonSubida(inputId){
     if(!file.files[0]) return;
     const textoOriginal = btn.textContent;
     btn.textContent = "Subiendo..."; btn.disabled = true;
-    try{ input.value = await subirImagen(file.files[0]); }
+    try{ input.value = await subirImagen(file.files[0]); input.dispatchEvent(new Event("input", { bubbles: true })); }
     catch(err){ alert("Error al subir: " + err.message); }
     btn.textContent = textoOriginal; btn.disabled = false; file.value = "";
   });
@@ -1152,6 +1332,7 @@ document.getElementById("cNombre").addEventListener("input", (e) => {
   if(!s.readOnly) s.value = slugify(e.target.value);
 });
 document.getElementById("btnAddPlaylist").addEventListener("click", () => crearFilaSimple("cPlaylistsList"));
+document.getElementById("filtroCategorias").addEventListener("input", renderListaCategorias);
 
 function ordenarCats(){
   return Object.keys(categoriasData).sort((a, b) =>
@@ -1214,6 +1395,7 @@ async function cargarCategorias(){
     categoriasData = c.val() || {};
     juegosIdx = j.val() || {};
     seriesIdx = s.val() || {};
+    INDICE.categorias = categoriasData; INDICE.juegos = juegosIdx; INDICE.series = seriesIdx;
     llenarSelectorItems();
     renderItemsSel();
     renderListaCategorias();
@@ -1231,8 +1413,16 @@ function renderListaCategorias(){
     return;
   }
   cont.innerHTML = "";
+  const qCat = document.getElementById("filtroCategorias").value;
+  const filtrando = !!qCat.trim();
+  if(filtrando){
+    const n = orden.filter(sl => coincide(qCat, `${sl} ${categoriasData[sl].nombre || ""} ${categoriasData[sl].icono || ""}`)).length;
+    cont.innerHTML = `<p class="filtro-info">${n} de ${orden.length} coinciden · al filtrar se desactivan las flechas de orden</p>`;
+    if(!n){ cont.innerHTML += `<p class="hint">No hay ninguna categoría que coincida con «${esc(qCat)}».</p>`; return; }
+  }
   orden.forEach((slug, i) => {
     const d = categoriasData[slug];
+    if(filtrando && !coincide(qCat, `${slug} ${d.nombre || ""} ${d.icono || ""}`)) return;
     const visible = d.visible !== false;
     const nPl = (d.playlists || []).length;
     const nIt = (d.items || []).length;
@@ -1253,16 +1443,18 @@ function renderListaCategorias(){
         <div class="link">${esc(link)}</div>
       </div>
       <div>
-        <button class="btn-secondary mini" type="button" data-a="up" ${i === 0 ? "disabled" : ""}>↑</button>
-        <button class="btn-secondary mini" type="button" data-a="down" ${i === orden.length - 1 ? "disabled" : ""}>↓</button>
+        <button class="btn-secondary mini" type="button" data-a="up" ${i === 0 || filtrando ? "disabled" : ""}>↑</button>
+        <button class="btn-secondary mini" type="button" data-a="down" ${i === orden.length - 1 || filtrando ? "disabled" : ""}>↓</button>
         <button class="btn-secondary mini" type="button" data-a="vis">${visible ? "👁 Ocultar" : "👁 Mostrar"}</button>
         <a class="btn-secondary" href="${esc(link)}" target="_blank" rel="noopener">↗ Abrir</a>
+        <button class="btn-secondary" type="button" data-a="estetica">🎨 Estética</button>
         <button class="btn-secondary" type="button" data-a="edit">Editar</button>
         <button class="btn-danger" type="button" data-a="del">Eliminar</button>
       </div>`;
     item.querySelector('[data-a="up"]').addEventListener("click", () => moverCategoria(slug, -1));
     item.querySelector('[data-a="down"]').addEventListener("click", () => moverCategoria(slug, 1));
     item.querySelector('[data-a="vis"]').addEventListener("click", () => alternarVisible(slug));
+    item.querySelector('[data-a="estetica"]').addEventListener("click", () => abrirEstetica("cat__" + slug));
     item.querySelector('[data-a="edit"]').addEventListener("click", () => cargarCategoriaParaEditar(slug));
     item.querySelector('[data-a="del"]').addEventListener("click", () => eliminarCategoria(slug));
     cont.appendChild(item);
@@ -1473,6 +1665,599 @@ document.getElementById("btnGuardarAjustes").addEventListener("click", async () 
     setMsg(aMsg, "error", errorLegible(err));
   }
 });
+
+// =====================================================================
+//  BÚSQUEDA (helpers, buscador global y carga del índice)
+// =====================================================================
+const $ = (id) => document.getElementById(id);
+
+function norm(s){
+  return String(s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+// true si TODAS las palabras buscadas aparecen en el texto (sin importar mayúsculas ni tildes)
+function coincide(q, texto){
+  const h = norm(texto);
+  return norm(q).split(/\s+/).filter(Boolean).every(t => h.includes(t));
+}
+
+// Carga juegos, series, categorías y estéticas de una vez (para buscar sin esperar)
+async function cargarIndice(){
+  try{
+    const [j, s, c, t] = await Promise.all([
+      get(ref(db, "paginasJuegos")), get(ref(db, "paginasSeries")),
+      get(ref(db, "categorias")), get(ref(db, "config/temas"))
+    ]);
+    INDICE.juegos = j.val() || {};
+    INDICE.series = s.val() || {};
+    INDICE.categorias = c.val() || {};
+    temasData = t.val() || {};
+  }catch(err){ console.error(err); }
+}
+
+const ACCIONES = [
+  { ico: "⚙️", t: "Ajustes del sitio", sub: "nombre, banner, redes, footer", k: "ajustes sitio nombre banner aviso footer pie redes sociales instagram tiktok youtube color acento", f: () => mostrarTab("Ajustes") },
+  { ico: "🎨", t: "Estética general del sitio", sub: "colores, fondo, fuentes…", k: "estetica tema diseño colores fondo fuente tipografia estilo apariencia general", f: () => abrirEstetica("global") },
+  { ico: "🏠", t: "Estética de la página de inicio", sub: "estética", k: "estetica inicio home portada principal", f: () => abrirEstetica("home") },
+  { ico: "➕", t: "Nueva página de juego", sub: "acción", k: "nuevo nueva crear agregar juego pagina", f: () => { mostrarTab("Juegos"); limpiarFormulario(); window.scrollTo({ top: 0, behavior: "smooth" }); $("fTitulo").focus(); } },
+  { ico: "➕", t: "Nueva serie / película", sub: "acción", k: "nuevo nueva crear agregar serie pelicula capitulos", f: () => { mostrarTab("Series"); limpiarFormularioSerie(); window.scrollTo({ top: 0, behavior: "smooth" }); $("sTitulo").focus(); } },
+  { ico: "➕", t: "Nueva categoría", sub: "acción", k: "nuevo nueva crear agregar categoria", f: () => { mostrarTab("Categorias"); limpiarFormularioCat(); window.scrollTo({ top: 0, behavior: "smooth" }); $("cNombre").focus(); } },
+  { ico: "🧰", t: "Cargar contenido inicial", sub: "importar lo que venía en el código", k: "contenido inicial importar cargar defaults", f: () => { mostrarTab("Categorias"); setTimeout(() => $("btnImportarIniciales").scrollIntoView({ behavior: "smooth", block: "center" }), 150); } }
+];
+
+const busqIn = $("busqGlobal");
+const busqRes = $("busqRes");
+let busqItems = [];
+let busqSel = -1;
+
+function buscarGlobal(q){
+  const res = [];
+  const puntaje = (titulo) => {
+    const t = norm(titulo), n = norm(q).trim();
+    return t === n ? 0 : t.startsWith(n) ? 1 : t.includes(n) ? 2 : 3;
+  };
+  Object.keys(INDICE.juegos).forEach(slug => {
+    const d = INDICE.juegos[slug];
+    if(coincide(q, textoJuego(slug, d)))
+      res.push({ tipo: "juego", slug, ico: "🎮", titulo: d.titulo || slug, sub: [d.grupo, slug].filter(Boolean).join(" · "), p: puntaje(d.titulo || slug) });
+  });
+  Object.keys(INDICE.series).forEach(slug => {
+    const d = INDICE.series[slug];
+    if(coincide(q, textoSerie(slug, d)))
+      res.push({ tipo: "serie", slug, ico: d.tipo === "pelicula" ? "🎬" : "📺", titulo: d.titulo || slug, sub: [d.grupo, slug].filter(Boolean).join(" · "), p: puntaje(d.titulo || slug) });
+  });
+  Object.keys(INDICE.categorias).forEach(slug => {
+    const d = INDICE.categorias[slug];
+    const nombre = `${d.icono || ""} ${d.nombre || slug}`.trim();
+    if(coincide(q, `${slug} ${d.nombre || ""}`))
+      res.push({ tipo: "categoria", slug, ico: "📂", titulo: nombre, sub: "categoría · " + slug, p: puntaje(d.nombre || slug) });
+  });
+  ACCIONES.forEach(a => {
+    if(coincide(q, a.t + " " + a.k)) res.push({ tipo: "accion", ico: a.ico, titulo: a.t, sub: a.sub, f: a.f, p: 4 });
+  });
+  res.sort((a, b) => a.p - b.p || String(a.titulo).localeCompare(String(b.titulo)));
+  return res.slice(0, 16);
+}
+
+function renderBusq(){
+  const q = busqIn.value;
+  if(!q.trim()){ cerrarBusq(); return; }
+  busqItems = buscarGlobal(q);
+  busqSel = busqItems.length ? 0 : -1;
+  busqRes.classList.add("abierto");
+  if(!busqItems.length){
+    busqRes.innerHTML = `<div class="busq-vacio">Nada coincide con «${esc(q)}»</div>`;
+    return;
+  }
+  busqRes.innerHTML = busqItems.map((r, i) => `
+    <div class="busq-item${i === busqSel ? " sel" : ""}" data-i="${i}">
+      <span class="busq-ico">${r.ico}</span>
+      <span class="busq-tit">${esc(r.titulo)}</span>
+      <span class="busq-sub">${esc(r.sub || "")}</span>
+    </div>`).join("");
+  busqRes.querySelectorAll(".busq-item").forEach(el => {
+    // mousedown (y no click) para ganarle al blur del input
+    el.addEventListener("mousedown", (e) => { e.preventDefault(); abrirResultado(busqItems[+el.dataset.i]); });
+  });
+}
+function cerrarBusq(){ busqRes.classList.remove("abierto"); busqRes.innerHTML = ""; busqItems = []; busqSel = -1; }
+function marcarBusq(){
+  busqRes.querySelectorAll(".busq-item").forEach((el, i) => {
+    el.classList.toggle("sel", i === busqSel);
+    if(i === busqSel) el.scrollIntoView({ block: "nearest" });
+  });
+}
+
+async function abrirResultado(r){
+  if(!r) return;
+  cerrarBusq();
+  busqIn.value = "";
+  busqIn.blur();
+  if(r.tipo === "juego"){
+    mostrarTab("Juegos");
+    if(INDICE.juegos[r.slug]) cargarParaEditar(r.slug, INDICE.juegos[r.slug]);
+  }else if(r.tipo === "serie"){
+    mostrarTab("Series");
+    if(INDICE.series[r.slug]) cargarSerieParaEditar(r.slug, INDICE.series[r.slug]);
+  }else if(r.tipo === "categoria"){
+    mostrarTab("Categorias");
+    await cargarCategorias();
+    if(categoriasData[r.slug]) cargarCategoriaParaEditar(r.slug);
+  }else if(r.tipo === "accion"){
+    r.f();
+  }
+}
+
+busqIn.addEventListener("input", renderBusq);
+busqIn.addEventListener("focus", () => { if(busqIn.value.trim()) renderBusq(); });
+busqIn.addEventListener("blur", () => setTimeout(cerrarBusq, 120));
+busqIn.addEventListener("keydown", (e) => {
+  if(e.key === "ArrowDown"){ e.preventDefault(); if(busqItems.length){ busqSel = (busqSel + 1) % busqItems.length; marcarBusq(); } }
+  else if(e.key === "ArrowUp"){ e.preventDefault(); if(busqItems.length){ busqSel = (busqSel - 1 + busqItems.length) % busqItems.length; marcarBusq(); } }
+  else if(e.key === "Enter"){ e.preventDefault(); if(busqItems[busqSel]) abrirResultado(busqItems[busqSel]); }
+  else if(e.key === "Escape"){ busqIn.value = ""; cerrarBusq(); busqIn.blur(); }
+});
+// Atajos: "/" o Ctrl/Cmd + K enfocan el buscador desde cualquier lado
+document.addEventListener("keydown", (e) => {
+  if(panelDiv.style.display === "none") return;
+  const enCampo = /^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || "");
+  if((e.key === "k" && (e.ctrlKey || e.metaKey)) || (e.key === "/" && !enCampo && !e.ctrlKey && !e.metaKey && !e.altKey)){
+    e.preventDefault();
+    busqIn.focus(); busqIn.select();
+  }
+});
+
+// =====================================================================
+//  APARTADOS EXTRA DE LA PÁGINA DEL JUEGO
+// =====================================================================
+const AP_FORMATOS = [
+  ["texto",    "Texto (párrafos)"],
+  ["lista",    "Lista de puntos"],
+  ["links",    "Botones con enlaces"],
+  ["video",    "Video (YouTube, Drive o .mp4)"],
+  ["imagenes", "Imágenes"]
+];
+const AP_MODOS = [
+  ["cerrado", "Desplegable (cerrado)"],
+  ["abierto", "Desplegable (abierto)"],
+  ["visible", "Bloque siempre visible"]
+];
+const AP_UBICS = [
+  ["antes_descargas",   "Arriba (antes de las descargas)"],
+  ["despues_descargas", "Después de las descargas"],
+  ["despues_detalles",  "Después de los detalles"],
+  ["final",             "Al final de la página"]
+];
+const AP_AYUDA = {
+  texto:    "Escribí el texto tal cual. Una línea en blanco separa los párrafos.",
+  lista:    "Un punto por línea.",
+  links:    "Un enlace por línea con este formato:  Nombre del botón | https://link   (o pegá solo el link).",
+  video:    "Pegá un link de YouTube, de Google Drive o un video directo (.mp4/.webm).",
+  imagenes: "Una URL de imagen por línea (o nombre de un archivo del repositorio)."
+};
+
+function opcionesHtml(lista, actual){
+  return lista.map(([v, t]) => `<option value="${v}" ${v === actual ? "selected" : ""}>${esc(t)}</option>`).join("");
+}
+
+function crearApartado(a){
+  a = a || {};
+  const cont = $("apartadosList");
+  const el = document.createElement("div");
+  el.className = "grupo-media apartado-card";
+  const formato = AP_FORMATOS.some(f => f[0] === a.formato) ? a.formato : "texto";
+  el.innerHTML = `
+    <div class="fila ap-cab">
+      <input type="text" class="apTitulo" placeholder="Título (ej: 🛠️ Cómo instalar)">
+      <button class="btn-secondary mini" type="button" data-a="up" title="Subir">↑</button>
+      <button class="btn-secondary mini" type="button" data-a="down" title="Bajar">↓</button>
+      <button class="btn-danger mini" type="button" data-a="del" title="Quitar">✕</button>
+    </div>
+    <div class="ap-opts">
+      <div><label>Formato</label><select class="apFormato">${opcionesHtml(AP_FORMATOS, formato)}</select></div>
+      <div><label>Cómo se muestra</label><select class="apModo">${opcionesHtml(AP_MODOS, a.modo || "cerrado")}</select></div>
+      <div><label>Dónde va en la página</label><select class="apUbic">${opcionesHtml(AP_UBICS, a.ubic || "despues_detalles")}</select></div>
+    </div>
+    <label>Contenido</label>
+    <textarea class="apContenido" rows="4"></textarea>
+    <p class="hint apAyuda"></p>`;
+  el.querySelector(".apTitulo").value = a.titulo || "";
+  el.querySelector(".apContenido").value = a.contenido || "";
+  const ayuda = () => { el.querySelector(".apAyuda").textContent = AP_AYUDA[el.querySelector(".apFormato").value] || ""; };
+  el.querySelector(".apFormato").addEventListener("change", ayuda);
+  ayuda();
+  el.querySelector('[data-a="del"]').addEventListener("click", () => el.remove());
+  el.querySelector('[data-a="up"]').addEventListener("click", () => { const prev = el.previousElementSibling; if(prev) cont.insertBefore(el, prev); });
+  el.querySelector('[data-a="down"]').addEventListener("click", () => { const next = el.nextElementSibling; if(next) cont.insertBefore(next, el); });
+  cont.appendChild(el);
+  return el;
+}
+$("btnAddApartado").addEventListener("click", () => {
+  const el = crearApartado();
+  $("secApartados").open = true;
+  el.querySelector(".apTitulo").focus();
+});
+
+function leerApartados(){
+  const out = [];
+  document.querySelectorAll("#apartadosList .apartado-card").forEach(el => {
+    const titulo = el.querySelector(".apTitulo").value.trim();
+    const contenido = el.querySelector(".apContenido").value.replace(/\s+$/g, "");
+    if(!titulo && !contenido.trim()) return;
+    out.push({
+      titulo,
+      formato: el.querySelector(".apFormato").value,
+      modo: el.querySelector(".apModo").value,
+      ubic: el.querySelector(".apUbic").value,
+      contenido
+    });
+  });
+  return out;
+}
+
+// =====================================================================
+//  ESTÉTICA (general, por tipo y por página)
+// =====================================================================
+const E = window.MS47_ESTILO;
+let esteSel = null;    // { clave, tipo, nombre, ico, link }
+let esteEdit = null;   // { heredar, activo, v }
+let esteHeredado = {}; // lo que llega de niveles superiores (para mostrar en los ajustes sin tildar)
+let estePendiente = null;
+let estePrevTimer = null;
+const esteMsg = { el: null };
+
+function esteTargets(){
+  const t = [{ clave: "global", tipo: null, ico: "🌐", nombre: "Todo el sitio (estética general)", grupo: "General" }];
+  [["juego", "🎮", "Todas las páginas de juegos"], ["serie", "📺", "Todas las series y películas"], ["categoria", "📂", "Todas las categorías"]]
+    .forEach(([tp, ico, nombre]) => t.push({ clave: "tipo_" + tp, tipo: null, ico, nombre, grupo: "General" }));
+  t.push({ clave: "home", tipo: null, ico: "🏠", nombre: "Página de inicio", grupo: "General", link: "index.html" });
+
+  const cats = Object.keys(INDICE.categorias).sort((a, b) =>
+    (INDICE.categorias[a].orden ?? 9999) - (INDICE.categorias[b].orden ?? 9999));
+  cats.forEach(sl => {
+    const d = INDICE.categorias[sl];
+    t.push({ clave: "cat__" + sl, tipo: "categoria", ico: d.icono || "📂", nombre: d.nombre || sl, grupo: "Categorías", link: "categoria.html?slug=" + encodeURIComponent(sl) });
+  });
+  const porTitulo = (idx) => Object.keys(idx).sort((a, b) => String(idx[a].titulo || a).localeCompare(String(idx[b].titulo || b)));
+  porTitulo(INDICE.juegos).forEach(sl => t.push({ clave: "juego__" + sl, tipo: "juego", ico: "🎮", nombre: INDICE.juegos[sl].titulo || sl, grupo: "Juegos", link: "juego.html?slug=" + encodeURIComponent(sl) }));
+  porTitulo(INDICE.series).forEach(sl => t.push({ clave: "serie__" + sl, tipo: "serie", ico: INDICE.series[sl].tipo === "pelicula" ? "🎬" : "📺", nombre: INDICE.series[sl].titulo || sl, grupo: "Series y películas", link: "serie.html?slug=" + encodeURIComponent(sl) }));
+  return t;
+}
+
+function esteEstado(clave){
+  const t = temasData[clave];
+  if(!t) return null;
+  const n = Object.keys(t.v || {}).length;
+  if(clave === "global"){
+    if(t.activo === false) return { txt: "desactivada", cls: "alerta" };
+    return n ? { txt: "🎨 " + n, cls: "" } : null;
+  }
+  if(t.heredar === false) return { txt: "🚫 original" + (n ? " + " + n : ""), cls: "alerta" };
+  return n ? { txt: "🎨 " + n, cls: "" } : null;
+}
+
+function renderEstLista(){
+  const cont = $("estLista");
+  const q = $("estBuscar").value;
+  const todos = esteTargets().filter(t => !q.trim() || coincide(q, t.nombre + " " + t.grupo + " " + t.clave));
+  if(!todos.length){ cont.innerHTML = `<p class="hint" style="padding:10px;">Nada coincide con «${esc(q)}».</p>`; return; }
+  let html = "", grupoActual = "";
+  todos.forEach(t => {
+    if(t.grupo !== grupoActual){ grupoActual = t.grupo; html += `<div class="est-grupo">${esc(t.grupo)}</div>`; }
+    const est = esteEstado(t.clave);
+    html += `<button type="button" class="est-item${esteSel && esteSel.clave === t.clave ? " activo" : ""}" data-clave="${esc(t.clave)}">
+      <span>${esc(t.ico)}</span><span class="nom">${esc(t.nombre)}</span>
+      ${est ? `<span class="chip ${est.cls}">${esc(est.txt)}</span>` : ""}</button>`;
+  });
+  cont.innerHTML = html;
+  cont.querySelectorAll(".est-item").forEach(b => b.addEventListener("click", () => seleccionarEstetica(b.dataset.clave)));
+}
+$("estBuscar").addEventListener("input", renderEstLista);
+
+async function cargarEstetica(){
+  await cargarIndice();
+  renderEstLista();
+  if(estePendiente){ const c = estePendiente; estePendiente = null; seleccionarEstetica(c); }
+  else if(esteSel){ renderEstLista(); }
+}
+
+function abrirEstetica(clave){
+  estePendiente = clave;
+  mostrarTab("Estetica");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function seleccionarEstetica(clave){
+  const t = esteTargets().find(x => x.clave === clave);
+  if(!t){ return; }
+  esteSel = t;
+  const g = temasData[clave] || {};
+  esteEdit = {
+    heredar: g.heredar !== false,
+    activo: g.activo !== false,
+    v: E.limpiar(g.v || {})
+  };
+  renderEstLista();
+  renderEstEditor();
+}
+
+function calcularHeredado(){
+  if(!esteSel || esteSel.clave === "global" || esteEdit.heredar === false) return {};
+  return E.limpiar(E.resolver(temasData, esteSel.clave, esteSel.tipo, true));
+}
+function valorVisible(c){
+  if(c.id in esteEdit.v) return esteEdit.v[c.id];
+  if(c.id in esteHeredado) return esteHeredado[c.id];
+  return c.d;
+}
+function hex6(c){
+  c = String(c || "").trim();
+  if(/^#[0-9a-f]{3}$/i.test(c)) return "#" + c[1] + c[1] + c[2] + c[2] + c[3] + c[3];
+  if(/^#[0-9a-f]{6}/i.test(c)) return c.slice(0, 7);
+  return "#000000";
+}
+
+// Crea el control de un campo. Devuelve { get, set, els }
+function crearControl(c, cont){
+  if(c.t === "color"){
+    const inp = document.createElement("input"); inp.type = "color";
+    const code = document.createElement("code");
+    cont.append(inp, code);
+    return { els: [inp], get: () => inp.value, set: (v) => { inp.value = hex6(v); code.textContent = inp.value; }, onInput: (fn) => inp.addEventListener("input", () => { code.textContent = inp.value; fn(); }) };
+  }
+  if(c.t === "rango"){
+    const inp = document.createElement("input"); inp.type = "range"; inp.min = c.min; inp.max = c.max; inp.step = c.step || 1;
+    const val = document.createElement("span"); val.className = "est-val";
+    cont.append(inp, val);
+    return { els: [inp], get: () => Number(inp.value), set: (v) => { inp.value = v; val.textContent = inp.value + (c.u || ""); }, onInput: (fn) => inp.addEventListener("input", () => { val.textContent = inp.value + (c.u || ""); fn(); }) };
+  }
+  if(c.t === "sel" || c.t === "fuente" || c.t === "bool"){
+    const sel = document.createElement("select");
+    let ops;
+    if(c.t === "sel") ops = c.o;
+    else if(c.t === "bool") ops = [["true", "Sí"], ["false", "No"]];
+    else ops = Object.keys(E.FUENTES).map(k => [k, E.FUENTES[k].n]);
+    sel.innerHTML = ops.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join("");
+    cont.append(sel);
+    return { els: [sel],
+      get: () => c.t === "bool" ? sel.value === "true" : sel.value,
+      set: (v) => { sel.value = c.t === "bool" ? String(!!v) : String(v ?? ""); },
+      onInput: (fn) => sel.addEventListener("change", fn) };
+  }
+  if(c.t === "url"){
+    const inp = document.createElement("input"); inp.type = "text"; inp.id = "ef_" + c.id; inp.placeholder = "https://...";
+    cont.append(inp);
+    return { els: [inp], get: () => inp.value.trim(), set: (v) => { inp.value = v || ""; }, onInput: (fn) => inp.addEventListener("input", fn), subible: true };
+  }
+  // area
+  const ta = document.createElement("textarea"); ta.placeholder = "Ej: .card h3 { letter-spacing: 1px; }";
+  cont.append(ta);
+  return { els: [ta], get: () => ta.value, set: (v) => { ta.value = v || ""; }, onInput: (fn) => ta.addEventListener("input", fn) };
+}
+
+function crearFilaCampo(c, contenedor){
+  const fila = document.createElement("div");
+  fila.className = "est-campo";
+  fila.dataset.id = c.id;
+  fila.innerHTML = `<label class="est-chk"><input type="checkbox" class="est-on"><span></span></label><div class="est-ctl"></div>`;
+  fila.querySelector(".est-chk span").textContent = c.l;
+  contenedor.appendChild(fila);
+
+  const ctl = crearControl(c, fila.querySelector(".est-ctl"));
+  const chk = fila.querySelector(".est-on");
+  fila._ctl = ctl;
+
+  const aplicarEstado = () => {
+    const on = c.id in esteEdit.v;
+    chk.checked = on;
+    fila.classList.toggle("apagado", !on);
+    ctl.els.forEach(e => { e.disabled = !on; });
+    ctl.set(valorVisible(c));
+  };
+  fila._refrescar = aplicarEstado;
+  aplicarEstado();
+
+  chk.addEventListener("change", () => {
+    if(chk.checked) esteEdit.v[c.id] = valorVisible(c);
+    else delete esteEdit.v[c.id];
+    aplicarEstado();
+    actualizarPreview();
+  });
+  ctl.onInput(() => {
+    if(c.id in esteEdit.v){ esteEdit.v[c.id] = ctl.get(); actualizarPreview(); }
+  });
+  return fila;
+}
+
+function esteTextoNivel(){
+  const c = esteSel.clave;
+  if(c === "global") return "Se aplica a todas las páginas del sitio, salvo que un tipo o una página cambie algo.";
+  if(c.startsWith("tipo_")) return "Se aplica a todas las páginas de este tipo, por encima de la estética general.";
+  if(c === "home") return "Solo la página de inicio. Va por encima de la estética general.";
+  return "Solo esta página. Va por encima de la estética general y la de su tipo.";
+}
+
+function renderEstEditor(){
+  const cont = $("estEditor");
+  if(!esteSel){ cont.innerHTML = `<p class="hint">← Elegí a la izquierda qué querés personalizar.</p>`; return; }
+  const t = esteSel;
+  const esGlobal = t.clave === "global";
+  esteHeredado = calcularHeredado();
+
+  const conPersonalizacion = esteTargets().filter(x => x.clave !== t.clave && temasData[x.clave] && Object.keys(temasData[x.clave].v || {}).length);
+
+  cont.innerHTML = `
+    <h3 class="est-titulo">${esc(t.ico)} ${esc(t.nombre)}</h3>
+    <p class="hint">${esc(esteTextoNivel())}</p>
+
+    <div class="est-modo">
+      ${esGlobal ? `
+        <label class="chk"><input type="checkbox" id="estActivo" ${esteEdit.activo ? "checked" : ""}> Aplicar la estética general al sitio</label>
+        <p class="hint">Si la desmarcás, todo el sitio vuelve a su diseño original sin que pierdas lo que configuraste acá.</p>
+      ` : `
+        <label class="chk"><input type="radio" name="estModo" value="heredar" ${esteEdit.heredar ? "checked" : ""}> Heredar la estética de arriba y cambiar solo lo que tilde abajo</label>
+        <label class="chk"><input type="radio" name="estModo" value="original" ${esteEdit.heredar ? "" : "checked"}> No heredar nada: partir del diseño original y cambiar solo lo que tilde abajo</label>
+      `}
+    </div>
+
+    <div class="est-herr">
+      <select id="estPreset"><option value="">🎁 Combinaciones listas…</option>${E.PRESETS.map(p => `<option value="${p.id}">${esc(p.n)}</option>`).join("")}</select>
+      <select id="estCopiar"><option value="">📋 Copiar de otra página…</option>${conPersonalizacion.map(x => `<option value="${esc(x.clave)}">${esc(x.ico + " " + x.nombre)}</option>`).join("")}</select>
+    </div>
+
+    <div class="est-preview">
+      <div class="est-preview-cab"><span>👁 Vista previa aproximada (con lo que está tildado y lo heredado)</span><span id="estPrevEstado"></span></div>
+      <iframe id="estPrevFrame" sandbox="" title="Vista previa"></iframe>
+    </div>
+
+    <div id="estGrupos" class="grid-secciones" style="grid-template-columns:1fr;"></div>
+
+    <div style="margin-top:6px;">
+      <button class="btn-primary" id="estGuardar" type="button">Guardar estética</button>
+      ${t.link ? `<a class="btn-secondary" href="${esc(t.link)}" target="_blank" rel="noopener">↗ Ver página real</a>` : ""}
+      <button class="btn-secondary" id="estDeshacer" type="button">Deshacer cambios sin guardar</button>
+      <button class="btn-danger" id="estQuitar" type="button">Quitar toda la personalización</button>
+    </div>
+    <p class="msg" id="estMsg"></p>`;
+  esteMsg.el = $("estMsg");
+
+  // Grupos de ajustes
+  const gcont = $("estGrupos");
+  E.GRUPOS.forEach((g, gi) => {
+    const det = document.createElement("details");
+    det.className = "seccion";
+    det.open = gi === 0 || g.campos.some(c => c.id in esteEdit.v);
+    det.innerHTML = `<summary>${esc(g.titulo)}</summary><div class="contenido-seccion"></div>`;
+    gcont.appendChild(det);
+    const inner = det.querySelector(".contenido-seccion");
+    if(gi === 0) inner.insertAdjacentHTML("beforeend", `<p class="hint" style="margin:0 0 6px;">Tildá el ajuste que querés cambiar. Lo que dejes sin tildar se hereda (o queda como el original).</p>`);
+    g.campos.forEach(c => {
+      crearFilaCampo(c, inner);
+      if(c.t === "url") agregarBotonSubida("ef_" + c.id);
+    });
+  });
+
+  // Modo
+  if(esGlobal){
+    $("estActivo").addEventListener("change", (e) => { esteEdit.activo = e.target.checked; actualizarPreview(); });
+  }else{
+    cont.querySelectorAll('input[name="estModo"]').forEach(r => r.addEventListener("change", () => {
+      if(r.checked) esteEdit.heredar = (r.value === "heredar");
+      esteHeredado = calcularHeredado();
+      gcont.querySelectorAll(".est-campo").forEach(f => f._refrescar());
+      actualizarPreview();
+    }));
+  }
+
+  $("estPreset").addEventListener("change", (e) => {
+    const p = E.PRESETS.find(x => x.id === e.target.value);
+    if(!p) return;
+    esteEdit.v = E.limpiar(p.v);
+    renderEstEditor();
+    setMsg($("estMsg"), "ok", `Se cargó «${p.n.replace(/^\S+\s/, "")}». Revisá la vista previa y guardá si te gusta.`);
+  });
+  $("estCopiar").addEventListener("change", (e) => {
+    const k = e.target.value;
+    if(!k || !temasData[k]) return;
+    esteEdit.v = E.limpiar(temasData[k].v || {});
+    renderEstEditor();
+    setMsg($("estMsg"), "ok", "Ajustes copiados. Guardá para aplicarlos.");
+  });
+  $("estGuardar").addEventListener("click", guardarEstetica);
+  $("estDeshacer").addEventListener("click", () => seleccionarEstetica(t.clave));
+  $("estQuitar").addEventListener("click", quitarEstetica);
+
+  actualizarPreview();
+}
+
+// ---- Vista previa: mini-página dentro de un iframe, con el mismo CSS que usan las páginas reales ----
+function valoresPreview(){
+  const base = esteSel.clave === "global" || esteEdit.heredar === false ? {} : esteHeredado;
+  return E.limpiar(Object.assign({}, base, esteEdit.v));
+}
+function docPreview(v){
+  const links = E.fuentesHref(v).map(h => `<link rel="stylesheet" href="${h}">`).join("");
+  const nombre = esc(esteSel.nombre);
+  return `<!doctype html><html><head><meta charset="utf-8">${links}<style>
+:root{--bg:#0a0a0b;--card:#151517;--card2:#1b1b1e;--line:#262629;--accent:#ff2b3d;--accent2:#00e5c7;--text:#f2f2f2;--muted:#9a9aa0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body,Arial,sans-serif);min-height:100vh}
+h1,h2,h3{font-family:var(--font-title,inherit)}
+.navbar{position:fixed;top:0;left:0;right:0;z-index:5;background:color-mix(in srgb,var(--bg) 75%,transparent);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.logo{font-weight:800;letter-spacing:1px}
+main{max-width:1000px;margin:56px auto 20px;padding:0 14px}
+.hero{border-radius:14px;border:1px solid var(--line);background:linear-gradient(160deg,var(--card2),var(--bg));padding:20px;text-align:center;margin-bottom:14px}
+.hero h1{font-size:22px}.barra{width:50px;height:4px;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));margin:10px auto 0}
+.partes-grid{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.partes-grid a{padding:9px 14px;border-radius:9px;background:var(--card2);border:1px solid var(--line);color:var(--text);text-decoration:none;font-size:12px;font-weight:600;transition:.25s}
+.partes-grid a:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.acordeon{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden}
+.acordeon-header{padding:11px 14px;background:var(--card2);font-weight:700;font-size:13px}
+.info-lista{list-style:none;padding:12px}
+.info-lista li{background:var(--card2);padding:8px 10px;border-radius:8px;font-size:12px;border-left:3px solid var(--accent2)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.card{background:var(--card);border-radius:12px;overflow:hidden;text-align:center;transition:.3s;border:1px solid var(--line)}
+.card .img{height:56px;background:linear-gradient(135deg,var(--accent),var(--accent2));opacity:.85}
+.card h3{padding:10px;font-size:12px}
+.card:hover{transform:translateY(-4px)}
+</style><style>${E.generarCSS(v)}</style></head><body>
+<nav class="navbar"><span class="logo">MS47</span><span>Juegos · YouTube · Instagram</span></nav>
+<main>
+  <section class="hero"><h1>${nombre}</h1><div class="barra"></div></section>
+  <div class="partes-grid"><a href="#">Descargar parte 1</a><a href="#">Descargar parte 2</a><a href="#">Mega</a></div>
+  <div class="acordeon"><div class="acordeon-header">🖥️ Un apartado de ejemplo</div><ul class="info-lista"><li>Primer punto de la lista</li><li>Segundo punto de la lista</li></ul></div>
+  <div class="grid"><div class="card"><div class="img"></div><h3>Tarjeta uno</h3></div><div class="card"><div class="img"></div><h3>Tarjeta dos</h3></div><div class="card"><div class="img"></div><h3>Tarjeta tres</h3></div></div>
+</main></body></html>`;
+}
+function actualizarPreview(){
+  clearTimeout(estePrevTimer);
+  estePrevTimer = setTimeout(() => {
+    const fr = $("estPrevFrame");
+    if(!fr || !esteSel) return;
+    const v = valoresPreview();
+    fr.srcdoc = docPreview(v);
+    const off = esteSel.clave === "global" && !esteEdit.activo;
+    $("estPrevEstado").textContent = off ? "⚠️ la estética general está desactivada" : "";
+  }, 120);
+}
+
+async function refrescarTemas(){
+  const t = await get(ref(db, "config/temas"));
+  temasData = t.val() || {};
+  renderEstLista();
+}
+
+async function guardarEstetica(){
+  const msg = $("estMsg");
+  setMsg(msg, "", "");
+  const clave = esteSel.clave;
+  const esGlobal = clave === "global";
+  const v = E.limpiar(esteEdit.v);
+  const sinCambios = !Object.keys(v).length && (esGlobal ? esteEdit.activo : esteEdit.heredar);
+  try{
+    if(sinCambios) await remove(ref(db, "config/temas/" + clave));
+    else await set(ref(db, "config/temas/" + clave), esGlobal ? { activo: esteEdit.activo, v } : { heredar: esteEdit.heredar, v });
+    await refrescarTemas();
+    setMsg(msg, "ok", sinCambios ? "No había nada que personalizar: queda con la estética heredada." : "¡Estética guardada! Ya se ve en el sitio (si una página tiene la vieja en memoria, recargala).");
+  }catch(err){
+    console.error(err);
+    setMsg(msg, "error", errorLegible(err));
+  }
+}
+
+async function quitarEstetica(){
+  const t = esteSel;
+  if(!temasData[t.clave]){ setMsg($("estMsg"), "error", "Esta página no tiene personalización guardada."); return; }
+  if(!confirm(`¿Quitar toda la personalización de «${t.nombre}»? Va a volver a heredar la estética de arriba.`)) return;
+  try{
+    await remove(ref(db, "config/temas/" + t.clave));
+    await refrescarTemas();
+    seleccionarEstetica(t.clave);
+    setMsg($("estMsg"), "ok", "Personalización quitada.");
+  }catch(err){
+    console.error(err);
+    setMsg($("estMsg"), "error", errorLegible(err));
+  }
+}
 </script>
 </body>
 </html>
