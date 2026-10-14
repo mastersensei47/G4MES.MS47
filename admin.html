@@ -171,6 +171,21 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
 .est-ctl code{font-size:11px;color:var(--muted);}
 .est-ctl textarea{min-height:110px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;}
 @media(max-width:560px){.est-campo{grid-template-columns:1fr;gap:6px;}}
+
+/* --- Chat y novedades --- */
+.chk-lbl{display:flex !important;align-items:center;gap:8px;color:var(--text) !important;font-weight:500 !important;cursor:pointer;}
+.chk-lbl input{width:auto;margin:0;}
+.w-grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 20px;}
+.w-fila{display:grid;grid-template-columns:2fr repeat(5,1fr) auto;gap:6px;margin-top:8px;align-items:center;}
+.w-fila select,.w-fila input{min-width:0;padding:9px 8px;}
+.w-fila button{margin:0;padding:9px 12px;}
+.w-cab{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-top:10px;}
+.w-msg{padding:10px 0;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:flex-start;}
+.w-msg>div{flex:1;word-break:break-word;font-size:14px;}
+.w-msg small{display:block;color:var(--muted);font-size:11px;margin-bottom:2px;}
+.w-msg button{margin:0;padding:6px 10px;}
+.w-lista{max-height:420px;overflow:auto;}
+@media(max-width:800px){.w-grid2{grid-template-columns:1fr;}.w-fila{grid-template-columns:1fr 1fr;}.w-cab{display:none;}}
 </style>
 </head>
 <body>
@@ -204,6 +219,8 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
     <button class="tab-btn" id="tabBtnCategorias" type="button">📂 Categorías</button>
     <button class="tab-btn" id="tabBtnEstetica" type="button">🎨 Estética</button>
     <button class="tab-btn" id="tabBtnAjustes" type="button">⚙️ Ajustes del sitio</button>
+    <button class="tab-btn" id="tabBtnChat" type="button">💬 Chat</button>
+    <button class="tab-btn" id="tabBtnNovedades" type="button">📣 Novedades</button>
   </div>
 
   <div id="tabJuegos">
@@ -587,6 +604,100 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
 
   </div><!-- /tabAjustes -->
 
+  <!-- ================= CHAT ================= -->
+  <div id="tabChat" style="display:none;">
+
+  <div class="card card-ancha">
+    <h2>Ajustes del chat y las novedades</h2>
+    <p class="hint">Valores para todo el sitio. Más abajo podés cambiarlos para una página en particular (por ejemplo, que el chat arranque abierto solo en un juego).</p>
+
+    <div class="w-grid2">
+      <div>
+        <label class="chk-lbl"><input type="checkbox" id="wdChatOn"> Chat habilitado</label>
+        <label class="chk-lbl"><input type="checkbox" id="wdChatOpen"> Chat abierto desde el inicio</label>
+      </div>
+      <div>
+        <label class="chk-lbl"><input type="checkbox" id="wdNewsOn"> Novedades habilitadas</label>
+        <label class="chk-lbl"><input type="checkbox" id="wdNewsOpen"> Novedades abiertas desde el inicio</label>
+      </div>
+    </div>
+    <p class="hint">Si los dos están abiertos desde el inicio, arranca el chat y las novedades muestran un puntito rojo. Si un visitante abre o cierra un panel, se respeta su elección mientras navega.</p>
+
+    <label>Tipo de chat</label>
+    <select id="wdMode">
+      <option value="page">Una sala por página (cada juego/serie/categoría tiene su chat)</option>
+      <option value="global">Una sola sala global (todas las páginas comparten el chat)</option>
+    </select>
+
+    <div class="w-grid2">
+      <div><label>Segundos entre mensajes</label><input type="text" id="wdSlow" inputmode="numeric" value="3"></div>
+      <div><label>Largo máximo del mensaje</label><input type="text" id="wdMax" inputmode="numeric" value="300"></div>
+    </div>
+    <label>Palabras prohibidas (separadas por coma, se reemplazan por ***)</label>
+    <input type="text" id="wdWords" placeholder="palabra1, palabra2">
+    <label>Nombres reservados (nadie más puede usarlos)</label>
+    <input type="text" id="wdReserved">
+
+    <label style="margin-top:22px;">Ajustes por página <span style="font-weight:400;">(los que dejes en «Heredar» usan los valores de arriba)</span></label>
+    <div class="w-fila w-cab"><span>Página</span><span>Chat</span><span>Chat abierto</span><span>Novedades</span><span>Nov. abiertas</span><span>Tipo</span><span></span></div>
+    <div id="wdPgs"></div>
+    <button class="btn-secondary" id="wdAddPg" type="button">+ Agregar página</button>
+
+    <div><button class="btn-primary" id="wdSave" type="button">Guardar ajustes</button></div>
+    <p class="msg" id="wdSaveMsg"></p>
+  </div>
+
+  <div class="card card-ancha">
+    <h2>Moderar el chat</h2>
+    <label>Sala</label>
+    <div class="fila"><select id="wdRoom"></select><button class="btn-secondary" id="wdRefresh" type="button">Actualizar</button></div>
+    <div>
+      <button class="btn-secondary" id="wdUnpin" type="button">Quitar mensaje fijado</button>
+      <button class="btn-danger" id="wdClear" type="button">Vaciar sala</button>
+    </div>
+    <p class="hint">🗑 borra el mensaje · 📌 lo fija arriba del chat · 🚫 bloquea al dispositivo por 24 horas. También podés hacer todo esto desde el propio chat del sitio si tenés la sesión de admin abierta en ese navegador.</p>
+    <div class="w-lista" id="wdList" style="margin-top:12px;"></div>
+    <div class="fila" style="margin-top:12px;"><input type="text" id="wdSay" placeholder="Escribir como Admin..." autocomplete="off"><button class="btn-primary" id="wdSayBtn" type="button">Enviar</button></div>
+    <p class="msg" id="wdChatMsg"></p>
+  </div>
+
+  <div class="card card-ancha">
+    <h2>Bloqueados</h2>
+    <div class="w-lista" id="wdBans"></div>
+  </div>
+
+  </div><!-- /tabChat -->
+
+  <!-- ================= NOVEDADES ================= -->
+  <div id="tabNovedades" style="display:none;">
+
+  <div class="card card-ancha">
+    <h2 id="wdNTit">Nueva novedad</h2>
+    <label>Título</label>
+    <input type="text" id="wdNTitulo" maxlength="120">
+    <label>Texto (opcional)</label>
+    <textarea id="wdNTexto"></textarea>
+    <label>Enlace (opcional)</label>
+    <input type="text" id="wdNLink" placeholder="https://...">
+    <label>Imagen (opcional, link)</label>
+    <input type="text" id="wdNImg" placeholder="https://...">
+    <label>Dónde se muestra</label>
+    <input type="text" id="wdNScope" list="wdPgList" value="global" placeholder="global = todo el sitio, o elegí una página">
+    <p class="hint">«global» la muestra en todas las páginas. Si elegís una página, solo aparece ahí.</p>
+    <div>
+      <button class="btn-primary" id="wdNSave" type="button">Publicar</button>
+      <button class="btn-secondary" id="wdNCancel" type="button" style="display:none;">Cancelar edición</button>
+    </div>
+    <p class="msg" id="wdNMsg"></p>
+  </div>
+
+  <h2>Novedades publicadas</h2>
+  <div id="wdNList"></div>
+
+  </div><!-- /tabNovedades -->
+
+  <datalist id="wdPgList"></datalist>
+
 </div>
 
 <script src="config.js"></script>
@@ -594,7 +705,7 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
 <script src="estilo.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, get, set, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, get, set, remove, update, push as fbPush, onValue as fbOnValue, query as fbQuery, orderByChild as fbOrderByChild, limitToLast as fbLimitToLast, serverTimestamp as fbTs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const { firebaseConfig, CLOUDINARY } = window.MS47;
@@ -653,7 +764,7 @@ onAuthStateChanged(auth, (user) => {
 document.getElementById("btnLogout").addEventListener("click", () => signOut(auth));
 
 // ---------- Tabs ----------
-const TABS = { Juegos: "tabJuegos", Series: "tabSeries", Categorias: "tabCategorias", Estetica: "tabEstetica", Ajustes: "tabAjustes" };
+const TABS = { Juegos: "tabJuegos", Series: "tabSeries", Categorias: "tabCategorias", Estetica: "tabEstetica", Ajustes: "tabAjustes", Chat: "tabChat", Novedades: "tabNovedades" };
 function mostrarTab(nombre){
   Object.keys(TABS).forEach(k => {
     document.getElementById(TABS[k]).style.display = (k === nombre) ? "block" : "none";
@@ -663,6 +774,8 @@ function mostrarTab(nombre){
   if(nombre === "Categorias") cargarCategorias();
   if(nombre === "Estetica") cargarEstetica();
   if(nombre === "Ajustes") cargarAjustes();
+  if(nombre === "Chat") cargarChat();
+  if(nombre === "Novedades") cargarNovedades();
 }
 Object.keys(TABS).forEach(k => document.getElementById("tabBtn" + k).addEventListener("click", () => mostrarTab(k)));
 
@@ -2351,6 +2464,236 @@ async function quitarEstetica(){
     setMsg($("estMsg"), "error", errorLegible(err));
   }
 }
+
+// =====================================================================
+//  💬 CHAT Y 📣 NOVEDADES  (widgets del sitio)
+// =====================================================================
+const WD = (p) => ref(db, "widgets/" + p);
+const wdLimpiar = (s) => String(s || "").trim().replace(/[.$#\[\]\/]/g, "_").slice(0, 120);
+const wdFecha = (t) => new Date(t).toLocaleString();
+const WD_TRI = ["chatEnabled", "chatOpen", "newsEnabled", "newsOpen"];
+let wdPaginas = {};   // id de página -> etiqueta legible
+
+function wdId(archivo, slug){ return wdLimpiar(archivo + (slug ? "?slug=" + slug : "")); }
+
+function wdConstruirPaginas(){
+  wdPaginas = {};
+  wdPaginas[wdId("index.html")] = "🏠 Inicio";
+  Object.entries(INDICE.juegos || {}).forEach(([s, d]) => { wdPaginas[wdId("juego.html", s)] = "🎮 " + ((d && (d.titulo || d.nombre)) || s); });
+  Object.entries(INDICE.series || {}).forEach(([s, d]) => { wdPaginas[wdId("serie.html", s)] = "📺 " + ((d && (d.titulo || d.nombre)) || s); });
+  Object.entries(INDICE.categorias || {}).forEach(([s, d]) => { wdPaginas[wdId("categoria.html", s)] = "📂 " + ((d && (d.nombre || d.titulo)) || s); });
+  $("wdPgList").innerHTML = '<option value="global">Todo el sitio</option>' +
+    Object.entries(wdPaginas).map(([id, l]) => `<option value="${esc(id)}">${esc(l)}</option>`).join("");
+}
+const wdEtiqueta = (id) => id === "_global" ? "💬 Chat global" : (wdPaginas[id] || id);
+
+// ---------- Ajustes ----------
+function wdTri(k, v){
+  return `<select data-k="${k}"><option value="">Heredar</option><option value="1"${v === true ? " selected" : ""}>Sí</option><option value="0"${v === false ? " selected" : ""}>No</option></select>`;
+}
+function wdAddFila(id, o){
+  id = id || ""; o = o || {};
+  const d = document.createElement("div");
+  d.className = "w-fila";
+  d.innerHTML = `<input type="text" class="wdPgId" list="wdPgList" placeholder="Elegí una página..." value="${esc(id)}" title="${esc(wdEtiqueta(id))}">` +
+    WD_TRI.map(k => wdTri(k, o[k])).join("") +
+    `<select data-k="chatMode"><option value="">Heredar</option><option value="page"${o.chatMode === "page" ? " selected" : ""}>Por página</option><option value="global"${o.chatMode === "global" ? " selected" : ""}>Global</option></select>` +
+    `<button class="btn-danger" type="button">✕</button>`;
+  d.querySelector("button").addEventListener("click", () => d.remove());
+  $("wdPgs").appendChild(d);
+}
+$("wdAddPg").addEventListener("click", () => wdAddFila(""));
+
+async function wdCargarAjustes(){
+  try{
+    const s = (await get(WD("settings"))).val() || {};
+    const g = Object.assign({ chatEnabled: true, newsEnabled: true, chatOpen: false, newsOpen: false, chatMode: "page", slow: 3, maxLen: 300, words: "", reserved: "admin,administrador,mod,moderador" }, s.global || {});
+    $("wdChatOn").checked = !!g.chatEnabled; $("wdChatOpen").checked = !!g.chatOpen;
+    $("wdNewsOn").checked = !!g.newsEnabled; $("wdNewsOpen").checked = !!g.newsOpen;
+    $("wdMode").value = g.chatMode; $("wdSlow").value = g.slow; $("wdMax").value = g.maxLen;
+    $("wdWords").value = g.words; $("wdReserved").value = g.reserved;
+    $("wdPgs").innerHTML = "";
+    Object.entries(s.pages || {}).forEach(([id, o]) => wdAddFila(id, o));
+  }catch(err){ console.error(err); setMsg($("wdSaveMsg"), "error", errorLegible(err)); }
+}
+
+$("wdSave").addEventListener("click", async () => {
+  const g = {
+    chatEnabled: $("wdChatOn").checked, chatOpen: $("wdChatOpen").checked,
+    newsEnabled: $("wdNewsOn").checked, newsOpen: $("wdNewsOpen").checked,
+    chatMode: $("wdMode").value, slow: parseInt($("wdSlow").value, 10) || 0,
+    maxLen: Math.min(500, parseInt($("wdMax").value, 10) || 300),
+    words: $("wdWords").value.trim(), reserved: $("wdReserved").value.trim()
+  };
+  const pages = {};
+  document.querySelectorAll("#wdPgs .w-fila").forEach(fila => {
+    const id = wdLimpiar(fila.querySelector(".wdPgId").value);
+    if(!id) return;
+    const o = {};
+    fila.querySelectorAll("select").forEach(sel => {
+      const k = sel.dataset.k, v = sel.value;
+      if(!v) return;
+      o[k] = (k === "chatMode") ? v : (v === "1");
+    });
+    if(Object.keys(o).length) pages[id] = o;
+  });
+  try{
+    await set(WD("settings"), { global: g, pages, adminUid: auth.currentUser.uid });
+    setMsg($("wdSaveMsg"), "ok", "Ajustes guardados. Se aplican al instante en el sitio.");
+  }catch(err){ console.error(err); setMsg($("wdSaveMsg"), "error", errorLegible(err)); }
+});
+
+// ---------- Moderación del chat ----------
+let wdSala = "", wdUnsub = null, wdBansIniciado = false;
+
+async function wdCargarSalas(){
+  try{
+    const token = await auth.currentUser.getIdToken();
+    const r = await fetch(firebaseConfig.databaseURL + "/widgets/chat.json?shallow=true&auth=" + encodeURIComponent(token));
+    const o = (await r.json()) || {};
+    if(o.error) throw new Error(o.error);
+    const salas = Object.keys(o);
+    const previa = $("wdRoom").value;
+    $("wdRoom").innerHTML = salas.length
+      ? salas.map(k => `<option value="${esc(k)}">${esc(wdEtiqueta(k))}</option>`).join("")
+      : '<option value="">(todavía no hay mensajes en ninguna sala)</option>';
+    if(salas.includes(previa)) $("wdRoom").value = previa;
+    wdAbrirSala();
+  }catch(err){ console.error(err); setMsg($("wdChatMsg"), "error", errorLegible(err)); }
+}
+
+function wdAbrirSala(){
+  if(wdUnsub){ wdUnsub(); wdUnsub = null; }
+  wdSala = $("wdRoom").value;
+  const lista = $("wdList");
+  lista.innerHTML = "";
+  if(!wdSala) return;
+  const q = fbQuery(WD("chat/" + wdSala + "/messages"), fbOrderByChild("ts"), fbLimitToLast(200));
+  wdUnsub = fbOnValue(q, (snap) => {
+    const sala = wdSala;
+    const abajo = lista.scrollHeight - lista.scrollTop - lista.clientHeight < 60;
+    lista.innerHTML = "";
+    if(!snap.exists()){ lista.innerHTML = '<p class="hint">No hay mensajes en esta sala.</p>'; return; }
+    snap.forEach(c => {
+      const m = c.val(), key = c.key;
+      const fila = document.createElement("div"); fila.className = "w-msg";
+      const info = document.createElement("div");
+      const sm = document.createElement("small"); sm.textContent = m.u + (m.admin ? " ★" : "") + " · " + wdFecha(m.ts);
+      const tx = document.createElement("div"); tx.textContent = m.t;
+      info.append(sm, tx); fila.append(info);
+      [["🗑", "btn-danger", () => remove(WD("chat/" + sala + "/messages/" + key))],
+       ["📌", "btn-secondary", () => set(WD("chat/" + sala + "/pinned"), { u: m.u, t: m.t, ts: m.ts })],
+       ["🚫", "btn-secondary", () => { if(confirm("¿Bloquear a " + m.u + " por 24 horas?")) set(WD("bans/" + m.d), { u: m.u, until: Date.now() + 864e5 }); }]
+      ].forEach(([ico, cls, fn]) => {
+        const b = document.createElement("button"); b.type = "button"; b.className = cls; b.textContent = ico;
+        b.addEventListener("click", () => Promise.resolve(fn()).catch(err => setMsg($("wdChatMsg"), "error", errorLegible(err))));
+        fila.append(b);
+      });
+      lista.append(fila);
+    });
+    if(abajo) lista.scrollTop = lista.scrollHeight;
+  }, (err) => setMsg($("wdChatMsg"), "error", errorLegible(err)));
+}
+$("wdRoom").addEventListener("change", wdAbrirSala);
+$("wdRefresh").addEventListener("click", wdCargarSalas);
+$("wdUnpin").addEventListener("click", () => { if(wdSala) remove(WD("chat/" + wdSala + "/pinned")).catch(err => setMsg($("wdChatMsg"), "error", errorLegible(err))); });
+$("wdClear").addEventListener("click", () => {
+  if(wdSala && confirm("¿Borrar TODOS los mensajes de esta sala? No se puede deshacer."))
+    remove(WD("chat/" + wdSala + "/messages")).catch(err => setMsg($("wdChatMsg"), "error", errorLegible(err)));
+});
+async function wdEnviarAdmin(){
+  const t = $("wdSay").value.trim();
+  if(!t || !wdSala) return;
+  try{
+    await fbPush(WD("chat/" + wdSala + "/messages"), { u: "Admin", t: t.slice(0, 500), ts: fbTs(), d: "admin-" + auth.currentUser.uid.slice(0, 12), admin: true });
+    $("wdSay").value = "";
+  }catch(err){ console.error(err); setMsg($("wdChatMsg"), "error", errorLegible(err)); }
+}
+$("wdSayBtn").addEventListener("click", wdEnviarAdmin);
+$("wdSay").addEventListener("keydown", (e) => { if(e.key === "Enter") wdEnviarAdmin(); });
+
+function wdIniciarBans(){
+  if(wdBansIniciado) return;
+  wdBansIniciado = true;
+  fbOnValue(WD("bans"), (snap) => {
+    const box = $("wdBans"); box.innerHTML = "";
+    if(!snap.exists()){ box.innerHTML = '<p class="hint">No hay nadie bloqueado.</p>'; return; }
+    snap.forEach(c => {
+      const v = c.val(), key = c.key;
+      const fila = document.createElement("div"); fila.className = "w-msg";
+      const info = document.createElement("div");
+      info.textContent = v.u + " · hasta " + wdFecha(v.until) + (v.until < Date.now() ? " (vencido)" : "");
+      const b = document.createElement("button"); b.type = "button"; b.className = "btn-secondary"; b.textContent = "Desbloquear";
+      b.addEventListener("click", () => remove(WD("bans/" + key)));
+      fila.append(info, b); box.append(fila);
+    });
+  });
+}
+
+function cargarChat(){
+  wdConstruirPaginas();
+  wdCargarAjustes();
+  wdCargarSalas();
+  wdIniciarBans();
+}
+
+// ---------- Novedades ----------
+let wdNEdit = null, wdNCache = {}, wdNIniciado = false;
+
+function cargarNovedades(){
+  wdConstruirPaginas();
+  if(wdNIniciado) return;
+  wdNIniciado = true;
+  fbOnValue(fbQuery(WD("news"), fbOrderByChild("ts")), (snap) => {
+    const box = $("wdNList"); box.innerHTML = ""; wdNCache = {};
+    const arr = [];
+    snap.forEach(c => { wdNCache[c.key] = c.val(); arr.push([c.key, c.val()]); });
+    if(!arr.length){ box.innerHTML = '<p class="hint" style="max-width:950px;margin:0 auto;">Todavía no publicaste ninguna novedad.</p>'; return; }
+    arr.reverse().forEach(([key, v]) => {
+      const it = document.createElement("div"); it.className = "pagina-item";
+      const info = document.createElement("div"); info.className = "pagina-info";
+      const t = document.createElement("div"); t.className = "titulo"; t.textContent = v.title || "(sin título)";
+      const l = document.createElement("div"); l.className = "link";
+      l.textContent = (v.scope === "global" ? "Todo el sitio" : wdEtiqueta(v.scope)) + " · " + wdFecha(v.ts);
+      info.append(t, l);
+      const be = document.createElement("button"); be.type = "button"; be.className = "btn-secondary"; be.textContent = "✎ Editar";
+      be.addEventListener("click", () => wdEditarNovedad(key));
+      const bd = document.createElement("button"); bd.type = "button"; bd.className = "btn-danger"; bd.textContent = "🗑 Borrar";
+      bd.addEventListener("click", () => { if(confirm("¿Borrar esta novedad?")) remove(WD("news/" + key)).catch(err => setMsg($("wdNMsg"), "error", errorLegible(err))); });
+      it.append(info, be, bd); box.append(it);
+    });
+  }, (err) => setMsg($("wdNMsg"), "error", errorLegible(err)));
+}
+function wdEditarNovedad(key){
+  const v = wdNCache[key]; if(!v) return;
+  wdNEdit = key;
+  $("wdNTitulo").value = v.title || ""; $("wdNTexto").value = v.body || ""; $("wdNLink").value = v.link || "";
+  $("wdNImg").value = v.img || ""; $("wdNScope").value = v.scope || "global";
+  $("wdNTit").textContent = "Editando novedad"; $("wdNSave").textContent = "Guardar cambios"; $("wdNCancel").style.display = "inline-block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function wdResetNovedad(){
+  wdNEdit = null;
+  ["wdNTitulo", "wdNTexto", "wdNLink", "wdNImg"].forEach(i => $(i).value = "");
+  $("wdNScope").value = "global";
+  $("wdNTit").textContent = "Nueva novedad"; $("wdNSave").textContent = "Publicar"; $("wdNCancel").style.display = "none";
+}
+$("wdNCancel").addEventListener("click", wdResetNovedad);
+$("wdNSave").addEventListener("click", async () => {
+  const title = $("wdNTitulo").value.trim();
+  if(!title){ setMsg($("wdNMsg"), "error", "Poné un título."); return; }
+  const sc = $("wdNScope").value.trim();
+  const o = {
+    title, body: $("wdNTexto").value.trim(), link: $("wdNLink").value.trim(), img: $("wdNImg").value.trim(),
+    scope: (!sc || sc.toLowerCase() === "global") ? "global" : wdLimpiar(sc)
+  };
+  try{
+    if(wdNEdit) await update(WD("news/" + wdNEdit), o);
+    else await fbPush(WD("news"), Object.assign(o, { ts: fbTs() }));
+    setMsg($("wdNMsg"), "ok", wdNEdit ? "Cambios guardados." : "Novedad publicada.");
+    wdResetNovedad();
+  }catch(err){ console.error(err); setMsg($("wdNMsg"), "error", errorLegible(err)); }
+});
 </script>
 </body>
 </html>
