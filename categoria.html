@@ -5,24 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Categoría | MS47</title>
 <style>
-body{margin:0;background:#0f0f0f;color:white;font-family:Arial,sans-serif}
-header{position:fixed;top:0;width:100%;background:#111;padding:15px;text-align:center;font-size:22px;font-weight:bold;box-shadow:0 2px 10px rgba(0,0,0,.6);z-index:1000;box-sizing:border-box}
-.volver{position:absolute;left:15px;top:17px;font-size:14px;text-decoration:none;color:#00bfff}
+body{margin:0;background:var(--bg,#0f0f0f);color:var(--text,white);font-family:var(--font-body,Arial,sans-serif)}
+header{position:fixed;top:0;width:100%;background:var(--card,#111);padding:15px;text-align:center;font-size:22px;font-weight:bold;box-shadow:0 2px 10px rgba(0,0,0,.6);z-index:1000;box-sizing:border-box}
+.volver{position:absolute;left:15px;top:17px;font-size:14px;text-decoration:none;color:var(--accent,#00bfff)}
 .container{padding:100px 20px 40px;max-width:1200px;margin:auto}
-.buscador{display:block;width:100%;max-width:420px;margin:0 auto 10px;padding:11px 14px;border-radius:8px;border:1px solid #2a2a2a;background:#1b1b1b;color:#fff;font-size:15px;box-sizing:border-box}
-.buscador:focus{outline:none;border-color:#00bfff}
-.conteo{text-align:center;color:#888;font-size:13px;margin-bottom:20px;min-height:16px}
-h2.seccion{font-size:18px;margin:30px 0 14px;border-left:4px solid #00bfff;padding-left:10px}
+.buscador{display:block;width:100%;max-width:420px;margin:0 auto 10px;padding:11px 14px;border-radius:8px;border:1px solid var(--line,#2a2a2a);background:var(--card,#1b1b1b);color:var(--text,#fff);font-size:15px;box-sizing:border-box}
+.buscador:focus{outline:none;border-color:var(--accent,#00bfff)}
+.conteo{text-align:center;color:var(--muted,#888);font-size:13px;margin-bottom:20px;min-height:16px}
+h2.seccion{font-size:18px;margin:30px 0 14px;border-left:4px solid var(--accent,#00bfff);padding-left:10px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
-.card{background:#1b1b1b;border-radius:8px;overflow:hidden;cursor:pointer;transition:.3s;position:relative;text-decoration:none;color:white;display:block}
-.card:hover{transform:scale(1.05);box-shadow:0 0 15px #00bfff}
-.card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#262626}
+.card{background:var(--card,#1b1b1b);border-radius:8px;overflow:hidden;cursor:pointer;transition:.3s;position:relative;text-decoration:none;color:var(--text,white);display:block}
+.card:hover{transform:scale(1.05);box-shadow:0 0 15px var(--accent,#00bfff)}
+.card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--card2,#262626)}
 .card h3{padding:10px;font-size:14px;margin:0}
-.badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.75);border-radius:6px;padding:3px 7px;font-size:12px}
-.loader{text-align:center;padding:20px;color:#888}
+.badge{position:absolute;top:8px;left:8px;color:#fff;background:rgba(0,0,0,.75);border-radius:6px;padding:3px 7px;font-size:12px}
+.loader{text-align:center;padding:20px;color:var(--muted,#888)}
 .loader.error{color:#ff8a93}
 .oculto{display:none !important}
 </style>
+<script src="estilo.js"></script>
+<script>MS47_ESTILO.aplicarCache("cat__" + (new URLSearchParams(location.search).get("slug") || "").trim());</script>
 </head>
 <body>
 
@@ -46,6 +48,7 @@ import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0
 
 const { firebaseConfig, YT_API_KEY } = window.MS47;
 const D = window.MS47_DEFAULTS;
+const E = window.MS47_ESTILO;
 
 const loader = document.getElementById("loader");
 const contenido = document.getElementById("contenido");
@@ -130,6 +133,9 @@ async function iniciar(){
   try{ db = getDatabase(initializeApp(firebaseConfig)); }
   catch(e){ estado("No se pudo conectar con la base de datos.", true); return; }
 
+  // Estética (general + tipo "categorías" + la de esta categoría), definida en el admin
+  get(ref(db, "config/temas")).then(s => E.aplicarDesdeTemas(s.val(), "cat__" + slug, "categoria")).catch(() => {});
+
   // 1) Categoría
   let cat = null;
   let usarDefault = false;
@@ -187,7 +193,7 @@ async function iniciar(){
         href: `${esSerie ? "serie" : "juego"}.html?slug=${encodeURIComponent(it.slug)}`,
         titulo: it.d.titulo || it.slug,
         img: miniaturaJuego(it.d),
-        badge: esSerie ? (it.d.tipoContenido === "pelicula" ? "🎬" : "📺") : "🎮"
+        badge: esSerie ? ((it.d.tipo || it.d.tipoContenido) === "pelicula" ? "🎬" : "📺") : "🎮"
       });
     }).join("") + `</div>`;
   }
