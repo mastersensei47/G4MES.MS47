@@ -190,6 +190,32 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
 .w-msg button{margin:0;padding:6px 10px;}
 .w-lista{max-height:420px;overflow:auto;}
 @media(max-width:800px){.w-grid2{grid-template-columns:1fr;}.w-fila{grid-template-columns:1fr 1fr;}.w-cab{display:none;}}
+/* selector con buscador */
+.w-pick{position:relative;}
+.w-pick-list{position:absolute;z-index:60;left:0;right:0;top:100%;margin-top:4px;max-height:340px;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 14px 34px rgba(0,0,0,.6);}
+.w-pick-list[hidden]{display:none;}
+.w-pick-g{padding:8px 12px 4px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);position:sticky;top:0;background:var(--card);}
+.w-pick-it{padding:8px 12px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:baseline;border-top:1px solid rgba(255,255,255,.03);}
+.w-pick-it b{font-size:14px;font-weight:600;}
+.w-pick-it small{color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%;}
+.w-pick-it:hover,.w-pick-it.act{background:var(--card2);}
+.w-pick-it.act{box-shadow:inset 3px 0 0 var(--accent);}
+.w-pick-vacio{padding:14px 12px;color:var(--muted);font-size:13px;}
+/* tarjetas de ajustes por página */
+.w-pg-bar{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap;}
+.w-pg-bar input{max-width:280px;padding:8px 10px;}
+.w-pgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px;margin-top:10px;}
+.w-card{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;}
+.w-card.nueva{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,43,61,.12);}
+.w-card-h{display:flex;gap:8px;align-items:flex-start;justify-content:space-between;}
+.w-card-h .t{font-weight:700;font-size:14px;word-break:break-word;}
+.w-card-h small{display:block;color:var(--muted);font-size:11px;word-break:break-all;margin-top:2px;}
+.w-card-h button{margin:0;padding:5px 10px;flex-shrink:0;}
+.w-card-g{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:10px;}
+.w-card-g label{margin:6px 0 0;font-size:11px;}
+.w-card-g select{padding:8px;font-size:13px;}
+.w-card-g select.ov{border-color:var(--accent2);color:var(--accent2);font-weight:600;}
+.w-chip{display:inline-block;background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-size:13px;margin-bottom:8px;}
 </style>
 </head>
 <body>
@@ -648,9 +674,10 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
     <input type="text" id="wdReserved">
 
     <label style="margin-top:22px;">Ajustes por página <span style="font-weight:400;">(los que dejes en «Heredar» usan los valores de arriba)</span></label>
-    <div class="w-fila w-cab"><span>Página</span><span>Chat</span><span>Chat abierto</span><span>Novedades</span><span>Nov. abiertas</span><span>Visitas</span><span>Tipo</span><span></span></div>
-    <div id="wdPgs"></div>
-    <button class="btn-secondary" id="wdAddPg" type="button">+ Agregar página</button>
+    <div id="wdPgPick" style="margin-top:8px;"></div>
+    <div class="w-pg-bar"><span class="hint" id="wdPgCount" style="margin:0;"></span><input type="text" id="wdPgFiltro" placeholder="🔍 Filtrar las ya configuradas" style="display:none;"></div>
+    <div class="w-pgs" id="wdPgs"></div>
+    <p class="hint" id="wdPgVacio">Todavía no configuraste ninguna página: todas usan los valores generales de arriba. Buscá una arriba para darle ajustes propios.</p>
 
     <div><button class="btn-primary" id="wdSave" type="button">Guardar ajustes</button></div>
     <p class="msg" id="wdSaveMsg"></p>
@@ -697,8 +724,10 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
     <label>Imagen (opcional, link)</label>
     <input type="text" id="wdNImg" placeholder="https://...">
     <label>Dónde se muestra</label>
-    <input type="text" id="wdNScope" list="wdPgList" value="global" placeholder="global = todo el sitio, o elegí una página">
-    <p class="hint">«global» la muestra en todas las páginas. Si elegís una página, solo aparece ahí.</p>
+    <div><span class="w-chip" id="wdNScopeTxt">🌐 Todo el sitio</span></div>
+    <div id="wdNScopePick"></div>
+    <input type="hidden" id="wdNScope" value="global">
+    <p class="hint">Por defecto se muestra en todo el sitio. Buscá una página para que solo aparezca ahí.</p>
     <label class="chk-lbl"><input type="checkbox" id="wdNPin"> 📌 Fijar arriba (si es «global», también sale como aviso en el inicio)</label>
     <label>Vence el (opcional)</label>
     <input type="date" id="wdNExp">
@@ -715,7 +744,6 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
 
   </div><!-- /tabNovedades -->
 
-  <datalist id="wdPgList"></datalist>
 
 </div>
 
@@ -2509,8 +2537,7 @@ async function wdConstruirPaginas(){
   Object.entries(INDICE.juegos || {}).forEach(([s, d]) => { wdPaginas[wdId("juego.html", s)] = "🎮 " + ((d && (d.titulo || d.nombre)) || s); });
   Object.entries(INDICE.series || {}).forEach(([s, d]) => { wdPaginas[wdId("serie.html", s)] = "📺 " + ((d && (d.titulo || d.nombre)) || s); });
   Object.entries(INDICE.categorias || {}).forEach(([s, d]) => { wdPaginas[wdId("categoria.html", s)] = "📂 " + ((d && (d.nombre || d.titulo)) || s); });
-  $("wdPgList").innerHTML = '<option value="global">Todo el sitio</option>' +
-    Object.entries(wdPaginas).map(([id, l]) => `<option value="${esc(id)}">${esc(l)}</option>`).join("");
+  wdRefrescarPickers();
   if(fallos.length) setMsg($("wdSaveMsg"), "error", "No se pudo leer la lista de páginas (" + fallos.join(", ") + "). Revisá las reglas de Firebase.");
 }
 const wdEtiqueta = (id) => id === "_global" ? "💬 Chat global" : (wdPaginas[id] || id);
@@ -2519,19 +2546,106 @@ const wdEtiqueta = (id) => id === "_global" ? "💬 Chat global" : (wdPaginas[id
 function wdTri(k, v){
   return `<select data-k="${k}"><option value="">Heredar</option><option value="1"${v === true ? " selected" : ""}>Sí</option><option value="0"${v === false ? " selected" : ""}>No</option></select>`;
 }
-function wdAddFila(id, o){
-  id = id || ""; o = o || {};
-  const d = document.createElement("div");
-  d.className = "w-fila";
-  d.innerHTML = `<input type="text" class="wdPgId" list="wdPgList" placeholder="Elegí una página..." value="${esc(id)}" title="${esc(wdEtiqueta(id))}">` +
-    WD_TRI.map(k => wdTri(k, o[k])).join("") +
-    `<select data-k="chatMode"><option value="">Heredar</option><option value="page"${o.chatMode === "page" ? " selected" : ""}>Por página</option><option value="global"${o.chatMode === "global" ? " selected" : ""}>Global</option></select>` +
-    `<button class="btn-danger" type="button">✕</button>`;
-  d.querySelector("button").addEventListener("click", () => d.remove());
-  $("wdPgs").appendChild(d);
+const WD_ETQ = { chatEnabled: "Chat", chatOpen: "Chat abierto al entrar", newsEnabled: "Novedades", newsOpen: "Novedades abiertas", showVisits: "Mostrar visitas" };
+function wdGrupo(id){
+  if(id === "global") return "General";
+  if(id.startsWith("index_html")) return "🏠 Inicio";
+  if(id.startsWith("juego_html")) return "🎮 Juegos";
+  if(id.startsWith("serie_html")) return "📺 Series y películas";
+  if(id.startsWith("categoria_html")) return "📂 Categorías";
+  return "Otras";
 }
-$("wdAddPg").addEventListener("click", () => wdAddFila(""));
+const wdIdsAjustes = () => new Set([...document.querySelectorAll("#wdPgs .w-card")].map(c => c.dataset.id));
 
+function wdActualizarListaAjustes(){
+  const n = document.querySelectorAll("#wdPgs .w-card").length;
+  $("wdPgCount").textContent = n ? n + " página" + (n === 1 ? "" : "s") + " con ajustes propios" : "";
+  $("wdPgVacio").style.display = n ? "none" : "block";
+  $("wdPgFiltro").style.display = n > 4 ? "block" : "none";
+  if(n <= 4) $("wdPgFiltro").value = "";
+  wdFiltrarAjustes();
+  wdPickAjustes && wdPickAjustes.refrescar();
+}
+function wdFiltrarAjustes(){
+  const q = $("wdPgFiltro").value;
+  document.querySelectorAll("#wdPgs .w-card").forEach(c => { c.style.display = (!q || coincide(q, c.dataset.id + " " + wdEtiqueta(c.dataset.id))) ? "" : "none"; });
+}
+$("wdPgFiltro").addEventListener("input", wdFiltrarAjustes);
+
+function wdAddFila(id, o, nueva){
+  o = o || {};
+  const d = document.createElement("div");
+  d.className = "w-card" + (nueva ? " nueva" : "");
+  d.dataset.id = id;
+  const tri = k => `<div><label>${WD_ETQ[k]}</label>${wdTri(k, o[k])}</div>`;
+  d.innerHTML = `<div class="w-card-h"><div><div class="t">${esc(wdEtiqueta(id))}</div><small>${esc(wdGrupo(id))} · ${esc(id)}</small></div><button class="btn-danger" type="button" title="Quitar esta página">✕</button></div>` +
+    `<div class="w-card-g">` + WD_TRI.map(tri).join("") +
+    `<div><label>Tipo de chat</label><select data-k="chatMode"><option value="">Heredar</option><option value="page"${o.chatMode === "page" ? " selected" : ""}>Por página</option><option value="global"${o.chatMode === "global" ? " selected" : ""}>Global</option></select></div></div>`;
+  d.querySelectorAll("select").forEach(sel => {
+    const marcar = () => sel.classList.toggle("ov", !!sel.value);
+    sel.addEventListener("change", marcar); marcar();
+  });
+  d.querySelector("button").addEventListener("click", () => { d.remove(); wdActualizarListaAjustes(); });
+  if(nueva) $("wdPgs").prepend(d); else $("wdPgs").appendChild(d);
+  return d;
+}
+
+// ---------- Selector con buscador (se usa en ajustes por página y en novedades) ----------
+function wdCrearPicker(box, { excluir, alElegir, global }){
+  box.classList.add("w-pick");
+  box.innerHTML = '<input type="text" placeholder="🔍 Buscar página, juego, serie o categoría..." autocomplete="off"><div class="w-pick-list" hidden></div>';
+  const inp = box.querySelector("input"), list = box.querySelector(".w-pick-list");
+  let items = [], activo = 0;
+  function pintar(){
+    const q = inp.value.trim(), ex = excluir ? excluir() : new Set();
+    const todos = global ? [["global", "🌐 Todo el sitio"]] : [];
+    Object.entries(wdPaginas).forEach(e => todos.push(e));
+    items = todos.filter(([id, l]) => !q || coincide(q, l + " " + id));
+    if(activo >= items.length) activo = Math.max(0, items.length - 1);
+    list.innerHTML = "";
+    if(!items.length){
+      const v = document.createElement("div"); v.className = "w-pick-vacio";
+      v.textContent = q ? "Sin resultados para «" + q + "»" : "No hay páginas cargadas todavía.";
+      list.append(v); return;
+    }
+    let grupo = "";
+    items.slice(0, 80).forEach(([id, l], i) => {
+      const g = wdGrupo(id);
+      if(g !== grupo){ grupo = g; const h = document.createElement("div"); h.className = "w-pick-g"; h.textContent = g; list.append(h); }
+      const it = document.createElement("div"); it.className = "w-pick-it" + (i === activo ? " act" : "");
+      const b = document.createElement("b"); b.textContent = l;
+      const sm = document.createElement("small"); sm.textContent = ex.has(id) ? "✓ ya configurada" : (id === "global" ? "" : id);
+      if(ex.has(id)) sm.style.color = "var(--accent2)";
+      it.append(b, sm);
+      it.addEventListener("mousedown", (e) => { e.preventDefault(); elegir(id); });
+      list.append(it);
+    });
+    if(items.length > 80){ const v = document.createElement("div"); v.className = "w-pick-vacio"; v.textContent = "Mostrando 80 de " + items.length + ": escribí para filtrar."; list.append(v); }
+    const act = list.querySelector(".act"); if(act) act.scrollIntoView({ block: "nearest" });
+  }
+  function elegir(id){ list.hidden = true; inp.value = ""; inp.blur(); alElegir(id); }
+  inp.addEventListener("focus", () => { activo = 0; list.hidden = false; pintar(); });
+  inp.addEventListener("input", () => { activo = 0; list.hidden = false; pintar(); });
+  inp.addEventListener("blur", () => { setTimeout(() => { list.hidden = true; }, 120); });
+  inp.addEventListener("keydown", (e) => {
+    if(e.key === "ArrowDown"){ e.preventDefault(); list.hidden = false; activo = Math.min(activo + 1, items.length - 1); pintar(); }
+    else if(e.key === "ArrowUp"){ e.preventDefault(); activo = Math.max(activo - 1, 0); pintar(); }
+    else if(e.key === "Enter"){ e.preventDefault(); if(items[activo]) elegir(items[activo][0]); }
+    else if(e.key === "Escape"){ inp.blur(); }
+  });
+  return { refrescar: () => { if(!list.hidden) pintar(); } };
+}
+let wdPickAjustes = null, wdPickScope = null;
+function wdRefrescarPickers(){
+  if(wdPickAjustes) wdPickAjustes.refrescar();
+  if(wdPickScope) wdPickScope.refrescar();
+  document.querySelectorAll("#wdPgs .w-card").forEach(c => { const t = c.querySelector(".t"); if(t) t.textContent = wdEtiqueta(c.dataset.id); });
+}
+function wdNScopeSet(v){
+  v = v || "global";
+  $("wdNScope").value = v;
+  $("wdNScopeTxt").textContent = v === "global" ? "🌐 Todo el sitio" : wdEtiqueta(v);
+}
 async function wdCargarAjustes(){
   try{
     const s = (await get(WD("settings"))).val() || {};
@@ -2542,7 +2656,10 @@ async function wdCargarAjustes(){
     $("wdMode").value = g.chatMode; $("wdSlow").value = g.slow; $("wdMax").value = g.maxLen;
     $("wdWords").value = g.words; $("wdReserved").value = g.reserved;
     $("wdPgs").innerHTML = "";
-    Object.entries(s.pages || {}).forEach(([id, o]) => wdAddFila(id, o));
+    Object.entries(s.pages || {})
+      .sort((a, b) => wdEtiqueta(a[0]).localeCompare(wdEtiqueta(b[0])))
+      .forEach(([id, o]) => wdAddFila(id, o));
+    wdActualizarListaAjustes();
   }catch(err){ console.error(err); setMsg($("wdSaveMsg"), "error", errorLegible(err)); }
 }
 
@@ -2557,8 +2674,8 @@ $("wdSave").addEventListener("click", async () => {
   };
   const pages = {};
   let sinPagina = 0, sinCambios = 0;
-  document.querySelectorAll("#wdPgs .w-fila").forEach(fila => {
-    const id = wdLimpiar(fila.querySelector(".wdPgId").value);
+  document.querySelectorAll("#wdPgs .w-card").forEach(fila => {
+    const id = wdLimpiar(fila.dataset.id);
     if(!id){ sinPagina++; return; }
     const o = {};
     fila.querySelectorAll("select").forEach(sel => {
@@ -2576,8 +2693,8 @@ $("wdSave").addEventListener("click", async () => {
     let txt = "Ajustes guardados y verificados" + (n ? " (" + n + " página" + (n === 1 ? "" : "s") + " con ajustes propios)" : "") + ". Se aplican al instante en el sitio.";
     const av = [];
     if(sinPagina) av.push(sinPagina + " fila(s) sin página elegida");
-    if(sinCambios) av.push(sinCambios + " fila(s) con todo en «Heredar»");
-    if(av.length) txt += " Se ignoraron: " + av.join(" y ") + " (elegí una página y cambiá al menos una opción de «Heredar»).";
+    if(sinCambios) av.push(sinCambios + " página(s) con todo en «Heredar» (no tenían nada distinto del general)");
+    if(av.length) txt += " Se ignoraron: " + av.join(" y ") + " (para que una página quede guardada cambiá al menos una de sus opciones de «Heredar»).";
     setMsg($("wdSaveMsg"), av.length ? "error" : "ok", txt);
     await wdCargarAjustes();
   }catch(err){ console.error(err); setMsg($("wdSaveMsg"), "error", errorLegible(err)); }
@@ -2732,6 +2849,22 @@ function wdIniciarVisitas(){
   }, (err) => { $("wdVisitas").innerHTML = '<p class="msg error">' + esc(errorLegible(err)) + '</p>'; });
 }
 
+wdPickAjustes = wdCrearPicker($("wdPgPick"), {
+  excluir: wdIdsAjustes,   // solo para marcarlas como «ya configurada»
+  alElegir: (id) => {
+    let c = [...document.querySelectorAll("#wdPgs .w-card")].find(x => x.dataset.id === id);
+    if(c){
+      $("wdPgFiltro").value = ""; wdFiltrarAjustes();
+      c.classList.add("nueva"); setTimeout(() => c.classList.remove("nueva"), 2000);
+    }else{
+      c = wdAddFila(id, {}, true);
+      wdActualizarListaAjustes();
+    }
+    c.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+});
+wdPickScope = wdCrearPicker($("wdNScopePick"), { global: true, alElegir: wdNScopeSet });
+
 async function cargarChat(){
   await wdConstruirPaginas();
   wdCargarAjustes();
@@ -2773,7 +2906,7 @@ function wdEditarNovedad(key){
   const v = wdNCache[key]; if(!v) return;
   wdNEdit = key;
   $("wdNTitulo").value = v.title || ""; $("wdNTexto").value = v.body || ""; $("wdNLink").value = v.link || "";
-  $("wdNImg").value = v.img || ""; $("wdNScope").value = v.scope || "global";
+  $("wdNImg").value = v.img || ""; wdNScopeSet(v.scope || "global");
   $("wdNPin").checked = !!v.pin;
   $("wdNExp").value = v.exp ? (() => { const d = new Date(v.exp), z = n => String(n).padStart(2, "0"); return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()); })() : "";
   $("wdNTit").textContent = "Editando novedad"; $("wdNSave").textContent = "Guardar cambios"; $("wdNCancel").style.display = "inline-block";
@@ -2782,7 +2915,7 @@ function wdEditarNovedad(key){
 function wdResetNovedad(){
   wdNEdit = null;
   ["wdNTitulo", "wdNTexto", "wdNLink", "wdNImg"].forEach(i => $(i).value = "");
-  $("wdNScope").value = "global"; $("wdNPin").checked = false; $("wdNExp").value = "";
+  wdNScopeSet("global"); $("wdNPin").checked = false; $("wdNExp").value = "";
   $("wdNTit").textContent = "Nueva novedad"; $("wdNSave").textContent = "Publicar"; $("wdNCancel").style.display = "none";
 }
 $("wdNCancel").addEventListener("click", wdResetNovedad);
