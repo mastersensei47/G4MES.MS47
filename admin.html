@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panel Admin - MS47</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0a0a0b">
+<link rel="manifest" href="manifest-admin.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -176,7 +180,7 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
 .chk-lbl{display:flex !important;align-items:center;gap:8px;color:var(--text) !important;font-weight:500 !important;cursor:pointer;}
 .chk-lbl input{width:auto;margin:0;}
 .w-grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 20px;}
-.w-fila{display:grid;grid-template-columns:2fr repeat(5,1fr) auto;gap:6px;margin-top:8px;align-items:center;}
+.w-fila{display:grid;grid-template-columns:2fr repeat(6,1fr) auto;gap:6px;margin-top:8px;align-items:center;}
 .w-fila select,.w-fila input{min-width:0;padding:9px 8px;}
 .w-fila button{margin:0;padding:9px 12px;}
 .w-cab{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-top:10px;}
@@ -619,6 +623,7 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
       <div>
         <label class="chk-lbl"><input type="checkbox" id="wdNewsOn"> Novedades habilitadas</label>
         <label class="chk-lbl"><input type="checkbox" id="wdNewsOpen"> Novedades abiertas desde el inicio</label>
+        <label class="chk-lbl"><input type="checkbox" id="wdShowVisits"> Mostrar contador de visitas (juegos y series)</label>
       </div>
     </div>
     <p class="hint">Si los dos están abiertos desde el inicio, arranca el chat y las novedades muestran un puntito rojo. Si un visitante abre o cierra un panel, se respeta su elección mientras navega.</p>
@@ -633,13 +638,17 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
       <div><label>Segundos entre mensajes</label><input type="text" id="wdSlow" inputmode="numeric" value="3"></div>
       <div><label>Largo máximo del mensaje</label><input type="text" id="wdMax" inputmode="numeric" value="300"></div>
     </div>
+    <div class="w-grid2">
+      <div><label>Borrar mensajes con más de X días (0 = nunca)</label><input type="text" id="wdClean" inputmode="numeric" value="0"></div>
+      <div><label>&nbsp;</label><button class="btn-secondary" id="wdCleanNow" type="button">🧹 Limpiar ahora</button></div>
+    </div>
     <label>Palabras prohibidas (separadas por coma, se reemplazan por ***)</label>
     <input type="text" id="wdWords" placeholder="palabra1, palabra2">
     <label>Nombres reservados (nadie más puede usarlos)</label>
     <input type="text" id="wdReserved">
 
     <label style="margin-top:22px;">Ajustes por página <span style="font-weight:400;">(los que dejes en «Heredar» usan los valores de arriba)</span></label>
-    <div class="w-fila w-cab"><span>Página</span><span>Chat</span><span>Chat abierto</span><span>Novedades</span><span>Nov. abiertas</span><span>Tipo</span><span></span></div>
+    <div class="w-fila w-cab"><span>Página</span><span>Chat</span><span>Chat abierto</span><span>Novedades</span><span>Nov. abiertas</span><span>Visitas</span><span>Tipo</span><span></span></div>
     <div id="wdPgs"></div>
     <button class="btn-secondary" id="wdAddPg" type="button">+ Agregar página</button>
 
@@ -659,6 +668,12 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
     <div class="w-lista" id="wdList" style="margin-top:12px;"></div>
     <div class="fila" style="margin-top:12px;"><input type="text" id="wdSay" placeholder="Escribir como Admin..." autocomplete="off"><button class="btn-primary" id="wdSayBtn" type="button">Enviar</button></div>
     <p class="msg" id="wdChatMsg"></p>
+  </div>
+
+  <div class="card card-ancha">
+    <h2>👁 Visitas por juego y serie</h2>
+    <p class="hint">Se cuentan siempre (una vez por visitante y sesión; tus visitas con sesión iniciada no cuentan). Que se vean o no en el sitio lo decidís con «Mostrar contador de visitas» (general o por página).</p>
+    <div class="w-lista" id="wdVisitas"></div>
   </div>
 
   <div class="card card-ancha">
@@ -684,6 +699,10 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
     <label>Dónde se muestra</label>
     <input type="text" id="wdNScope" list="wdPgList" value="global" placeholder="global = todo el sitio, o elegí una página">
     <p class="hint">«global» la muestra en todas las páginas. Si elegís una página, solo aparece ahí.</p>
+    <label class="chk-lbl"><input type="checkbox" id="wdNPin"> 📌 Fijar arriba (si es «global», también sale como aviso en el inicio)</label>
+    <label>Vence el (opcional)</label>
+    <input type="date" id="wdNExp">
+    <p class="hint">Pasada esa fecha la novedad se oculta sola. Vacío = no vence.</p>
     <div>
       <button class="btn-primary" id="wdNSave" type="button">Publicar</button>
       <button class="btn-secondary" id="wdNCancel" type="button" style="display:none;">Cancelar edición</button>
@@ -705,7 +724,7 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
 <script src="estilo.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, get, set, remove, update, push as fbPush, onValue as fbOnValue, query as fbQuery, orderByChild as fbOrderByChild, limitToLast as fbLimitToLast, serverTimestamp as fbTs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, get, set, remove, update, push as fbPush, onValue as fbOnValue, query as fbQuery, orderByChild as fbOrderByChild, limitToLast as fbLimitToLast, endAt as fbEndAt, serverTimestamp as fbTs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const { firebaseConfig, CLOUDINARY } = window.MS47;
@@ -749,6 +768,8 @@ async function intentarLogin(){
 
 let panelIniciado = false;
 onAuthStateChanged(auth, (user) => {
+  // Las sesiones anónimas (las crea el visitante en el sitio) no son de admin: se descartan
+  if(user && user.isAnonymous){ signOut(auth); return; }
   if(user){
     loginDiv.style.display = "none";
     panelDiv.style.display = "block";
@@ -2471,12 +2492,18 @@ async function quitarEstetica(){
 const WD = (p) => ref(db, "widgets/" + p);
 const wdLimpiar = (s) => String(s || "").trim().replace(/[.$#\[\]\/]/g, "_").slice(0, 120);
 const wdFecha = (t) => new Date(t).toLocaleString();
-const WD_TRI = ["chatEnabled", "chatOpen", "newsEnabled", "newsOpen"];
+const WD_TRI = ["chatEnabled", "chatOpen", "newsEnabled", "newsOpen", "showVisits"];
 let wdPaginas = {};   // id de página -> etiqueta legible
 
 function wdId(archivo, slug){ return wdLimpiar(archivo + (slug ? "?slug=" + slug : "")); }
 
-function wdConstruirPaginas(){
+async function wdConstruirPaginas(){
+  // Siempre se vuelve a leer la lista desde la base (no depende de que otra pestaña la haya cargado antes)
+  const fallos = [];
+  await Promise.all([["paginasJuegos", "juegos"], ["paginasSeries", "series"], ["categorias", "categorias"]].map(async ([nodo, k]) => {
+    try{ INDICE[k] = (await get(ref(db, nodo))).val() || INDICE[k] || {}; }
+    catch(err){ console.error(err); fallos.push(nodo); }
+  }));
   wdPaginas = {};
   wdPaginas[wdId("index.html")] = "🏠 Inicio";
   Object.entries(INDICE.juegos || {}).forEach(([s, d]) => { wdPaginas[wdId("juego.html", s)] = "🎮 " + ((d && (d.titulo || d.nombre)) || s); });
@@ -2484,6 +2511,7 @@ function wdConstruirPaginas(){
   Object.entries(INDICE.categorias || {}).forEach(([s, d]) => { wdPaginas[wdId("categoria.html", s)] = "📂 " + ((d && (d.nombre || d.titulo)) || s); });
   $("wdPgList").innerHTML = '<option value="global">Todo el sitio</option>' +
     Object.entries(wdPaginas).map(([id, l]) => `<option value="${esc(id)}">${esc(l)}</option>`).join("");
+  if(fallos.length) setMsg($("wdSaveMsg"), "error", "No se pudo leer la lista de páginas (" + fallos.join(", ") + "). Revisá las reglas de Firebase.");
 }
 const wdEtiqueta = (id) => id === "_global" ? "💬 Chat global" : (wdPaginas[id] || id);
 
@@ -2507,7 +2535,8 @@ $("wdAddPg").addEventListener("click", () => wdAddFila(""));
 async function wdCargarAjustes(){
   try{
     const s = (await get(WD("settings"))).val() || {};
-    const g = Object.assign({ chatEnabled: true, newsEnabled: true, chatOpen: false, newsOpen: false, chatMode: "page", slow: 3, maxLen: 300, words: "", reserved: "admin,administrador,mod,moderador" }, s.global || {});
+    const g = Object.assign({ chatEnabled: true, newsEnabled: true, chatOpen: false, newsOpen: false, chatMode: "page", showVisits: false, cleanDays: 0, slow: 3, maxLen: 300, words: "", reserved: "admin,administrador,mod,moderador" }, s.global || {});
+    $("wdShowVisits").checked = !!g.showVisits; $("wdClean").value = g.cleanDays || 0;
     $("wdChatOn").checked = !!g.chatEnabled; $("wdChatOpen").checked = !!g.chatOpen;
     $("wdNewsOn").checked = !!g.newsEnabled; $("wdNewsOpen").checked = !!g.newsOpen;
     $("wdMode").value = g.chatMode; $("wdSlow").value = g.slow; $("wdMax").value = g.maxLen;
@@ -2522,24 +2551,35 @@ $("wdSave").addEventListener("click", async () => {
     chatEnabled: $("wdChatOn").checked, chatOpen: $("wdChatOpen").checked,
     newsEnabled: $("wdNewsOn").checked, newsOpen: $("wdNewsOpen").checked,
     chatMode: $("wdMode").value, slow: parseInt($("wdSlow").value, 10) || 0,
+    showVisits: $("wdShowVisits").checked, cleanDays: Math.max(0, parseInt($("wdClean").value, 10) || 0),
     maxLen: Math.min(500, parseInt($("wdMax").value, 10) || 300),
     words: $("wdWords").value.trim(), reserved: $("wdReserved").value.trim()
   };
   const pages = {};
+  let sinPagina = 0, sinCambios = 0;
   document.querySelectorAll("#wdPgs .w-fila").forEach(fila => {
     const id = wdLimpiar(fila.querySelector(".wdPgId").value);
-    if(!id) return;
+    if(!id){ sinPagina++; return; }
     const o = {};
     fila.querySelectorAll("select").forEach(sel => {
       const k = sel.dataset.k, v = sel.value;
       if(!v) return;
       o[k] = (k === "chatMode") ? v : (v === "1");
     });
-    if(Object.keys(o).length) pages[id] = o;
+    if(Object.keys(o).length) pages[id] = o; else sinCambios++;
   });
   try{
     await set(WD("settings"), { global: g, pages, adminUid: auth.currentUser.uid });
-    setMsg($("wdSaveMsg"), "ok", "Ajustes guardados. Se aplican al instante en el sitio.");
+    // Se vuelve a leer lo guardado para comprobar que quedó en la base
+    const v = (await get(WD("settings"))).val() || {};
+    const n = Object.keys(v.pages || {}).length;
+    let txt = "Ajustes guardados y verificados" + (n ? " (" + n + " página" + (n === 1 ? "" : "s") + " con ajustes propios)" : "") + ". Se aplican al instante en el sitio.";
+    const av = [];
+    if(sinPagina) av.push(sinPagina + " fila(s) sin página elegida");
+    if(sinCambios) av.push(sinCambios + " fila(s) con todo en «Heredar»");
+    if(av.length) txt += " Se ignoraron: " + av.join(" y ") + " (elegí una página y cambiá al menos una opción de «Heredar»).";
+    setMsg($("wdSaveMsg"), av.length ? "error" : "ok", txt);
+    await wdCargarAjustes();
   }catch(err){ console.error(err); setMsg($("wdSaveMsg"), "error", errorLegible(err)); }
 });
 
@@ -2630,18 +2670,82 @@ function wdIniciarBans(){
   });
 }
 
-function cargarChat(){
-  wdConstruirPaginas();
+// ---------- Limpieza de mensajes viejos ----------
+async function wdSalasLista(){
+  const token = await auth.currentUser.getIdToken();
+  const r = await fetch(firebaseConfig.databaseURL + "/widgets/chat.json?shallow=true&auth=" + encodeURIComponent(token));
+  const o = (await r.json()) || {};
+  if(o.error) throw new Error(o.error);
+  return Object.keys(o);
+}
+async function wdLimpiarViejos(dias){
+  const corte = Date.now() - dias * 864e5;
+  let borrados = 0;
+  for(const sala of await wdSalasLista()){
+    const snap = await get(fbQuery(WD("chat/" + sala + "/messages"), fbOrderByChild("ts"), fbEndAt(corte)));
+    if(!snap.exists()) continue;
+    const m = {}, rx = {};
+    snap.forEach(c => { m[c.key] = null; rx[c.key] = null; borrados++; });
+    await update(WD("chat/" + sala + "/messages"), m);
+    try{ await update(WD("reactions/" + sala), rx); }catch(e){ /* sin reacciones o sin permiso */ }
+  }
+  return borrados;
+}
+$("wdCleanNow").addEventListener("click", async () => {
+  const dias = parseInt($("wdClean").value, 10) || 0;
+  if(dias < 1){ setMsg($("wdSaveMsg"), "error", "Poné cuántos días querés conservar (1 o más)."); return; }
+  if(!confirm("Se borran los mensajes con más de " + dias + " días en todas las salas. ¿Seguir?")) return;
+  try{
+    const n = await wdLimpiarViejos(dias);
+    setMsg($("wdSaveMsg"), "ok", n + " mensaje(s) viejos borrados.");
+    wdCargarSalas();
+  }catch(err){ console.error(err); setMsg($("wdSaveMsg"), "error", errorLegible(err)); }
+});
+// Limpieza automática: al abrir la pestaña Chat, como mucho una vez cada 6 horas
+async function wdLimpiezaAuto(dias){
+  try{
+    if(!dias) return;
+    if(Date.now() - (+localStorage.ms47_cleanT || 0) < 6 * 3600 * 1000) return;
+    localStorage.ms47_cleanT = Date.now();
+    const n = await wdLimpiarViejos(dias);
+    if(n) setMsg($("wdSaveMsg"), "ok", "Limpieza automática: " + n + " mensaje(s) con más de " + dias + " días borrados.");
+  }catch(err){ console.error(err); }
+}
+
+// ---------- Visitas ----------
+let wdVisitasIniciado = false;
+function wdIniciarVisitas(){
+  if(wdVisitasIniciado) return;
+  wdVisitasIniciado = true;
+  fbOnValue(ref(db, "visitas"), (snap) => {
+    const box = $("wdVisitas"); box.innerHTML = "";
+    if(!snap.exists()){ box.innerHTML = '<p class="hint">Todavía no hay visitas registradas.</p>'; return; }
+    const arr = [];
+    snap.forEach(c => { arr.push([c.key, +c.val() || 0]); });
+    arr.sort((a, b) => b[1] - a[1]).slice(0, 60).forEach(([key, n]) => {
+      const fila = document.createElement("div"); fila.className = "w-msg";
+      const info = document.createElement("div"); info.textContent = "👁 " + n + " · " + wdEtiqueta(key);
+      const b = document.createElement("button"); b.type = "button"; b.className = "btn-secondary"; b.textContent = "Reiniciar";
+      b.addEventListener("click", () => { if(confirm("¿Poner en cero las visitas de esta página?")) remove(ref(db, "visitas/" + key)).catch(err => setMsg($("wdSaveMsg"), "error", errorLegible(err))); });
+      fila.append(info, b); box.append(fila);
+    });
+  }, (err) => { $("wdVisitas").innerHTML = '<p class="msg error">' + esc(errorLegible(err)) + '</p>'; });
+}
+
+async function cargarChat(){
+  await wdConstruirPaginas();
   wdCargarAjustes();
   wdCargarSalas();
   wdIniciarBans();
+  wdIniciarVisitas();
+  try{ const g = ((await get(WD("settings"))).val() || {}).global || {}; wdLimpiezaAuto(+g.cleanDays || 0); }catch(e){}
 }
 
 // ---------- Novedades ----------
 let wdNEdit = null, wdNCache = {}, wdNIniciado = false;
 
 function cargarNovedades(){
-  wdConstruirPaginas();
+  wdConstruirPaginas().then(() => { /* actualiza los nombres de las páginas en la lista */ });
   if(wdNIniciado) return;
   wdNIniciado = true;
   fbOnValue(fbQuery(WD("news"), fbOrderByChild("ts")), (snap) => {
@@ -2654,7 +2758,8 @@ function cargarNovedades(){
       const info = document.createElement("div"); info.className = "pagina-info";
       const t = document.createElement("div"); t.className = "titulo"; t.textContent = v.title || "(sin título)";
       const l = document.createElement("div"); l.className = "link";
-      l.textContent = (v.scope === "global" ? "Todo el sitio" : wdEtiqueta(v.scope)) + " · " + wdFecha(v.ts);
+      l.textContent = (v.pin ? "📌 " : "") + (v.scope === "global" ? "Todo el sitio" : wdEtiqueta(v.scope)) + " · " + wdFecha(v.ts) +
+        (v.exp ? (v.exp < Date.now() ? " · VENCIDA el " : " · vence el ") + new Date(v.exp).toLocaleDateString() : "");
       info.append(t, l);
       const be = document.createElement("button"); be.type = "button"; be.className = "btn-secondary"; be.textContent = "✎ Editar";
       be.addEventListener("click", () => wdEditarNovedad(key));
@@ -2669,13 +2774,15 @@ function wdEditarNovedad(key){
   wdNEdit = key;
   $("wdNTitulo").value = v.title || ""; $("wdNTexto").value = v.body || ""; $("wdNLink").value = v.link || "";
   $("wdNImg").value = v.img || ""; $("wdNScope").value = v.scope || "global";
+  $("wdNPin").checked = !!v.pin;
+  $("wdNExp").value = v.exp ? (() => { const d = new Date(v.exp), z = n => String(n).padStart(2, "0"); return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()); })() : "";
   $("wdNTit").textContent = "Editando novedad"; $("wdNSave").textContent = "Guardar cambios"; $("wdNCancel").style.display = "inline-block";
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 function wdResetNovedad(){
   wdNEdit = null;
   ["wdNTitulo", "wdNTexto", "wdNLink", "wdNImg"].forEach(i => $(i).value = "");
-  $("wdNScope").value = "global";
+  $("wdNScope").value = "global"; $("wdNPin").checked = false; $("wdNExp").value = "";
   $("wdNTit").textContent = "Nueva novedad"; $("wdNSave").textContent = "Publicar"; $("wdNCancel").style.display = "none";
 }
 $("wdNCancel").addEventListener("click", wdResetNovedad);
@@ -2685,7 +2792,9 @@ $("wdNSave").addEventListener("click", async () => {
   const sc = $("wdNScope").value.trim();
   const o = {
     title, body: $("wdNTexto").value.trim(), link: $("wdNLink").value.trim(), img: $("wdNImg").value.trim(),
-    scope: (!sc || sc.toLowerCase() === "global") ? "global" : wdLimpiar(sc)
+    scope: (!sc || sc.toLowerCase() === "global") ? "global" : wdLimpiar(sc),
+    pin: $("wdNPin").checked,
+    exp: $("wdNExp").value ? new Date($("wdNExp").value + "T23:59:59").getTime() : null
   };
   try{
     if(wdNEdit) await update(WD("news/" + wdNEdit), o);
@@ -2694,6 +2803,11 @@ $("wdNSave").addEventListener("click", async () => {
     wdResetNovedad();
   }catch(err){ console.error(err); setMsg($("wdNMsg"), "error", errorLegible(err)); }
 });
+
+// ---------- App instalable (PWA solo para el panel admin) ----------
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => { navigator.serviceWorker.register("sw-admin.js").catch(() => {}); });
+}
 </script>
 </body>
 </html>
