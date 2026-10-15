@@ -3,52 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🟪 Retro | MS47</title>
-<style>
-body{margin:0;background:#0f0f0f;color:white;font-family:Arial}
-header{position:fixed;top:0;width:100%;background:#111;padding:15px;text-align:center;font-size:22px;font-weight:bold;box-shadow:0 2px 10px rgba(0,0,0,.6);z-index:1000}
-.volver{position:absolute;left:15px;top:15px;font-size:14px;text-decoration:none;color:#00bfff}
-.container{padding:100px 20px 40px;max-width:1200px;margin:auto}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
-.card{background:#1b1b1b;border-radius:8px;overflow:hidden;cursor:pointer;transition:.3s}
-.card:hover{transform:scale(1.05);box-shadow:0 0 15px #00bfff}
-.card img{width:100%}
-.card h3{padding:10px;font-size:14px}
-.loader{text-align:center;padding:20px;color:#888}
-</style>
+<meta http-equiv="refresh" content="0; url=categoria.html?slug=retro">
+<title>Redirigiendo... | MS47</title>
+<script>location.replace("categoria.html?slug=retro");</script>
 </head>
-<body>
-<header><a href="index.html" class="volver">⬅ Volver</a>🟪 Retro</header>
-<div class="container">
-<div id="videosGrid" class="grid"></div>
-<div id="loader" class="loader">Cargando videos...</div>
-</div>
-<script>
-const API_KEY = "AIzaSyCN5aFqwNDIvgDx30F98gc3Hqvw9_tLq4g";
-const PLAYLIST_ID = "PLmrN7pAkmKvm53gCXU-aQH68SCewWZotz";
-let nextPageToken="";
-async function loadVideos(){
-let url=`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${PLAYLIST_ID}&key=${API_KEY}`;
-if(nextPageToken)url+=`&pageToken=${nextPageToken}`;
-const res=await fetch(url);
-const data=await res.json();
-if(data.error){document.getElementById("loader").innerText=data.error.message;return;}
-nextPageToken=data.nextPageToken||"";
-data.items.forEach(item=>{
-const videoId=item.snippet.resourceId.videoId;
-const title=item.snippet.title;
-const thumb=item.snippet.thumbnails.high.url;
-document.getElementById("videosGrid").innerHTML+=`
-<div class="card" onclick="window.open('https://www.youtube.com/watch?v=${videoId}')">
-<img src="${thumb}">
-<h3>${title}</h3>
-</div>`;
-});
-if(nextPageToken)loadVideos();else document.getElementById("loader").innerText="Todos los videos cargados ✔";
-}
-loadVideos();
-</script>
-<script src="config.js"></script>
-<script src="ms47-widgets.js"></script>
+<body style="background:#0f0f0f;color:#fff;font-family:Arial,sans-serif;text-align:center;padding:40px">
+<p>Esta página se movió. <a href="categoria.html?slug=retro" style="color:#00bfff">Ir a la nueva</a>.</p>
 </body>
 </html>
