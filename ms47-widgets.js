@@ -1,4 +1,4 @@
-/* MS47 Widgets: chat + novedades + contador de visitas (Firebase Realtime Database)
+/* MS47 Widgets: chat + novedades + pedidos de juegos + contador de visitas + estadísticas (Firebase Realtime Database)
    Uso en cada página:
    <script src="config.js"></script>   (define window.MS47.firebaseConfig)
    <script src="ms47-widgets.js"></script>
@@ -9,6 +9,8 @@
   const PAGE = ((S && S.dataset.page) || ((location.pathname.split('/').pop() || 'index.html') + srch))
     .replace(/[.$#\[\]\/]/g, '_').slice(0, 120);
   const GLOBAL = '_global';
+  const TZ = -3;   // huso horario (horas respecto de UTC) con el que se cuentan los «días» de las estadísticas. Tiene que ser igual en admin.html
+  const dayKey = () => new Date(Date.now() + TZ * 36e5).toISOString().slice(0, 10).replace(/-/g, '');
   const IS_HOME = PAGE === 'index_html';
   const IS_ITEM = /^(juego|serie)_html/.test(PAGE);   // páginas que cuentan visitas
   const SDK = 'https://www.gstatic.com/firebasejs/10.8.0/';
@@ -82,6 +84,15 @@
 #w47 .bnr{position:fixed;top:10px;left:50%;transform:translateX(-50%);max-width:min(94vw,640px);width:max-content;display:flex;align-items:center;gap:10px;background:rgba(14,18,24,.96);border:1px solid rgba(255,209,102,.5);border-radius:12px;padding:8px 12px;font-size:14px;box-shadow:0 6px 24px rgba(0,0,0,.5)}
 #w47 .bnr span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #w47 .bnr .x{background:transparent;padding:0 4px;font-size:16px}
+#w47 .qh{margin:12px 0 4px;font-size:11px;color:#8aa;text-transform:uppercase;letter-spacing:.6px}
+#w47 .qh:first-child{margin-top:0}
+#w47 .q1{display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.08)}
+#w47 .q1 .qt{flex:1;min-width:0;word-break:break-word}
+#w47 .q1 .qt small{display:block;color:#8aa;font-size:11px}
+#w47 .q1 button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:5px 10px;font-size:13px;white-space:nowrap}
+#w47 .q1 button.mine{background:rgba(42,127,128,.45);border-color:#2a7f80}
+#w47 .q1.dn .qt{opacity:.65}
+#w47 .qnote{padding:8px 12px 0;font-size:12px;color:#aab}
 @media(max-width:600px){
   #w47{left:10px;right:10px;bottom:10px;align-items:stretch}
   #w47 .p{width:auto;max-width:none;height:min(78vh,600px);max-height:none}
@@ -92,6 +103,12 @@
   const HTML = `
 <div class="bnr" id="w47bn2" hidden><span id="w47bt"></span><button id="w47bs">Ver</button><button class="x" id="w47bx" title="Cerrar">×</button></div>
 <div class="p" id="w47n" hidden><div class="h"><b>📣 Novedades</b><button data-x="x">×</button></div><div class="b" id="w47nl"></div></div>
+<div class="p" id="w47q" hidden><div class="h"><b>🎮 Pedidos de juegos</b><button data-x="x">×</button></div>
+ <div class="qnote">Pedí el juego que quieras. Votá los que también querés: los más votados se hacen primero.</div>
+ <div class="b" id="w47ql"></div>
+ <div class="hint" id="w47qh"></div>
+ <form class="f" id="w47qf"><input id="w47qi" maxlength="80" placeholder="¿Qué juego querés?" autocomplete="off"><button id="w47qb">Pedir</button></form>
+</div>
 <div class="p" id="w47c" hidden>
  <div class="h"><b id="w47ct">Chat</b><span class="on" id="w47on" hidden></span><button id="w47sn" title="Sonido de mensajes nuevos">🔔</button><button id="w47ch" title="Cambiar usuario">✎</button><button data-x="x">×</button></div>
  <div class="pin" id="w47pin" hidden></div>
@@ -102,7 +119,7 @@
  <form class="f" id="w47nu"><input id="w47ni" maxlength="20" placeholder="Elegí tu usuario" autocomplete="off"><button>Entrar</button></form>
  <form class="f" id="w47mf" hidden><button type="button" class="emb" id="w47eb" title="Emojis">😊</button><input id="w47mi" placeholder="Enviar mensaje..." autocomplete="off"><button>➤</button></form>
 </div>
-<div class="bt"><span class="vs" id="w47vs" hidden></span><button id="w47bn" title="Novedades">📣<i id="w47dot" hidden></i></button><button id="w47bc" title="Chat">💬<i id="w47cdot" hidden></i></button></div>`;
+<div class="bt"><span class="vs" id="w47vs" hidden></span><button id="w47bn" title="Novedades">📣<i id="w47dot" hidden></i></button><button id="w47bq" title="Pedir un juego">🎮</button><button id="w47bc" title="Chat">💬<i id="w47cdot" hidden></i></button></div>`;
 
   async function boot() {
     const CFG = window.MS47_FIREBASE_CONFIG || (window.MS47 && window.MS47.firebaseConfig);
@@ -120,6 +137,8 @@
     }
     const db = firebase.database();
     const TS = firebase.database.ServerValue.TIMESTAMP;
+    // Estadísticas por día: stats/dias/AAAAMMDD/{v: visitas, m: mensajes de chat}
+    const bump = f => db.ref('stats/dias/' + dayKey() + '/' + f).transaction(n => (n || 0) + 1).catch(() => {});
 
     const host = document.createElement('div'); document.body.appendChild(host);
     SH = host.attachShadow({ mode: 'open' });
@@ -133,17 +152,18 @@
     const ml = $('w47ml'), pin = $('w47pin'), hint = t => { $('w47h').textContent = t || ''; };
 
     function effective(s) {
-      const g = Object.assign({ chatEnabled: true, newsEnabled: true, chatOpen: false, newsOpen: false, chatMode: 'page', showVisits: false, slow: 3, maxLen: 300, words: '', reserved: 'admin,administrador,mod,moderador' }, s.global || {});
+      const g = Object.assign({ chatEnabled: true, newsEnabled: true, reqEnabled: true, chatOpen: false, newsOpen: false, chatMode: 'page', showVisits: false, slow: 3, maxLen: 300, words: '', reserved: 'admin,administrador,mod,moderador' }, s.global || {});
       const p = (s.pages && s.pages[PAGE]) || {};
-      ['chatEnabled', 'newsEnabled', 'chatOpen', 'newsOpen', 'chatMode', 'showVisits'].forEach(k => { if (p[k] !== undefined && p[k] !== null && p[k] !== 'auto') g[k] = p[k]; });
+      ['chatEnabled', 'newsEnabled', 'reqEnabled', 'chatOpen', 'newsOpen', 'chatMode', 'showVisits'].forEach(k => { if (p[k] !== undefined && p[k] !== null && p[k] !== 'auto') g[k] = p[k]; });
       g.adminUid = s.adminUid || '';
       return g;
     }
 
     // ---- abrir / cerrar paneles (uno a la vez) ----
-    function show(w) {   // w: 'c' | 'n' | 'x'
-      $('w47c').hidden = w !== 'c'; $('w47n').hidden = w !== 'n';
-      $('w47bc').classList.toggle('on', w === 'c'); $('w47bn').classList.toggle('on', w === 'n');
+    function show(w) {   // w: 'c' (chat) | 'n' (novedades) | 'q' (pedidos) | 'x' (todo cerrado)
+      $('w47c').hidden = w !== 'c'; $('w47n').hidden = w !== 'n'; $('w47q').hidden = w !== 'q';
+      $('w47bc').classList.toggle('on', w === 'c'); $('w47bn').classList.toggle('on', w === 'n'); $('w47bq').classList.toggle('on', w === 'q');
+      if (w === 'q') startReq();
       ss.set('w47s_' + PAGE, w);
       if (w === 'c') { ml.scrollTop = ml.scrollHeight; $('w47cdot').hidden = true; }
       if (w === 'n' && newestNews) { ls.set('ms47w_ns', newestNews); $('w47dot').hidden = true; }
@@ -151,8 +171,9 @@
     const cur = () => ss.get('w47s_' + PAGE) || 'x';
     $('w47bc').onclick = () => show(cur() === 'c' ? 'x' : 'c');
     $('w47bn').onclick = () => show(cur() === 'n' ? 'x' : 'n');
+    $('w47bq').onclick = () => show(cur() === 'q' ? 'x' : 'q');
     root.querySelectorAll('[data-x]').forEach(b => b.onclick = () => show('x'));
-    window.MS47W = { openNews: () => show('n'), openChat: () => show('c') };
+    window.MS47W = { openNews: () => show('n'), openChat: () => show('c'), openReq: () => show('q') };
 
     // ---- sonido ----
     const paintSnd = () => { $('w47sn').classList.toggle('off', !sound); $('w47sn').textContent = sound ? '🔔' : '🔕'; };
@@ -295,6 +316,7 @@
       const m = { u: user, t, ts: TS, d: dev }; if (isAdmin) m.admin = true; if (replyTo) m.r = { u: replyTo.u, t: replyTo.t };
       db.ref('widgets/chat/' + room + '/messages').push(m).then(() => {
         $('w47mi').value = ''; ls.set('ms47w_last', String(now)); ls.set('ms47w_lt', t); hint(''); setReply(null);
+        if (!isAdmin) bump('m');
       }).catch(err => { console.error('MS47 widgets: no se pudo enviar', err); hint('No se pudo enviar (' + ((err && (err.code || err.message)) || 'error') + ')'); });
     };
     db.ref('widgets/bans/' + dev).on('value', s => {
@@ -302,6 +324,71 @@
       if (banned) hint('Estás bloqueado hasta ' + new Date(b.until).toLocaleString());
       gate();
     }, err => console.warn('MS47 widgets: no se pueden leer los bloqueos', err && err.code));
+
+    // ---- pedidos de juegos ----
+    let reqItems = [], reqOn = false;
+    const normQ = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+    const qHint = (t, ok) => { const h = $('w47qh'); h.textContent = t || ''; h.style.color = ok ? '#9be39b' : ''; };
+    const qCount = v => (v && v.votos) ? Object.keys(v.votos).length : 0;
+    function qVote(k) {
+      const r = db.ref('pedidos/' + k + '/votos/' + dev);
+      r.once('value').then(s => s.exists() ? r.remove() : r.set(true)).catch(() => qHint('No se pudo votar'));
+    }
+    function paintReq() {
+      const box = $('w47ql'); box.innerHTML = '';
+      const pend = reqItems.filter(x => !x.v.hecho).sort((a, b) => qCount(b.v) - qCount(a.v) || (b.v.ts || 0) - (a.v.ts || 0));
+      const done = reqItems.filter(x => x.v.hecho).sort((a, b) => (b.v.hechoTs || b.v.ts || 0) - (a.v.hechoTs || a.v.ts || 0)).slice(0, 10);
+      if (!pend.length && !done.length) { box.textContent = 'Todavía no hay pedidos. ¡Sé el primero en pedir uno!'; return; }
+      const title = t => { const h = document.createElement('div'); h.className = 'qh'; h.textContent = t; box.append(h); };
+      const row = (x, ok) => {
+        const el = document.createElement('div'); el.className = 'q1' + (ok ? ' dn' : '');
+        const t = document.createElement('div'); t.className = 'qt'; t.textContent = x.v.juego || '';
+        const sm = document.createElement('small');
+        sm.textContent = ok ? '✅ Ya está hecho' : new Date(x.v.ts || Date.now()).toLocaleDateString();
+        t.append(sm); el.append(t);
+        if (!ok) {
+          const mine = !!(x.v.votos && x.v.votos[dev]);
+          const b = document.createElement('button'); b.type = 'button';
+          b.textContent = '👍 ' + qCount(x.v); b.title = mine ? 'Quitar mi voto' : 'Yo también lo quiero';
+          if (mine) b.className = 'mine';
+          b.onclick = () => qVote(x.k); el.append(b);
+        }
+        box.append(el);
+      };
+      if (pend.length) { title('Más pedidos'); pend.forEach(x => row(x, false)); }
+      if (done.length) { title('Ya hechos'); done.forEach(x => row(x, true)); }
+    }
+    function startReq() {   // se conecta recién cuando alguien abre el panel (así no gasta datos en cada página)
+      if (reqOn) return; reqOn = true;
+      db.ref('pedidos').orderByChild('ts').limitToLast(150).on('value', s => {
+        reqItems = []; s.forEach(c => { const v = c.val(); if (v && v.juego) reqItems.push({ k: c.key, v }); });
+        paintReq();
+      }, err => { console.warn('MS47 widgets: no se pueden leer los pedidos', err && err.code); $('w47ql').textContent = 'No se pudieron cargar los pedidos.'; });
+    }
+    $('w47qf').onsubmit = e => {
+      e.preventDefault();
+      if (banned) { qHint('Estás bloqueado, no podés pedir juegos por ahora'); return; }
+      const t = $('w47qi').value.trim().replace(/\s+/g, ' ').slice(0, 80);
+      if (t.length < 2) { qHint('Escribí el nombre del juego'); return; }
+      if (/https?:\/\/|www\./i.test(t)) { qHint('Escribí solo el nombre del juego, sin links'); return; }
+      let limpio = t;
+      ((cfg && cfg.words) || '').split(',').map(w => w.trim()).filter(Boolean).forEach(w => { limpio = limpio.replace(new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '***'); });
+      if (limpio !== t) { qHint('Ese texto no está permitido'); return; }
+      const dup = reqItems.find(x => !x.v.hecho && normQ(x.v.juego) === normQ(t));
+      if (dup) {   // ya estaba pedido: se suma el voto en vez de duplicarlo
+        $('w47qi').value = '';
+        if (dup.v.votos && dup.v.votos[dev]) { qHint('Ya habías votado ese juego 👍', true); return; }
+        db.ref('pedidos/' + dup.k + '/votos/' + dev).set(true).then(() => qHint('Ese juego ya estaba pedido: sumé tu voto 👍', true)).catch(() => qHint('No se pudo votar'));
+        return;
+      }
+      const qd = (ls.get('ms47w_qd') || '').split('|'), usados = qd[0] === dayKey() ? (+qd[1] || 0) : 0;
+      if (usados >= 3) { qHint('Hoy ya hiciste 3 pedidos. Mañana podés pedir más 🙌'); return; }
+      const btn = $('w47qb'); btn.disabled = true;
+      db.ref('pedidos').push({ juego: t, ts: TS, d: dev, hecho: false, votos: { [dev]: true } }).then(() => {
+        $('w47qi').value = ''; ls.set('ms47w_qd', dayKey() + '|' + (usados + 1)); qHint('¡Pedido enviado! 🎮', true);
+      }).catch(err => { console.error('MS47 widgets: no se pudo enviar el pedido', err); qHint('No se pudo enviar (' + ((err && (err.code || err.message)) || 'error') + ')'); })
+        .then(() => { btn.disabled = false; });
+    };
 
     // ---- novedades ----
     function paintNews() {
@@ -343,6 +430,7 @@
     }
     if (IS_ITEM) db.ref('visitas/' + PAGE).on('value', s => paintVisits(s.val() || 0), () => {});
     function countVisit() {
+      if (!ss.get('w47sd')) { ss.set('w47sd', '1'); bump('v'); }   // visita del día (una por sesión, en cualquier página)
       if (!IS_ITEM || ss.get('w47v_' + PAGE)) return;
       ss.set('w47v_' + PAGE, '1');
       db.ref('visitas/' + PAGE).transaction(n => (n || 0) + 1).catch(() => {});
@@ -351,14 +439,14 @@
     // ---- ajustes (los maneja el panel admin) ----
     function apply(s) {
       cfg = effective(s);
-      $('w47bc').hidden = !cfg.chatEnabled; $('w47bn').hidden = !cfg.newsEnabled;
+      $('w47bc').hidden = !cfg.chatEnabled; $('w47bn').hidden = !cfg.newsEnabled; $('w47bq').hidden = !cfg.reqEnabled;
       joinRoom(); paintVisits();
       if (first) {
         first = false;
         if (!ss.get('w47s_' + PAGE)) show(cfg.chatEnabled && cfg.chatOpen ? 'c' : cfg.newsEnabled && cfg.newsOpen ? 'n' : 'x');
         else show(cur());
       }
-      if ((!cfg.chatEnabled && cur() === 'c') || (!cfg.newsEnabled && cur() === 'n')) show('x');
+      if ((!cfg.chatEnabled && cur() === 'c') || (!cfg.newsEnabled && cur() === 'n') || (!cfg.reqEnabled && cur() === 'q')) show('x');
     }
     let lastS = {};
     db.ref('widgets/settings').on('value', s => { lastS = s.val() || {}; apply(lastS); },
