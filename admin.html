@@ -216,6 +216,28 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
 .w-card-g select{padding:8px;font-size:13px;}
 .w-card-g select.ov{border-color:var(--accent2);color:var(--accent2);font-weight:600;}
 .w-chip{display:inline-block;background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-size:13px;margin-bottom:8px;}
+/* ===== Pedidos, links rotos, estadísticas y estado de descarga ===== */
+.badge{display:inline-block;min-width:18px;padding:1px 6px;margin-left:6px;border-radius:10px;background:var(--accent);color:#fff;font-size:11px;line-height:16px;text-align:center;}
+.badge[hidden]{display:none;}
+.tab-btn.active .badge{background:#fff;color:#c4142a;}
+.chip-est{--c:#9a9aa0;display:inline-block;margin-left:8px;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;color:var(--c);border:1px solid var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);vertical-align:middle;}
+select.sel-estado{width:auto;max-width:100%;margin-top:8px;padding:6px 8px;font-size:12px;}
+.st-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:16px;}
+.st-kpi{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
+.st-kpi b{display:block;font-family:'Poppins',Arial,sans-serif;font-size:26px;line-height:1.2;}
+.st-kpi span{font-size:12px;color:var(--muted);}
+.st-chart{width:100%;margin-top:6px;}
+.st-chart svg{display:block;width:100%;height:auto;}
+.st-grid{stroke:var(--line);stroke-width:1;}
+.st-tx{fill:var(--muted);font-size:11px;font-family:'Inter',Arial,sans-serif;}
+.st-bar{fill:var(--accent2);}
+.st-bar.rojo{fill:var(--accent);}
+.st-bar:hover{opacity:0.75;}
+.st-top-row{display:grid;grid-template-columns:minmax(100px,1.3fr) 3fr 50px;gap:10px;align-items:center;padding:6px 0;font-size:13px;}
+.st-top-row .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.st-top-bar{height:12px;background:var(--card2);border-radius:6px;overflow:hidden;}
+.st-top-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:6px;}
+.st-top-row .n{text-align:right;color:var(--muted);}
 </style>
 </head>
 <body>
@@ -251,6 +273,9 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
     <button class="tab-btn" id="tabBtnAjustes" type="button">⚙️ Ajustes del sitio</button>
     <button class="tab-btn" id="tabBtnChat" type="button">💬 Chat</button>
     <button class="tab-btn" id="tabBtnNovedades" type="button">📣 Novedades</button>
+    <button class="tab-btn" id="tabBtnPedidos" type="button">🎮 Pedidos <span class="badge" id="badgePedidos" hidden></span></button>
+    <button class="tab-btn" id="tabBtnReportes" type="button">🚩 Links rotos <span class="badge" id="badgeReportes" hidden></span></button>
+    <button class="tab-btn" id="tabBtnStats" type="button">📊 Estadísticas</button>
   </div>
 
   <div id="tabJuegos">
@@ -346,6 +371,18 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
     <details class="seccion" id="secDescargas" open>
       <summary>⬇️ Descargas</summary>
       <div class="contenido-seccion">
+        <p class="subgrupo-titulo">🏷 Estado de la descarga</p>
+        <p class="hint">Aparece como etiqueta debajo del título del juego. Dejala en «Sin etiqueta» si no querés mostrar nada.</p>
+        <label>Etiqueta</label>
+        <select id="fEstado"></select>
+        <label>Texto de la etiqueta personalizada (solo si elegiste «Personalizada»)</label>
+        <input type="text" id="fEstadoTxt" placeholder="Ej: 🔥 Nueva versión disponible">
+        <label>Versión (opcional)</label>
+        <input type="text" id="fVersion" placeholder="Ej: 1.4.2">
+        <label>Nota arriba de los links (opcional)</label>
+        <input type="text" id="fEstadoNota" placeholder="Ej: La parte 3 se está resubiendo, vuelve en un rato.">
+
+        <p class="subgrupo-titulo" style="margin-top:20px;">Links</p>
         <label>Título de la sección de descargas</label>
         <input type="text" id="fPeso" placeholder="Ej: DESCOMPRIMIDO (90GB) solo la parte 1 tiene acortador">
 
@@ -645,6 +682,7 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
       <div>
         <label class="chk-lbl"><input type="checkbox" id="wdChatOn"> Chat habilitado</label>
         <label class="chk-lbl"><input type="checkbox" id="wdChatOpen"> Chat abierto desde el inicio</label>
+        <label class="chk-lbl"><input type="checkbox" id="wdReqOn"> Pedidos de juegos habilitados (botón 🎮)</label>
       </div>
       <div>
         <label class="chk-lbl"><input type="checkbox" id="wdNewsOn"> Novedades habilitadas</label>
@@ -744,6 +782,57 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
 
   </div><!-- /tabNovedades -->
 
+  <!-- ================= PEDIDOS ================= -->
+  <div id="tabPedidos" style="display:none;">
+  <div class="card card-ancha">
+    <h2>🎮 Pedidos de juegos</h2>
+    <p class="hint">Lo que piden los visitantes desde el botón 🎮 del sitio. Cada dispositivo vota una vez por pedido y los más votados aparecen primero. Marcá como «hecho» los que ya subiste: en el sitio pasan a la lista de «Ya hechos».</p>
+    <div class="w-grid2">
+      <div>
+        <label>Mostrar</label>
+        <select id="pdFiltro"><option value="pend">Pendientes</option><option value="hechos">Hechos</option><option value="todos">Todos</option></select>
+      </div>
+      <div><label>&nbsp;</label><button class="btn-danger" id="pdBorrarHechos" type="button" style="margin-top:0;">🧹 Borrar los hechos</button></div>
+    </div>
+    <p class="msg" id="pdMsg"></p>
+    <div id="pdLista" style="margin-top:14px;"></div>
+  </div>
+  </div><!-- /tabPedidos -->
+
+  <!-- ================= LINKS ROTOS ================= -->
+  <div id="tabReportes" style="display:none;">
+  <div class="card card-ancha">
+    <h2>🚩 Links reportados como rotos</h2>
+    <p class="hint">Los visitantes avisan con el botón «🚩 Link roto» que hay al lado de cada descarga. Están ordenados por cantidad de reportes (cada dispositivo cuenta una sola vez por link). Si ya cambiaste el link en el juego, el reporte queda atenuado como «ya cambiado».</p>
+    <p class="msg" id="rpMsg"></p>
+    <div id="rpLista" style="margin-top:14px;"></div>
+  </div>
+  </div><!-- /tabReportes -->
+
+  <!-- ================= ESTADÍSTICAS ================= -->
+  <div id="tabStats" style="display:none;">
+  <div class="card card-ancha">
+    <h2>📊 Estadísticas</h2>
+    <div class="w-grid2">
+      <div>
+        <label>Período</label>
+        <select id="stRango"><option value="7">Últimos 7 días</option><option value="14">Últimos 14 días</option><option value="30" selected>Últimos 30 días</option><option value="90">Últimos 90 días</option></select>
+      </div>
+      <div>
+        <label>«Más vistos» de</label>
+        <select id="stTipo"><option value="juegos">Juegos</option><option value="series">Series y películas</option><option value="todo">Todo</option></select>
+      </div>
+    </div>
+    <div class="st-kpis" id="stKpis"></div>
+    <div><button class="btn-secondary" id="stRefresh" type="button">🔄 Actualizar</button></div>
+    <p class="hint">Una visita = una persona que entra al sitio (se cuenta una vez por sesión; tus visitas con la sesión de admin abierta no cuentan). Los días van con horario de Argentina (UTC-3). Los gráficos por día empiezan a contar desde que subiste esta versión.</p>
+    <p class="msg" id="stMsg"></p>
+  </div>
+  <div class="card card-ancha"><h2>👁 Visitas por día</h2><div class="st-chart" id="stVisitas"></div></div>
+  <div class="card card-ancha"><h2>💬 Mensajes de chat por día</h2><div class="st-chart" id="stChat"></div></div>
+  <div class="card card-ancha"><h2>🔥 Más vistos</h2><p class="hint" style="margin:0 0 8px;">Visitas totales acumuladas de cada página (no dependen del período de arriba).</p><div id="stTop"></div></div>
+  </div><!-- /tabStats -->
+
 
 </div>
 
@@ -752,7 +841,7 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
 <script src="estilo.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, get, set, remove, update, push as fbPush, onValue as fbOnValue, query as fbQuery, orderByChild as fbOrderByChild, limitToLast as fbLimitToLast, endAt as fbEndAt, serverTimestamp as fbTs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, get, set, remove, update, push as fbPush, onValue as fbOnValue, query as fbQuery, orderByChild as fbOrderByChild, limitToLast as fbLimitToLast, endAt as fbEndAt, serverTimestamp as fbTs, orderByKey as fbOrderByKey } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const { firebaseConfig, CLOUDINARY } = window.MS47;
@@ -765,6 +854,28 @@ const auth = getAuth(app);
 // Copia en memoria de todo lo que se carga (la usan el buscador y la pestaña Estética)
 const INDICE = { juegos: {}, series: {}, categorias: {} };
 let temasData = {};   // config/temas
+
+// ---------- Estado de la descarga (etiquetas del juego) + helpers de las bandejas ----------
+const ESTADOS = {
+  ok: ["✅ Funciona", "#2ecc71"],
+  parcial: ["⚠️ Parcial", "#f5a623"],
+  actualizando: ["🛠 Actualizando", "#3b9eff"],
+  desactualizado: ["⏳ Desactualizado", "#ff8a3d"],
+  ultima: ["🆕 Última versión", "#00e5c7"],
+  proximamente: ["🔜 Próximamente actualizado", "#b07cff"],
+  caido: ["❌ Links caídos", "#ff4d5e"]
+};
+const opcionesEstado = () => '<option value="">🏷 Sin etiqueta</option>' + Object.entries(ESTADOS).map(([k, e]) => `<option value="${k}">${e[0]}</option>`).join("") + '<option value="custom">✏️ Personalizada</option>';
+function chipEstadoAdmin(d){
+  if(d.estado === "custom") return d.estadoTxt ? `<span class="chip-est">${esc(d.estadoTxt)}</span>` : "";
+  const e = ESTADOS[d.estado];
+  return e ? `<span class="chip-est" style="--c:${e[1]}">${e[0]}</span>` : "";
+}
+document.getElementById("fEstado").innerHTML = opcionesEstado();
+const TZ = -3;   // huso horario (horas respecto de UTC) para los «días» de las estadísticas. Tiene que ser igual en ms47-widgets.js
+const diaKey = (atras = 0) => new Date(Date.now() + TZ * 36e5 - atras * 864e5).toISOString().slice(0, 10).replace(/-/g, "");
+// misma función que usa juego.html para identificar cada link reportado
+function hashUrl(u){ u = String(u || ""); let h = 5381; for(let i = 0; i < u.length; i++) h = ((h << 5) + h + u.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
 
 const loginDiv = document.getElementById("login");
 const panelDiv = document.getElementById("panel");
@@ -801,9 +912,10 @@ onAuthStateChanged(auth, (user) => {
   if(user){
     loginDiv.style.display = "none";
     panelDiv.style.display = "block";
-    if(!panelIniciado){ panelIniciado = true; cargarLista(); cargarIndice(); }
+    if(!panelIniciado){ panelIniciado = true; cargarLista(); cargarIndice(); iniciarBandejas(); }
   }else{
     panelIniciado = false;
+    detenerBandejas();
     panelDiv.style.display = "none";
     loginDiv.style.display = "block";
     document.getElementById("loginPass").value = "";
@@ -813,7 +925,7 @@ onAuthStateChanged(auth, (user) => {
 document.getElementById("btnLogout").addEventListener("click", () => signOut(auth));
 
 // ---------- Tabs ----------
-const TABS = { Juegos: "tabJuegos", Series: "tabSeries", Categorias: "tabCategorias", Estetica: "tabEstetica", Ajustes: "tabAjustes", Chat: "tabChat", Novedades: "tabNovedades" };
+const TABS = { Juegos: "tabJuegos", Series: "tabSeries", Categorias: "tabCategorias", Estetica: "tabEstetica", Ajustes: "tabAjustes", Chat: "tabChat", Novedades: "tabNovedades", Pedidos: "tabPedidos", Reportes: "tabReportes", Stats: "tabStats" };
 function mostrarTab(nombre){
   Object.keys(TABS).forEach(k => {
     document.getElementById(TABS[k]).style.display = (k === nombre) ? "block" : "none";
@@ -825,6 +937,9 @@ function mostrarTab(nombre){
   if(nombre === "Ajustes") cargarAjustes();
   if(nombre === "Chat") cargarChat();
   if(nombre === "Novedades") cargarNovedades();
+  if(nombre === "Pedidos") renderPedidos();
+  if(nombre === "Reportes") renderReportes();
+  if(nombre === "Stats") cargarStats();
 }
 Object.keys(TABS).forEach(k => document.getElementById("tabBtn" + k).addEventListener("click", () => mostrarTab(k)));
 
@@ -885,7 +1000,7 @@ document.getElementById("fTitulo").addEventListener("input", (e) => {
 let editandoSlug = null;
 
 function limpiarFormulario(){
-  ["fTitulo","fSlug","fGrupo","fFondo","fPortada","fFondoVideo","fVideoIzq","fVideoCentro","fVideoDer","fImagenIzq","fImagenCentro","fImagenDer","fPeso","fVerificacion","fTituloVerif","fTituloContenido","fTituloReq","fTituloInfo","fTituloGaleria"].forEach(id => document.getElementById(id).value = "");
+  ["fTitulo","fSlug","fGrupo","fFondo","fPortada","fFondoVideo","fVideoIzq","fVideoCentro","fVideoDer","fImagenIzq","fImagenCentro","fImagenDer","fPeso","fVerificacion","fTituloVerif","fTituloContenido","fTituloReq","fTituloInfo","fTituloGaleria","fEstado","fEstadoTxt","fVersion","fEstadoNota"].forEach(id => document.getElementById(id).value = "");
   ["fModoIzq","fModoCentro","fModoDer","fFondoModo"].forEach(id => document.getElementById(id).value = "hover");
   document.getElementById("fSlug").readOnly = false;
   ["descargasList","contenidoList","requisitosList","infoJuegoList","galeriaList","apartadosList"].forEach(id => document.getElementById(id).innerHTML = "");
@@ -934,6 +1049,10 @@ document.getElementById("btnGuardar").addEventListener("click", async () => {
     imagenDer: document.getElementById("fImagenDer").value.trim(),
     modoDer: document.getElementById("fModoDer").value,
     pesoTitulo: document.getElementById("fPeso").value.trim(),
+    estado: document.getElementById("fEstado").value,
+    estadoTxt: document.getElementById("fEstadoTxt").value.trim(),
+    version: document.getElementById("fVersion").value.trim(),
+    estadoNota: document.getElementById("fEstadoNota").value.trim(),
     descargas: leerDescargas(),
     verificacion: document.getElementById("fVerificacion").value.trim(),
     tituloVerificacion: document.getElementById("fTituloVerif").value.trim(),
@@ -977,8 +1096,9 @@ function crearItemPagina(slug, d){
   item.innerHTML = `
     ${miniatura ? `<img class="mini-thumb" src="${esc(miniatura)}">` : ""}
     <div class="pagina-info">
-      <div class="titulo">${esc(d.titulo || slug)}</div>
+      <div class="titulo">${esc(d.titulo || slug)}<span class="chip-slot">${chipEstadoAdmin(d)}</span></div>
       <div class="link">${esc(link)}</div>
+      <select class="sel-estado" data-accion="estado" title="Cambiar la etiqueta de estado sin abrir el editor"></select>
     </div>
     <div>
       <a class="btn-secondary" href="${esc(link)}" target="_blank" rel="noopener">↗ Abrir página</a>
@@ -991,6 +1111,16 @@ function crearItemPagina(slug, d){
   item.querySelector('[data-accion="estetica"]').addEventListener("click", () => abrirEstetica("juego__" + slug));
   item.querySelector('[data-accion="editar"]').addEventListener("click", () => cargarParaEditar(slug, d));
   item.querySelector('[data-accion="eliminar"]').addEventListener("click", () => eliminarPagina(slug));
+  const selE = item.querySelector('[data-accion="estado"]');
+  selE.innerHTML = opcionesEstado();
+  selE.value = d.estado || "";
+  selE.addEventListener("change", async () => {
+    try{
+      await update(ref(db, "paginasJuegos/" + slug), { estado: selE.value });
+      d.estado = selE.value;
+      item.querySelector(".chip-slot").innerHTML = chipEstadoAdmin(d);
+    }catch(err){ console.error(err); alert(errorLegible(err)); selE.value = d.estado || ""; }
+  });
   return item;
 }
 
@@ -1037,6 +1167,7 @@ async function cargarLista(){
     const snap = await get(ref(db, "paginasJuegos"));
     INDICE.juegos = snap.val() || {};
     renderListaJuegos();
+    renderReportes();
   }catch(err){
     console.error(err);
     cont.innerHTML = "<p>Error al cargar las páginas.</p>";
@@ -1126,6 +1257,10 @@ function cargarParaEditar(slug, d){
   document.getElementById("fImagenDer").value = d.imagenDer || "";
   document.getElementById("fModoDer").value = d.modoDer || "hover";
   document.getElementById("fPeso").value = d.pesoTitulo || "";
+  document.getElementById("fEstado").value = d.estado || "";
+  document.getElementById("fEstadoTxt").value = d.estadoTxt || "";
+  document.getElementById("fVersion").value = d.version || "";
+  document.getElementById("fEstadoNota").value = d.estadoNota || "";
   document.getElementById("fVerificacion").value = d.verificacion || "";
   document.getElementById("fTituloVerif").value = d.tituloVerificacion || "";
   document.getElementById("fTituloContenido").value = d.tituloContenido || "";
@@ -1946,6 +2081,7 @@ async function cargarIndice(){
     INDICE.series = s.val() || {};
     INDICE.categorias = c.val() || {};
     temasData = t.val() || {};
+    renderReportes();
   }catch(err){ console.error(err); }
 }
 
@@ -2520,7 +2656,7 @@ async function quitarEstetica(){
 const WD = (p) => ref(db, "widgets/" + p);
 const wdLimpiar = (s) => String(s || "").trim().replace(/[.$#\[\]\/]/g, "_").slice(0, 120);
 const wdFecha = (t) => new Date(t).toLocaleString();
-const WD_TRI = ["chatEnabled", "chatOpen", "newsEnabled", "newsOpen", "showVisits"];
+const WD_TRI = ["chatEnabled", "chatOpen", "newsEnabled", "newsOpen", "reqEnabled", "showVisits"];
 let wdPaginas = {};   // id de página -> etiqueta legible
 
 function wdId(archivo, slug){ return wdLimpiar(archivo + (slug ? "?slug=" + slug : "")); }
@@ -2546,7 +2682,7 @@ const wdEtiqueta = (id) => id === "_global" ? "💬 Chat global" : (wdPaginas[id
 function wdTri(k, v){
   return `<select data-k="${k}"><option value="">Heredar</option><option value="1"${v === true ? " selected" : ""}>Sí</option><option value="0"${v === false ? " selected" : ""}>No</option></select>`;
 }
-const WD_ETQ = { chatEnabled: "Chat", chatOpen: "Chat abierto al entrar", newsEnabled: "Novedades", newsOpen: "Novedades abiertas", showVisits: "Mostrar visitas" };
+const WD_ETQ = { chatEnabled: "Chat", chatOpen: "Chat abierto al entrar", newsEnabled: "Novedades", newsOpen: "Novedades abiertas", reqEnabled: "Pedidos de juegos", showVisits: "Mostrar visitas" };
 function wdGrupo(id){
   if(id === "global") return "General";
   if(id.startsWith("index_html")) return "🏠 Inicio";
@@ -2649,9 +2785,9 @@ function wdNScopeSet(v){
 async function wdCargarAjustes(){
   try{
     const s = (await get(WD("settings"))).val() || {};
-    const g = Object.assign({ chatEnabled: true, newsEnabled: true, chatOpen: false, newsOpen: false, chatMode: "page", showVisits: false, cleanDays: 0, slow: 3, maxLen: 300, words: "", reserved: "admin,administrador,mod,moderador" }, s.global || {});
+    const g = Object.assign({ chatEnabled: true, newsEnabled: true, reqEnabled: true, chatOpen: false, newsOpen: false, chatMode: "page", showVisits: false, cleanDays: 0, slow: 3, maxLen: 300, words: "", reserved: "admin,administrador,mod,moderador" }, s.global || {});
     $("wdShowVisits").checked = !!g.showVisits; $("wdClean").value = g.cleanDays || 0;
-    $("wdChatOn").checked = !!g.chatEnabled; $("wdChatOpen").checked = !!g.chatOpen;
+    $("wdChatOn").checked = !!g.chatEnabled; $("wdChatOpen").checked = !!g.chatOpen; $("wdReqOn").checked = !!g.reqEnabled;
     $("wdNewsOn").checked = !!g.newsEnabled; $("wdNewsOpen").checked = !!g.newsOpen;
     $("wdMode").value = g.chatMode; $("wdSlow").value = g.slow; $("wdMax").value = g.maxLen;
     $("wdWords").value = g.words; $("wdReserved").value = g.reserved;
@@ -2665,7 +2801,7 @@ async function wdCargarAjustes(){
 
 $("wdSave").addEventListener("click", async () => {
   const g = {
-    chatEnabled: $("wdChatOn").checked, chatOpen: $("wdChatOpen").checked,
+    chatEnabled: $("wdChatOn").checked, chatOpen: $("wdChatOpen").checked, reqEnabled: $("wdReqOn").checked,
     newsEnabled: $("wdNewsOn").checked, newsOpen: $("wdNewsOpen").checked,
     chatMode: $("wdMode").value, slow: parseInt($("wdSlow").value, 10) || 0,
     showVisits: $("wdShowVisits").checked, cleanDays: Math.max(0, parseInt($("wdClean").value, 10) || 0),
@@ -2935,6 +3071,227 @@ $("wdNSave").addEventListener("click", async () => {
     setMsg($("wdNMsg"), "ok", wdNEdit ? "Cambios guardados." : "Novedad publicada.");
     wdResetNovedad();
   }catch(err){ console.error(err); setMsg($("wdNMsg"), "error", errorLegible(err)); }
+});
+
+// =====================================================================
+//  🎮 PEDIDOS · 🚩 LINKS ROTOS · 📊 ESTADÍSTICAS
+// =====================================================================
+let pdItems = [], rpItems = [], bandejasOff = [];
+const pdVotos = (v) => (v && v.votos) ? Object.keys(v.votos).length : 0;
+
+// Escucha en vivo los pedidos y los reportes (así las insignias de las pestañas se actualizan solas)
+function iniciarBandejas(){
+  if(bandejasOff.length) return;
+  bandejasOff.push(fbOnValue(fbQuery(ref(db, "pedidos"), fbOrderByChild("ts"), fbLimitToLast(300)), (snap) => {
+    pdItems = [];
+    snap.forEach(c => { const v = c.val(); if(v && v.juego) pdItems.push({ k: c.key, v }); });
+    pintarInsignias(); renderPedidos();
+  }, (err) => { console.error(err); setMsg($("pdMsg"), "error", errorLegible(err)); }));
+  bandejasOff.push(fbOnValue(ref(db, "reportes"), (snap) => {
+    rpItems = [];
+    snap.forEach(sc => sc.forEach(hc => {
+      const v = hc.val();
+      if(v && v.url) rpItems.push({ slug: sc.key, h: hc.key, v, n: v.d ? Object.keys(v.d).length : 0 });
+    }));
+    rpItems.sort((a, b) => b.n - a.n || (b.v.ts || 0) - (a.v.ts || 0));
+    pintarInsignias(); renderReportes();
+  }, (err) => { console.error(err); setMsg($("rpMsg"), "error", errorLegible(err)); }));
+}
+function detenerBandejas(){
+  bandejasOff.forEach(f => { try{ f(); }catch(e){} });
+  bandejasOff = []; pdItems = []; rpItems = [];
+  ["badgePedidos", "badgeReportes"].forEach(id => { const b = document.getElementById(id); if(b) b.hidden = true; });
+}
+function pintarInsignias(){
+  const np = pdItems.filter(x => !x.v.hecho).length, nr = rpItems.length;
+  $("badgePedidos").hidden = !np; $("badgePedidos").textContent = np;
+  $("badgeReportes").hidden = !nr; $("badgeReportes").textContent = nr;
+}
+function mkBtn(txt, cls, fn){
+  const b = document.createElement("button"); b.type = "button"; b.className = cls; b.textContent = txt;
+  b.addEventListener("click", fn); return b;
+}
+
+// ---------- Pedidos ----------
+function renderPedidos(){
+  const box = $("pdLista"); if(!box) return;
+  box.innerHTML = "";
+  const f = $("pdFiltro").value;
+  const arr = pdItems.filter(x => f === "todos" ? true : f === "hechos" ? !!x.v.hecho : !x.v.hecho)
+    .sort((a, b) => (!!a.v.hecho - !!b.v.hecho) || (a.v.hecho ? (b.v.hechoTs || 0) - (a.v.hechoTs || 0) : (pdVotos(b.v) - pdVotos(a.v)) || (b.v.ts || 0) - (a.v.ts || 0)));
+  if(!arr.length){ box.innerHTML = '<p class="hint">' + (f === "hechos" ? "Todavía no marcaste ningún pedido como hecho." : "No hay pedidos pendientes. 🎉") + '</p>'; return; }
+  arr.forEach(x => {
+    const it = document.createElement("div"); it.className = "pagina-item" + (x.v.hecho ? " oculta" : "");
+    const info = document.createElement("div"); info.className = "pagina-info";
+    const t = document.createElement("div"); t.className = "titulo"; t.textContent = x.v.juego;
+    const n = pdVotos(x.v);
+    const l = document.createElement("div"); l.className = "link";
+    l.textContent = "👍 " + n + (n === 1 ? " voto" : " votos") + " · " + wdFecha(x.v.ts || Date.now()) + (x.v.hecho ? " · ✅ hecho el " + wdFecha(x.v.hechoTs || Date.now()) : "");
+    info.append(t, l);
+    const acc = document.createElement("div");
+    if(!x.v.hecho){
+      acc.append(
+        mkBtn("✅ Hecho", "btn-secondary", () => pdAccion(update(ref(db, "pedidos/" + x.k), { hecho: true, hechoTs: Date.now() }))),
+        mkBtn("➕ Crear página", "btn-secondary", () => pdCrearPagina(x)),
+        mkBtn("🚫", "btn-secondary", () => {
+          if(!x.v.d){ setMsg($("pdMsg"), "error", "Este pedido no tiene dispositivo asociado."); return; }
+          if(confirm("¿Bloquear por 24 horas al dispositivo que hizo este pedido? (no podrá pedir ni chatear)")) pdAccion(set(WD("bans/" + x.v.d), { u: "pedido: " + String(x.v.juego).slice(0, 20), until: Date.now() + 864e5 }));
+        })
+      );
+      acc.lastChild.title = "Bloquear a quien lo pidió";
+    }else{
+      acc.append(mkBtn("↩ Reabrir", "btn-secondary", () => pdAccion(update(ref(db, "pedidos/" + x.k), { hecho: false, hechoTs: null }))));
+    }
+    acc.append(mkBtn("🗑", "btn-danger", () => { if(confirm("¿Borrar este pedido?")) pdAccion(remove(ref(db, "pedidos/" + x.k))); }));
+    it.append(info, acc); box.append(it);
+  });
+}
+function pdAccion(promesa){
+  setMsg($("pdMsg"), "", "");
+  return Promise.resolve(promesa).catch(err => { console.error(err); setMsg($("pdMsg"), "error", errorLegible(err)); });
+}
+function pdCrearPagina(x){
+  if($("fTitulo").value.trim() && !confirm("Se va a vaciar el formulario de Juegos para empezar uno nuevo con este nombre. ¿Seguir?")) return;
+  mostrarTab("Juegos");
+  limpiarFormulario();
+  $("fTitulo").value = x.v.juego;
+  $("fSlug").value = slugify(x.v.juego);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+$("pdFiltro").addEventListener("change", renderPedidos);
+$("pdBorrarHechos").addEventListener("click", () => {
+  const hechos = pdItems.filter(x => x.v.hecho);
+  if(!hechos.length){ setMsg($("pdMsg"), "error", "No hay pedidos hechos para borrar."); return; }
+  if(!confirm("¿Borrar los " + hechos.length + " pedidos marcados como hechos?")) return;
+  const m = {}; hechos.forEach(x => { m[x.k] = null; });
+  pdAccion(update(ref(db, "pedidos"), m).then(() => setMsg($("pdMsg"), "ok", hechos.length + " pedido(s) borrados.")));
+});
+
+// ---------- Links rotos ----------
+function renderReportes(){
+  const box = $("rpLista"); if(!box) return;
+  box.innerHTML = "";
+  if(!rpItems.length){ box.innerHTML = '<p class="hint">No hay links reportados por ahora. 🎉</p>'; return; }
+  const indiceListo = Object.keys(INDICE.juegos || {}).length > 0;
+  rpItems.forEach(x => {
+    const g = (INDICE.juegos || {})[x.slug];
+    const vigente = !g || (g.descargas || []).some(dl => dl && dl.url && hashUrl(dl.url) === x.h);
+    const it = document.createElement("div"); it.className = "pagina-item" + (vigente ? "" : " oculta");
+    const info = document.createElement("div"); info.className = "pagina-info";
+    const t = document.createElement("div"); t.className = "titulo";
+    t.textContent = "🚩 " + x.n + (x.n === 1 ? " reporte" : " reportes") + " · " + ((g && g.titulo) || x.slug);
+    const l = document.createElement("div"); l.className = "link"; l.textContent = (x.v.label || "Descargar") + " → " + x.v.url;
+    const m = document.createElement("div"); m.className = "hint";
+    m.textContent = "Último aviso: " + wdFecha(x.v.ts || Date.now())
+      + (!vigente ? " · el link ya fue cambiado en el juego (seguramente ya está arreglado)" : "")
+      + (indiceListo && !g ? " · el juego ya no existe" : "");
+    info.append(t, l, m);
+    const acc = document.createElement("div");
+    if(/^https?:\/\//i.test(x.v.url)){
+      const a = document.createElement("a"); a.className = "btn-secondary"; a.href = x.v.url; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = "↗ Probar link";
+      acc.append(a);
+    }
+    if(g || !indiceListo){
+      acc.append(mkBtn("✎ Editar juego", "btn-secondary", () => rpEditar(x.slug)));
+      acc.append(mkBtn("🛠 Poner «Actualizando»", "btn-secondary", () => rpEstado(x.slug, "actualizando")));
+    }
+    acc.append(mkBtn("✔ Resuelto", "btn-primary", () => rpResolver(x)));
+    it.append(info, acc); box.append(it);
+  });
+}
+async function rpEditar(slug){
+  try{
+    const snap = await get(ref(db, "paginasJuegos/" + slug));
+    if(!snap.exists()){ setMsg($("rpMsg"), "error", "Ese juego ya no existe."); return; }
+    mostrarTab("Juegos");
+    cargarParaEditar(slug, snap.val());
+  }catch(err){ console.error(err); setMsg($("rpMsg"), "error", errorLegible(err)); }
+}
+async function rpEstado(slug, estado){
+  try{
+    await update(ref(db, "paginasJuegos/" + slug), { estado });
+    if(INDICE.juegos && INDICE.juegos[slug]) INDICE.juegos[slug].estado = estado;
+    setMsg($("rpMsg"), "ok", "Listo: el juego quedó con la etiqueta «" + ESTADOS[estado][0] + "».");
+    if(typeof renderListaJuegos === "function") renderListaJuegos();
+  }catch(err){ console.error(err); setMsg($("rpMsg"), "error", errorLegible(err)); }
+}
+function rpResolver(x){
+  setMsg($("rpMsg"), "", "");
+  remove(ref(db, "reportes/" + x.slug + "/" + x.h)).catch(err => { console.error(err); setMsg($("rpMsg"), "error", errorLegible(err)); });
+}
+
+// ---------- Estadísticas ----------
+let stDatos = null, stTok = 0, stTimer = null;
+function stPaso(m){   // paso «redondo» para 4 divisiones del eje vertical
+  for(let mul = 1; ; mul *= 10) for(const b of [1, 2, 5]) if(b * mul * 4 >= m) return b * mul;
+}
+function stBarras(box, labels, vals, clase){
+  box.innerHTML = "";
+  const W = Math.max(300, box.clientWidth || 600), H = 230, L = 40, R = 8, T = 12, B = 28;
+  const iw = W - L - R, ih = H - T - B;
+  const paso = stPaso(Math.max(1, ...vals)), top = paso * 4;
+  let g = "";
+  for(let i = 0; i <= 4; i++){
+    const y = T + ih - ih * i / 4;
+    g += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" class="st-grid"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" class="st-tx">${paso * i}</text>`;
+  }
+  const bw = iw / vals.length, cada = Math.ceil(vals.length / Math.max(1, Math.floor(iw / 55)));
+  vals.forEach((v, i) => {
+    const h = ih * v / top, x = L + i * bw;
+    g += `<rect x="${x + bw * 0.15}" y="${T + ih - h}" width="${Math.max(1, bw * 0.7)}" height="${h}" rx="2" class="st-bar ${clase || ""}"><title>${labels[i]}: ${v}</title></rect>`;
+    if((vals.length - 1 - i) % cada === 0) g += `<text x="${x + bw / 2}" y="${H - 8}" text-anchor="middle" class="st-tx">${labels[i]}</text>`;
+  });
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de barras por día">${g}</svg>`;
+}
+function stPintar(){
+  if(!stDatos) return;
+  const { labels, vis, msg, top, n } = stDatos;
+  const suma = (a) => a.reduce((x, y) => x + y, 0);
+  $("stKpis").innerHTML = [
+    [vis[vis.length - 1], "Visitas hoy"], [suma(vis), "Visitas en " + n + " días"],
+    [msg[msg.length - 1], "Mensajes hoy"], [suma(msg), "Mensajes en " + n + " días"]
+  ].map(([v, t]) => `<div class="st-kpi"><b>${v}</b><span>${t}</span></div>`).join("");
+  stBarras($("stVisitas"), labels, vis);
+  stBarras($("stChat"), labels, msg, "rojo");
+  const box = $("stTop"); box.innerHTML = "";
+  if(!top.length){ box.innerHTML = '<p class="hint">Todavía no hay visitas registradas en esta categoría.</p>'; return; }
+  const max = top[0][1] || 1;
+  top.forEach(([k, v], i) => {
+    const fila = document.createElement("div"); fila.className = "st-top-row";
+    const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = (i + 1) + ". " + wdEtiqueta(k); nm.title = nm.textContent;
+    const bar = document.createElement("div"); bar.className = "st-top-bar"; const fill = document.createElement("i"); fill.style.width = Math.max(2, v / max * 100) + "%"; bar.append(fill);
+    const num = document.createElement("div"); num.className = "n"; num.textContent = v;
+    fila.append(nm, bar, num); box.append(fila);
+  });
+}
+async function cargarStats(){
+  const tok = ++stTok, n = +$("stRango").value || 30, tipo = $("stTipo").value;
+  setMsg($("stMsg"), "", "");
+  try{
+    await wdConstruirPaginas();   // para mostrar los nombres de los juegos en «Más vistos»
+    const [sd, sv] = await Promise.all([
+      get(fbQuery(ref(db, "stats/dias"), fbOrderByKey(), fbLimitToLast(n))),
+      get(ref(db, "visitas"))
+    ]);
+    if(tok !== stTok) return;
+    const dias = sd.val() || {}, labels = [], vis = [], msg = [];
+    for(let i = n - 1; i >= 0; i--){
+      const k = diaKey(i), o = dias[k] || {};
+      labels.push(k.slice(6) + "/" + k.slice(4, 6)); vis.push(+o.v || 0); msg.push(+o.m || 0);
+    }
+    const top = Object.entries(sv.val() || {})
+      .filter(([k]) => tipo === "todo" || k.startsWith(tipo === "juegos" ? "juego_html" : "serie_html"))
+      .map(([k, v]) => [k, +v || 0]).sort((a, b) => b[1] - a[1]).slice(0, 15);
+    stDatos = { labels, vis, msg, top, n };
+    stPintar();
+  }catch(err){ console.error(err); setMsg($("stMsg"), "error", errorLegible(err)); }
+}
+$("stRango").addEventListener("change", cargarStats);
+$("stTipo").addEventListener("change", cargarStats);
+$("stRefresh").addEventListener("click", cargarStats);
+window.addEventListener("resize", () => {
+  clearTimeout(stTimer);
+  stTimer = setTimeout(() => { if(stDatos && $("tabStats").style.display !== "none") stPintar(); }, 150);
 });
 
 // ---------- App instalable (PWA solo para el panel admin) ----------
