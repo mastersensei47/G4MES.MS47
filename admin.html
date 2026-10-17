@@ -215,12 +215,18 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
 .w-card-g label{margin:6px 0 0;font-size:11px;}
 .w-card-g select{padding:8px;font-size:13px;}
 .w-card-g select.ov{border-color:var(--accent2);color:var(--accent2);font-weight:600;}
-.w-card-h{cursor:pointer;user-select:none;align-items:center;}
-.w-card-h .w-chev{display:inline-block;width:14px;margin-right:6px;color:var(--muted);transition:transform .15s;}
-.w-card:not(.cerrada) .w-chev{transform:rotate(90deg);}
-.w-card.cerrada .w-card-g{display:none;}
-.w-card-h .w-res{display:block;font-size:11px;margin-top:3px;color:var(--accent2);}
+.w-pgs{grid-template-columns:1fr;gap:10px;}
+.w-card{padding:0;overflow:hidden;border-radius:12px;}
+.w-card-h{cursor:pointer;user-select:none;align-items:center;padding:14px 16px;background:var(--card2);transition:.2s;gap:12px;}
+.w-card-h:hover{filter:brightness(1.2);}
+.w-card-h>div:first-child{flex:1;min-width:0;}
+.w-card-h .t{font-size:15px;}
+.w-card-h .w-res{display:inline-block;margin:0;font-size:12px;color:var(--accent2);white-space:nowrap;}
 .w-card-h .w-res.vacio{color:var(--muted);}
+.w-card-h .w-chev{color:var(--muted);transition:transform .3s;font-size:14px;flex-shrink:0;}
+.w-card:not(.cerrada) .w-chev{transform:rotate(180deg);color:var(--accent2);}
+.w-card.cerrada .w-card-g{display:none;}
+.w-card-g{margin:0;padding:6px 16px 16px;}
 .w-pg-acc{display:flex;gap:8px;}
 .w-pg-acc button{margin:0;padding:6px 10px;font-size:12px;}
 .w-chip{display:inline-block;background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-size:13px;margin-bottom:8px;}
@@ -2767,7 +2773,7 @@ function wdAddFila(id, o, nueva){
   d.className = "w-card" + (nueva ? " nueva" : " cerrada");
   d.dataset.id = id;
   const tri = k => `<div><label>${WD_ETQ[k]}</label>${wdTri(k, o[k])}</div>`;
-  d.innerHTML = `<div class="w-card-h"><div><div class="t"><span class="w-chev">▸</span><span class="w-t">${esc(wdEtiqueta(id))}</span></div><small>${esc(wdGrupo(id))} · ${esc(id)}</small><span class="w-res"></span></div><button class="btn-danger" type="button" title="Quitar esta página">✕</button></div>` +
+  d.innerHTML = `<div class="w-card-h"><div><div class="t"><span class="w-t">${esc(wdEtiqueta(id))}</span></div><small>${esc(wdGrupo(id))} · ${esc(id)}</small></div><span class="w-res"></span><button class="btn-danger" type="button" title="Quitar esta página">✕</button><span class="w-chev">▼</span></div>` +
     `<div class="w-card-g">` + WD_TRI.map(tri).join("") +
     `<div><label>Tipo de chat</label><select data-k="chatMode"><option value="">Heredar</option><option value="page"${o.chatMode === "page" ? " selected" : ""}>Por página</option><option value="global"${o.chatMode === "global" ? " selected" : ""}>Global</option></select></div></div>`;
   const res = d.querySelector(".w-res");
