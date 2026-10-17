@@ -215,6 +215,14 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
 .w-card-g label{margin:6px 0 0;font-size:11px;}
 .w-card-g select{padding:8px;font-size:13px;}
 .w-card-g select.ov{border-color:var(--accent2);color:var(--accent2);font-weight:600;}
+.w-card-h{cursor:pointer;user-select:none;align-items:center;}
+.w-card-h .w-chev{display:inline-block;width:14px;margin-right:6px;color:var(--muted);transition:transform .15s;}
+.w-card:not(.cerrada) .w-chev{transform:rotate(90deg);}
+.w-card.cerrada .w-card-g{display:none;}
+.w-card-h .w-res{display:block;font-size:11px;margin-top:3px;color:var(--accent2);}
+.w-card-h .w-res.vacio{color:var(--muted);}
+.w-pg-acc{display:flex;gap:8px;}
+.w-pg-acc button{margin:0;padding:6px 10px;font-size:12px;}
 .w-chip{display:inline-block;background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-size:13px;margin-bottom:8px;}
 /* ===== Pedidos, links rotos, estadísticas y estado de descarga ===== */
 .badge{display:inline-block;min-width:18px;padding:1px 6px;margin-left:6px;border-radius:10px;background:var(--accent);color:#fff;font-size:11px;line-height:16px;text-align:center;}
@@ -722,7 +730,7 @@ select.sel-estado{width:auto;max-width:100%;margin-top:8px;padding:6px 8px;font-
 
     <label style="margin-top:22px;">Ajustes por página <span style="font-weight:400;">(los que dejes en «Heredar» usan los valores de arriba)</span></label>
     <div id="wdPgPick" style="margin-top:8px;"></div>
-    <div class="w-pg-bar"><span class="hint" id="wdPgCount" style="margin:0;"></span><input type="text" id="wdPgFiltro" placeholder="🔍 Filtrar las ya configuradas" style="display:none;"></div>
+    <div class="w-pg-bar"><span class="hint" id="wdPgCount" style="margin:0;"></span><div class="w-pg-acc"><button class="btn-secondary" id="wdPgAbrir" type="button">Desplegar todas</button><button class="btn-secondary" id="wdPgCerrar" type="button">Plegar todas</button></div><input type="text" id="wdPgFiltro" placeholder="🔍 Filtrar las ya configuradas" style="display:none;"></div>
     <div class="w-pgs" id="wdPgs"></div>
     <p class="hint" id="wdPgVacio">Todavía no configuraste ninguna página: todas usan los valores generales de arriba. Buscá una arriba para darle ajustes propios.</p>
 
@@ -2750,20 +2758,29 @@ function wdFiltrarAjustes(){
   document.querySelectorAll("#wdPgs .w-card").forEach(c => { c.style.display = (!q || coincide(q, c.dataset.id + " " + wdEtiqueta(c.dataset.id))) ? "" : "none"; });
 }
 $("wdPgFiltro").addEventListener("input", wdFiltrarAjustes);
+$("wdPgAbrir").addEventListener("click", () => document.querySelectorAll("#wdPgs .w-card").forEach(c => c.classList.remove("cerrada")));
+$("wdPgCerrar").addEventListener("click", () => document.querySelectorAll("#wdPgs .w-card").forEach(c => c.classList.add("cerrada")));
 
 function wdAddFila(id, o, nueva){
   o = o || {};
   const d = document.createElement("div");
-  d.className = "w-card" + (nueva ? " nueva" : "");
+  d.className = "w-card" + (nueva ? " nueva" : " cerrada");
   d.dataset.id = id;
   const tri = k => `<div><label>${WD_ETQ[k]}</label>${wdTri(k, o[k])}</div>`;
-  d.innerHTML = `<div class="w-card-h"><div><div class="t">${esc(wdEtiqueta(id))}</div><small>${esc(wdGrupo(id))} · ${esc(id)}</small></div><button class="btn-danger" type="button" title="Quitar esta página">✕</button></div>` +
+  d.innerHTML = `<div class="w-card-h"><div><div class="t"><span class="w-chev">▸</span><span class="w-t">${esc(wdEtiqueta(id))}</span></div><small>${esc(wdGrupo(id))} · ${esc(id)}</small><span class="w-res"></span></div><button class="btn-danger" type="button" title="Quitar esta página">✕</button></div>` +
     `<div class="w-card-g">` + WD_TRI.map(tri).join("") +
     `<div><label>Tipo de chat</label><select data-k="chatMode"><option value="">Heredar</option><option value="page"${o.chatMode === "page" ? " selected" : ""}>Por página</option><option value="global"${o.chatMode === "global" ? " selected" : ""}>Global</option></select></div></div>`;
+  const res = d.querySelector(".w-res");
+  const resumen = () => {
+    const n = [...d.querySelectorAll("select")].filter(x => x.value).length;
+    res.textContent = n ? n + " ajuste" + (n === 1 ? "" : "s") + " propio" + (n === 1 ? "" : "s") : "Todo en «Heredar»";
+    res.classList.toggle("vacio", !n);
+  };
   d.querySelectorAll("select").forEach(sel => {
-    const marcar = () => sel.classList.toggle("ov", !!sel.value);
+    const marcar = () => { sel.classList.toggle("ov", !!sel.value); resumen(); };
     sel.addEventListener("change", marcar); marcar();
   });
+  d.querySelector(".w-card-h").addEventListener("click", (e) => { if(e.target.closest("button")) return; d.classList.toggle("cerrada"); });
   d.querySelector("button").addEventListener("click", () => { d.remove(); wdActualizarListaAjustes(); });
   if(nueva) $("wdPgs").prepend(d); else $("wdPgs").appendChild(d);
   return d;
@@ -2818,7 +2835,7 @@ let wdPickAjustes = null, wdPickScope = null;
 function wdRefrescarPickers(){
   if(wdPickAjustes) wdPickAjustes.refrescar();
   if(wdPickScope) wdPickScope.refrescar();
-  document.querySelectorAll("#wdPgs .w-card").forEach(c => { const t = c.querySelector(".t"); if(t) t.textContent = wdEtiqueta(c.dataset.id); });
+  document.querySelectorAll("#wdPgs .w-card").forEach(c => { const t = c.querySelector(".w-t"); if(t) t.textContent = wdEtiqueta(c.dataset.id); });
 }
 function wdNScopeSet(v){
   v = v || "global";
@@ -3034,7 +3051,7 @@ wdPickAjustes = wdCrearPicker($("wdPgPick"), {
     let c = [...document.querySelectorAll("#wdPgs .w-card")].find(x => x.dataset.id === id);
     if(c){
       $("wdPgFiltro").value = ""; wdFiltrarAjustes();
-      c.classList.add("nueva"); setTimeout(() => c.classList.remove("nueva"), 2000);
+      c.classList.remove("cerrada"); c.classList.add("nueva"); setTimeout(() => c.classList.remove("nueva"), 2000);
     }else{
       c = wdAddFila(id, {}, true);
       wdActualizarListaAjustes();
