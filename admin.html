@@ -215,7 +215,16 @@ kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-botto
 .w-card-g label{margin:6px 0 0;font-size:11px;}
 .w-card-g select{padding:8px;font-size:13px;}
 .w-card-g select.ov{border-color:var(--accent2);color:var(--accent2);font-weight:600;}
-.w-pgs{grid-template-columns:1fr;gap:10px;}
+.w-pgs{grid-template-columns:1fr;gap:10px;max-height:60vh;overflow-y:auto;padding-right:4px;}
+.w-fold{margin-top:22px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card);}
+.w-fold-h{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 18px;cursor:pointer;user-select:none;background:var(--card2);font-size:15px;transition:.2s;}
+.w-fold-h:hover{filter:brightness(1.2);}
+.w-fold-h small{display:block;color:var(--muted);font-size:12px;font-weight:400;margin-top:3px;}
+.w-fold-n{color:var(--accent2);font-size:12px;font-weight:600;margin-left:6px;}
+.w-fold>.w-fold-h .w-chev{color:var(--muted);transition:transform .3s;}
+.w-fold:not(.cerrada)>.w-fold-h .w-chev{transform:rotate(180deg);color:var(--accent2);}
+.w-fold.cerrada .w-fold-b{display:none;}
+.w-fold-b{padding:6px 16px 16px;}
 .w-card{padding:0;overflow:hidden;border-radius:12px;}
 .w-card-h{cursor:pointer;user-select:none;align-items:center;padding:14px 16px;background:var(--card2);transition:.2s;gap:12px;}
 .w-card-h:hover{filter:brightness(1.2);}
@@ -734,11 +743,15 @@ select.sel-estado{width:auto;max-width:100%;margin-top:8px;padding:6px 8px;font-
     <label>Nombres reservados (nadie más puede usarlos)</label>
     <input type="text" id="wdReserved">
 
-    <label style="margin-top:22px;">Ajustes por página <span style="font-weight:400;">(los que dejes en «Heredar» usan los valores de arriba)</span></label>
+    <div class="w-fold cerrada" id="wdFold">
+    <div class="w-fold-h" id="wdFoldH"><div><b>Ajustes por página</b> <span class="w-fold-n" id="wdFoldN"></span><small>Los que dejes en «Heredar» usan los valores de arriba</small></div><span class="w-chev">▼</span></div>
+    <div class="w-fold-b">
     <div id="wdPgPick" style="margin-top:8px;"></div>
     <div class="w-pg-bar"><span class="hint" id="wdPgCount" style="margin:0;"></span><div class="w-pg-acc"><button class="btn-secondary" id="wdPgAbrir" type="button">Desplegar todas</button><button class="btn-secondary" id="wdPgCerrar" type="button">Plegar todas</button></div><input type="text" id="wdPgFiltro" placeholder="🔍 Filtrar las ya configuradas" style="display:none;"></div>
     <div class="w-pgs" id="wdPgs"></div>
     <p class="hint" id="wdPgVacio">Todavía no configuraste ninguna página: todas usan los valores generales de arriba. Buscá una arriba para darle ajustes propios.</p>
+    </div>
+    </div>
 
     <div><button class="btn-primary" id="wdSave" type="button">Guardar ajustes</button></div>
     <p class="msg" id="wdSaveMsg"></p>
@@ -2754,6 +2767,7 @@ function wdActualizarListaAjustes(){
   const n = document.querySelectorAll("#wdPgs .w-card").length;
   $("wdPgCount").textContent = n ? n + " página" + (n === 1 ? "" : "s") + " con ajustes propios" : "";
   $("wdPgVacio").style.display = n ? "none" : "block";
+  $("wdFoldN").textContent = n ? "(" + n + ")" : "";
   $("wdPgFiltro").style.display = n > 4 ? "block" : "none";
   if(n <= 4) $("wdPgFiltro").value = "";
   wdFiltrarAjustes();
@@ -2764,6 +2778,7 @@ function wdFiltrarAjustes(){
   document.querySelectorAll("#wdPgs .w-card").forEach(c => { c.style.display = (!q || coincide(q, c.dataset.id + " " + wdEtiqueta(c.dataset.id))) ? "" : "none"; });
 }
 $("wdPgFiltro").addEventListener("input", wdFiltrarAjustes);
+$("wdFoldH").addEventListener("click", () => $("wdFold").classList.toggle("cerrada"));
 $("wdPgAbrir").addEventListener("click", () => document.querySelectorAll("#wdPgs .w-card").forEach(c => c.classList.remove("cerrada")));
 $("wdPgCerrar").addEventListener("click", () => document.querySelectorAll("#wdPgs .w-card").forEach(c => c.classList.add("cerrada")));
 
