@@ -330,7 +330,7 @@ function cuerpoApartado(a){
   }
   if(formato === "imagenes"){
     const imgs = lineas.map(u => E.urlOk(u)).filter(Boolean);
-    return imgs.length ? `<div class="galeria-capturas">${imgs.map(u => `<img src="${escA(u)}" data-src="${escA(u)}" onclick="abrirLightbox(this.dataset.src)" loading="lazy" alt="">`).join("")}</div>` : "";
+    return imgs.length ? `<div class="galeria-capturas">${imgs.map(u => E.img(u, 640, "", `data-src="${escA(u)}" onclick="abrirLightbox(this.dataset.src)"`)).join("")}</div>` : "";
   }
   // texto: los renglones vacíos separan párrafos
   const parrafos = String(a.contenido).split(/\r?\n\s*\r?\n/).map(p => p.trim()).filter(Boolean);
@@ -493,11 +493,20 @@ async function cargarPagina(){
     let galeriaHtml = "";
     if(galeria.length){
       galeriaHtml = `<div class="bloque-titulo titulo-galeria"><h2>${esc((d.tituloGaleria || "").trim() || "📸 Capturas del juego")}</h2><div class="linea"></div></div><div class="galeria-capturas">`;
-      galeria.forEach(src => galeriaHtml += `<img src="${src}" onclick="abrirLightbox('${src}')" loading="lazy">`);
+      galeria.forEach(src => galeriaHtml += E.img(src, 640, "", `data-src="${escA(src)}" onclick="abrirLightbox(this.dataset.src)"`));
       galeriaHtml += `</div>`;
     }
 
-    const ap = d.apartados;
+    // Bloques predeterminados (definidos en el admin para todas las páginas o algunas): se suman a los apartados del juego
+    let presets = [];
+    try{
+      const pv = (await get(ref(db, "config/linksPredeterminados"))).val();
+      const idPag = "juego_html?slug=" + slug;
+      presets = (Array.isArray(pv) ? pv : Object.values(pv || {})).filter(a => a && a.activo !== false && String(a.contenido || "").trim()
+        && (a.alcance === "algunas" ? (a.paginas || []).includes(idPag) : (!a.alcance || a.alcance === "todas" || a.alcance === "juegos")))
+        .map(a => ({ titulo: a.titulo, formato: a.formato || "links", modo: a.modo, ubic: a.ubic, contenido: a.contenido }));
+    }catch(e){ console.warn("No se pudieron leer los bloques predeterminados", e); }
+    const ap = (Array.isArray(d.apartados) ? d.apartados : []).concat(presets);
     main.innerHTML = heroHtml
       + apartadosEn(ap, "antes_descargas")
       + descargasHtml
