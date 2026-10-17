@@ -57,6 +57,18 @@ main.fade-in{ animation:fadeIn 0.5s ease; }
 .tag.tipo{ background:var(--accent); border-color:var(--accent); color:#fff; }
 .ficha-sinopsis{ color:rgba(255,255,255,0.75); font-size:14px; line-height:1.6; max-width:700px; }
 
+/* ===== BLOQUES PREDETERMINADOS (links, texto, listas) ===== */
+.preset-box{ margin-top:26px; padding:0 20px; }
+.preset-links{ display:flex; flex-wrap:wrap; gap:10px; }
+.preset-links a{ background:var(--card2); border:1px solid var(--line); color:var(--text); text-decoration:none; font-weight:600; font-size:14px; padding:11px 18px; border-radius:10px; transition:0.25s; }
+.preset-links a:hover{ background:var(--accent); border-color:var(--accent); color:#fff; transform:translateY(-2px); }
+.preset-texto p{ font-size:14px; line-height:1.65; margin-bottom:10px; }
+.preset-lista{ list-style:none; }
+.preset-lista li{ background:var(--card2); margin-bottom:7px; padding:10px 12px; border-radius:8px; font-size:14px; border-left:3px solid var(--accent2); }
+details.preset-det{ background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+details.preset-det > summary{ cursor:pointer; padding:14px 16px; font-weight:700; font-size:15px; background:var(--card2); list-style:none; }
+details.preset-det > .preset-cuerpo{ padding:16px; }
+
 /* ===== REPRODUCTOR ===== */
 .contenido-central{ padding:0 20px; max-width:900px; margin:0 auto; }
 .reproductor-box{ background:#000; border-radius:14px; overflow:hidden; border:1px solid var(--line); box-shadow:0 12px 35px rgba(255,43,61,0.15); margin-bottom:22px; }
@@ -224,11 +236,37 @@ window.cambiarCapitulo = function(index){
 
 function miniCard(slug, d, etiqueta, sub, actual){
   const img = d.poster || d.fondo || "";
-  const cuerpo = `<div class="mini-img">${img && !/\.(mp4|webm|ogg|ogv|mov|m3u8)(\?.*)?$/i.test(img) && !/youtu\.be|youtube\.com/i.test(img) ? `<img src="${attr(img)}" alt="" loading="lazy">` : (d.tipo === "pelicula" ? "🎬" : "📺")}</div>
+  const cuerpo = `<div class="mini-img">${img && !/\.(mp4|webm|ogg|ogv|mov|m3u8)(\?.*)?$/i.test(img) && !/youtu\.be|youtube\.com/i.test(img) ? window.MS47_ESTILO.img(img, 320, "") : (d.tipo === "pelicula" ? "🎬" : "📺")}</div>
       <div class="mini-et">${esc(etiqueta)}</div>
       ${sub ? `<div class="mini-sub ${actual ? "mini-aqui" : ""}">${esc(sub)}</div>` : ""}`;
   if(actual) return `<div class="mini-card actual">${cuerpo}</div>`;
   return `<a class="mini-card" href="serie.html?slug=${encodeURIComponent(slug)}">${cuerpo}</a>`;
+}
+
+// Bloques predeterminados que el admin definió para todas las series (o algunas). Si falla, no se muestran.
+async function bloquesPredeterminados(slug){
+  try{
+    const v = (await get(ref(db, "config/linksPredeterminados"))).val();
+    const lista = Array.isArray(v) ? v : Object.values(v || {});
+    const id = "serie_html?slug=" + slug;
+    const urlOkS = (u) => window.MS47_ESTILO.urlOk(u);
+    return lista.filter(a => a && a.activo !== false && (a.contenido || "").trim()
+      && (a.alcance === "algunas" ? (a.paginas || []).includes(id) : (!a.alcance || a.alcance === "todas" || a.alcance === "series")))
+      .map(a => {
+        const lineas = String(a.contenido).split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+        let cuerpo = "";
+        if(a.formato === "lista") cuerpo = `<ul class="preset-lista">${lineas.map(l => `<li>${esc(l)}</li>`).join("")}</ul>`;
+        else if(a.formato === "texto") cuerpo = `<div class="preset-texto">${String(a.contenido).split(/\r?\n\s*\r?\n/).map(p => `<p>${esc(p.trim()).replace(/\n/g, "<br>")}</p>`).join("")}</div>`;
+        else{
+          const links = lineas.map(l => { const i = l.indexOf("|"); const u = urlOkS(i >= 0 ? l.slice(i + 1) : l); return u ? `<a href="${attr(u)}" target="_blank" rel="noopener">${esc((i >= 0 ? l.slice(0, i).trim() : "") || "Abrir enlace")}</a>` : ""; }).filter(Boolean);
+          cuerpo = links.length ? `<div class="preset-links">${links.join("")}</div>` : "";
+        }
+        if(!cuerpo) return "";
+        const titulo = esc((a.titulo || "").trim() || "Enlaces");
+        if(a.modo === "visible") return `<div class="preset-box"><div class="bloque-titulo"><h2>${titulo}</h2><div class="linea"></div></div>${cuerpo}</div>`;
+        return `<div class="preset-box"><details class="preset-det"${a.modo === "abierto" ? " open" : ""}><summary>${titulo}</summary><div class="preset-cuerpo">${cuerpo}</div></details></div>`;
+      }).join("");
+  }catch(e){ console.warn("No se pudieron leer los bloques predeterminados", e); return ""; }
 }
 
 // Apartados «Temporadas» (misma saga) y «Te puede interesar» (sugerencias).
@@ -314,7 +352,7 @@ async function cargarSerie(){
     }
     fichaHtml += `<div class="ficha-contenido">`;
     if(s.poster){
-      fichaHtml += `<div class="ficha-poster"><img src="${s.poster}" alt=""></div>`;
+      fichaHtml += `<div class="ficha-poster">${window.MS47_ESTILO.img(s.poster, 360, "")}</div>`;
     }
     fichaHtml += `<div class="ficha-info">`;
     fichaHtml += `<h1>${esc(tituloSerie)}</h1>`;
@@ -349,6 +387,7 @@ async function cargarSerie(){
       cuerpoHtml += `<div class="bloque-titulo"><h2>Capítulos</h2><div class="linea"></div></div><div class="grid-capitulos">${botonesHtml}</div>`;
     }
     cuerpoHtml += await bloquesExtra(slug, s);
+    cuerpoHtml += await bloquesPredeterminados(slug);
     cuerpoHtml += `</div>`;
 
     main.innerHTML = fichaHtml + cuerpoHtml;
