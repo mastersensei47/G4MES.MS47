@@ -120,7 +120,7 @@ function tarjeta({ href, titulo, img, badge, nueva }){
   return `
     <a class="card" href="${esc(href)}" ${nueva ? 'target="_blank" rel="noopener"' : ""} data-t="${esc(String(titulo).toLowerCase())}">
       ${badge ? `<span class="badge">${badge}</span>` : ""}
-      ${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : `<img alt="" style="visibility:hidden">`}
+      ${img ? window.MS47_ESTILO.img(img, 420, "") : `<img alt="" style="visibility:hidden">`}
       <h3>${esc(titulo)}</h3>
     </a>`;
 }
