@@ -232,7 +232,7 @@ function render({ config, categorias }){
     return `
       <div class="card">
         <a href="${esc(href)}">
-          ${imagen ? `<img src="${esc(imagen)}" alt="${esc(c.nombre)}" loading="lazy">` : `<img alt="" style="visibility:hidden">`}
+          ${imagen ? window.MS47_ESTILO.img(imagen, 480, c.nombre) : `<img alt="" style="visibility:hidden">`}
           <h3>${esc(c.nombre)}</h3>
         </a>
       </div>`;
