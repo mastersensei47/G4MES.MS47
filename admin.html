@@ -238,6 +238,14 @@ select.sel-estado{width:auto;max-width:100%;margin-top:8px;padding:6px 8px;font-
 .st-top-bar{height:12px;background:var(--card2);border-radius:6px;overflow:hidden;}
 .st-top-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:6px;}
 .st-top-row .n{text-align:right;color:var(--muted);}
+.chk-bar{height:8px;background:var(--card2);border-radius:6px;overflow:hidden;margin-top:12px;}
+.chk-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .2s;}
+.chk-modo{font-size:12px;padding:8px 12px;border-radius:8px;margin-top:10px;line-height:1.5;}
+.chk-modo.full{background:rgba(0,229,199,0.1);color:#6bffb0;}
+.chk-modo.basico{background:rgba(255,200,60,0.1);color:#ffd77a;}
+.ps-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.ps-chips .w-chip{margin:0;cursor:pointer;}
+.ps-card .w-pick{margin-top:8px;}
 </style>
 </head>
 <body>
@@ -275,6 +283,7 @@ select.sel-estado{width:auto;max-width:100%;margin-top:8px;padding:6px 8px;font-
     <button class="tab-btn" id="tabBtnNovedades" type="button">📣 Novedades</button>
     <button class="tab-btn" id="tabBtnPedidos" type="button">🎮 Pedidos <span class="badge" id="badgePedidos" hidden></span></button>
     <button class="tab-btn" id="tabBtnReportes" type="button">🚩 Links rotos <span class="badge" id="badgeReportes" hidden></span></button>
+    <button class="tab-btn" id="tabBtnPreset" type="button">🔗 Predeterminados</button>
     <button class="tab-btn" id="tabBtnStats" type="button">📊 Estadísticas</button>
   </div>
 
@@ -802,12 +811,39 @@ select.sel-estado{width:auto;max-width:100%;margin-top:8px;padding:6px 8px;font-
   <!-- ================= LINKS ROTOS ================= -->
   <div id="tabReportes" style="display:none;">
   <div class="card card-ancha">
+    <h2>🔎 Chequeo automático de links</h2>
+    <p class="hint">Prueba los links de descarga de todos los juegos y te marca los que ya no andan, sin esperar a que un visitante avise. Los resultados quedan guardados y los juegos con links caídos se marcan en la lista de Juegos.</p>
+    <div class="chk-modo" id="chkModo"></div>
+    <div>
+      <button class="btn-primary" id="chkRun" type="button">🔎 Revisar todos los links</button>
+      <button class="btn-secondary" id="chkStop" type="button" style="display:none;">Cancelar</button>
+    </div>
+    <label class="chk-lbl" style="margin-top:14px;"><input type="checkbox" id="chkAuto"> Revisar solo al abrir el panel si pasó más de un día desde el último chequeo</label>
+    <div class="chk-bar" id="chkBar" style="display:none;"><i></i></div>
+    <p class="hint" id="chkProg"></p>
+    <p class="hint" id="chkMeta"></p>
+    <p class="msg" id="chkMsg"></p>
+    <div id="chkLista" style="margin-top:12px;"></div>
+  </div>
+  <div class="card card-ancha">
     <h2>🚩 Links reportados como rotos</h2>
     <p class="hint">Los visitantes avisan con el botón «🚩 Link roto» que hay al lado de cada descarga. Están ordenados por cantidad de reportes (cada dispositivo cuenta una sola vez por link). Si ya cambiaste el link en el juego, el reporte queda atenuado como «ya cambiado».</p>
     <p class="msg" id="rpMsg"></p>
     <div id="rpLista" style="margin-top:14px;"></div>
   </div>
   </div><!-- /tabReportes -->
+
+  <!-- ================= PREDETERMINADOS ================= -->
+  <div id="tabPreset" style="display:none;">
+  <div class="card card-ancha">
+    <h2>🔗 Links y bloques predeterminados</h2>
+    <p class="hint">Armá una sola vez lo que querés que aparezca solo en varias páginas (cómo instalar, programas necesarios, tu Discord, avisos…) y elegí si va en <b>todas</b> las páginas, solo en los juegos, solo en las series o en <b>algunas</b> que elijas. Se suman a lo que ya tenga cada página, sin tocar los juegos uno por uno. En las series se muestran después de los capítulos.</p>
+    <div id="psLista"></div>
+    <button class="btn-secondary" id="psAdd" type="button">+ Agregar bloque</button>
+    <div style="margin-top:6px;"><button class="btn-primary" id="psSave" type="button">Guardar bloques</button></div>
+    <p class="msg" id="psMsg"></p>
+  </div>
+  </div><!-- /tabPreset -->
 
   <!-- ================= ESTADÍSTICAS ================= -->
   <div id="tabStats" style="display:none;">
@@ -872,6 +908,12 @@ function chipEstadoAdmin(d){
   return e ? `<span class="chip-est" style="--c:${e[1]}">${e[0]}</span>` : "";
 }
 document.getElementById("fEstado").innerHTML = opcionesEstado();
+let chequeosData = {}, chequeoMeta = null;   // resultados del chequeo de links (nodos chequeos y chequeoMeta)
+function chipCaidos(slug){
+  const o = chequeosData[slug]; if(!o) return "";
+  const n = Object.values(o).filter(x => x && (x.e === "roto" || x.e === "noresp")).length;
+  return n ? `<span class="chip-est" style="--c:#ff4d5e">🔗 ${n} caído${n === 1 ? "" : "s"}</span>` : "";
+}
 const TZ = -3;   // huso horario (horas respecto de UTC) para los «días» de las estadísticas. Tiene que ser igual en ms47-widgets.js
 const diaKey = (atras = 0) => new Date(Date.now() + TZ * 36e5 - atras * 864e5).toISOString().slice(0, 10).replace(/-/g, "");
 // misma función que usa juego.html para identificar cada link reportado
@@ -912,7 +954,7 @@ onAuthStateChanged(auth, (user) => {
   if(user){
     loginDiv.style.display = "none";
     panelDiv.style.display = "block";
-    if(!panelIniciado){ panelIniciado = true; cargarLista(); cargarIndice(); iniciarBandejas(); }
+    if(!panelIniciado){ panelIniciado = true; cargarLista(); cargarIndice(); iniciarBandejas(); autoChequeo(); }
   }else{
     panelIniciado = false;
     detenerBandejas();
@@ -925,7 +967,7 @@ onAuthStateChanged(auth, (user) => {
 document.getElementById("btnLogout").addEventListener("click", () => signOut(auth));
 
 // ---------- Tabs ----------
-const TABS = { Juegos: "tabJuegos", Series: "tabSeries", Categorias: "tabCategorias", Estetica: "tabEstetica", Ajustes: "tabAjustes", Chat: "tabChat", Novedades: "tabNovedades", Pedidos: "tabPedidos", Reportes: "tabReportes", Stats: "tabStats" };
+const TABS = { Juegos: "tabJuegos", Series: "tabSeries", Categorias: "tabCategorias", Estetica: "tabEstetica", Ajustes: "tabAjustes", Chat: "tabChat", Novedades: "tabNovedades", Pedidos: "tabPedidos", Reportes: "tabReportes", Preset: "tabPreset", Stats: "tabStats" };
 function mostrarTab(nombre){
   Object.keys(TABS).forEach(k => {
     document.getElementById(TABS[k]).style.display = (k === nombre) ? "block" : "none";
@@ -938,7 +980,8 @@ function mostrarTab(nombre){
   if(nombre === "Chat") cargarChat();
   if(nombre === "Novedades") cargarNovedades();
   if(nombre === "Pedidos") renderPedidos();
-  if(nombre === "Reportes") renderReportes();
+  if(nombre === "Reportes"){ renderReportes(); pintarChequeoInfo(); }
+  if(nombre === "Preset") cargarPresets();
   if(nombre === "Stats") cargarStats();
 }
 Object.keys(TABS).forEach(k => document.getElementById("tabBtn" + k).addEventListener("click", () => mostrarTab(k)));
@@ -1094,9 +1137,9 @@ function crearItemPagina(slug, d){
   const item = document.createElement("div");
   item.className = "pagina-item";
   item.innerHTML = `
-    ${miniatura ? `<img class="mini-thumb" src="${esc(miniatura)}">` : ""}
+    ${miniatura ? E.img(miniatura, 120, "", 'class="mini-thumb"') : ""}
     <div class="pagina-info">
-      <div class="titulo">${esc(d.titulo || slug)}<span class="chip-slot">${chipEstadoAdmin(d)}</span></div>
+      <div class="titulo">${esc(d.titulo || slug)}<span class="chip-slot">${chipEstadoAdmin(d)}</span>${chipCaidos(slug)}</div>
       <div class="link">${esc(link)}</div>
       <select class="sel-estado" data-accion="estado" title="Cambiar la etiqueta de estado sin abrir el editor"></select>
     </div>
@@ -1476,7 +1519,7 @@ function crearItemSerie(slug, s){
   const item = document.createElement("div");
   item.className = "pagina-item";
   item.innerHTML = `
-    ${miniatura ? `<img class="mini-thumb" src="${esc(miniatura)}">` : ""}
+    ${miniatura ? E.img(miniatura, 120, "", 'class="mini-thumb"') : ""}
     <div class="pagina-info">
       <div class="titulo">${esc(s.titulo || slug)} <small style="display:inline;">(${(s.capitulos||[]).length} capítulos)</small></div>
       <div class="link">${esc(link)}</div>
@@ -1821,7 +1864,7 @@ function renderListaCategorias(){
     const item = document.createElement("div");
     item.className = "pagina-item" + (visible ? "" : " oculta");
     item.innerHTML = `
-      ${miniatura ? `<img class="mini-thumb" src="${esc(miniatura)}" alt="">` : ""}
+      ${miniatura ? E.img(miniatura, 120, "", 'class="mini-thumb"') : ""}
       <div class="pagina-info">
         <div class="titulo">${esc(d.icono || "")} ${esc(d.nombre || slug)}</div>
         <div style="margin-top:6px;">
@@ -3096,14 +3139,21 @@ function iniciarBandejas(){
     rpItems.sort((a, b) => b.n - a.n || (b.v.ts || 0) - (a.v.ts || 0));
     pintarInsignias(); renderReportes();
   }, (err) => { console.error(err); setMsg($("rpMsg"), "error", errorLegible(err)); }));
+  bandejasOff.push(fbOnValue(ref(db, "chequeos"), (snap) => {
+    chequeosData = snap.val() || {};
+    pintarInsignias(); renderChequeos();
+    if(Object.keys(INDICE.juegos || {}).length && typeof renderListaJuegos === "function") renderListaJuegos();
+  }, (err) => { console.error(err); setMsg($("chkMsg"), "error", errorLegible(err)); }));
+  bandejasOff.push(fbOnValue(ref(db, "chequeoMeta"), (snap) => { chequeoMeta = snap.val(); pintarChequeoInfo(); }, () => {}));
 }
 function detenerBandejas(){
   bandejasOff.forEach(f => { try{ f(); }catch(e){} });
-  bandejasOff = []; pdItems = []; rpItems = [];
+  bandejasOff = []; pdItems = []; rpItems = []; chequeosData = {}; chequeoMeta = null;
   ["badgePedidos", "badgeReportes"].forEach(id => { const b = document.getElementById(id); if(b) b.hidden = true; });
 }
 function pintarInsignias(){
-  const np = pdItems.filter(x => !x.v.hecho).length, nr = rpItems.length;
+  const rotos = Object.values(chequeosData || {}).reduce((a, o) => a + Object.values(o || {}).filter(x => x && (x.e === "roto" || x.e === "noresp")).length, 0);
+  const np = pdItems.filter(x => !x.v.hecho).length, nr = rpItems.length + rotos;
   $("badgePedidos").hidden = !np; $("badgePedidos").textContent = np;
   $("badgeReportes").hidden = !nr; $("badgeReportes").textContent = nr;
 }
@@ -3219,6 +3269,225 @@ function rpResolver(x){
   setMsg($("rpMsg"), "", "");
   remove(ref(db, "reportes/" + x.slug + "/" + x.h)).catch(err => { console.error(err); setMsg($("rpMsg"), "error", errorLegible(err)); });
 }
+
+// ---------- Chequeo automático de links ----------
+let chkCorriendo = false, chkCancelar = false;
+const chkUrl = () => String((window.MS47 && window.MS47.LINK_CHECK_URL) || "").trim();
+const CHK_ETQ = { roto: ["🔴 Roto", "#ff4d5e"], noresp: ["⚫ No responde", "#ff8a3d"], dudoso: ["🟠 Dudoso", "#f5a623"] };
+
+function pintarChequeoInfo(){
+  const full = !!chkUrl();
+  const m = $("chkModo");
+  m.className = "chk-modo " + (full ? "full" : "basico");
+  m.textContent = full
+    ? "Chequeo completo: se consulta tu chequeador en servidor, que revisa si el archivo existe en Mega, Drive, MediaFire y otros."
+    : "Modo básico: desde el navegador solo se puede saber si el sitio responde (no si el archivo fue borrado). Para detectar archivos borrados en Mega/Drive/MediaFire instalá el chequeador gratis (archivo link-checker-worker.js) y poné su dirección en config.js como LINK_CHECK_URL.";
+  $("chkAuto").checked = localStorage.getItem("ms47_chk_auto") === "1";
+  $("chkMeta").textContent = chequeoMeta && chequeoMeta.ts
+    ? "Último chequeo: " + wdFecha(chequeoMeta.ts) + " · " + (chequeoMeta.total || 0) + " links revisados" + (chequeoMeta.cancelado ? " (se canceló antes de terminar)" : "")
+    : "Todavía no se hizo ningún chequeo.";
+}
+$("chkAuto").addEventListener("change", (e) => { localStorage.setItem("ms47_chk_auto", e.target.checked ? "1" : "0"); });
+
+function chkEnlaces(){
+  const out = [];
+  Object.entries(INDICE.juegos || {}).forEach(([slug, g]) => (g && g.descargas || []).forEach(dl => {
+    if(dl && /^https?:\/\//i.test(String(dl.url || "").trim())) out.push({ slug, h: hashUrl(dl.url), label: dl.label || "Descargar", url: String(dl.url).trim() });
+  }));
+  return out;
+}
+async function probarLink(url){
+  const full = chkUrl(), ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), full ? 20000 : 9000);
+  try{
+    if(full){
+      const r = await fetch(full + (full.includes("?") ? "&" : "?") + "u=" + encodeURIComponent(url), { signal: ctl.signal });
+      const j = await r.json();
+      return { e: ["ok", "roto", "dudoso"].includes(j.estado) ? j.estado : "dudoso", d: String(j.detalle || "").slice(0, 140) };
+    }
+    await fetch(url, { mode: "no-cors", cache: "no-store", signal: ctl.signal });
+    return { e: "ok", d: "El sitio responde" };
+  }catch(err){
+    if(full) return { e: "dudoso", d: "No se pudo consultar el chequeador" };
+    return { e: "noresp", d: ctl.signal.aborted ? "No respondió a tiempo" : "No se pudo conectar con el sitio" };
+  }finally{ clearTimeout(t); }
+}
+async function chequearLinks(auto){
+  if(chkCorriendo) return;
+  if(!Object.keys(INDICE.juegos || {}).length) await cargarIndice();
+  const todos = chkEnlaces();
+  if(!todos.length){ if(!auto) setMsg($("chkMsg"), "error", "No hay links de descarga para revisar."); return; }
+  chkCorriendo = true; chkCancelar = false; setMsg($("chkMsg"), "", "");
+  $("chkRun").disabled = true; $("chkStop").style.display = "inline-block"; $("chkBar").style.display = "block";
+  const cache = new Map(), res = []; let i = 0, hechos = 0;
+  const barra = $("chkBar").firstElementChild;
+  async function obrero(){
+    while(!chkCancelar){
+      const it = todos[i++]; if(!it) break;
+      if(!cache.has(it.url)) cache.set(it.url, probarLink(it.url));
+      const r = await cache.get(it.url);
+      res.push(Object.assign({}, it, r)); hechos++;
+      $("chkProg").textContent = "Revisando… " + hechos + " de " + todos.length;
+      barra.style.width = Math.round(hechos / todos.length * 100) + "%";
+    }
+  }
+  try{
+    await Promise.all([obrero(), obrero(), obrero(), obrero()]);
+    const m = {};
+    res.forEach(r => { m[r.slug + "/" + r.h] = r.e === "ok" ? null : { e: r.e, d: r.d, label: r.label, url: r.url, ts: Date.now() }; });
+    if(!chkCancelar){   // chequeo completo: se limpian los resultados de links que ya no existen
+      const vivos = new Set(todos.map(x => x.slug + "/" + x.h));
+      Object.entries(chequeosData).forEach(([slug, o]) => Object.keys(o || {}).forEach(h => { if(!vivos.has(slug + "/" + h)) m[slug + "/" + h] = null; }));
+    }
+    if(Object.keys(m).length) await update(ref(db, "chequeos"), m);
+    await set(ref(db, "chequeoMeta"), { ts: Date.now(), total: hechos, modo: chkUrl() ? "servidor" : "basico", cancelado: chkCancelar });
+    const malos = res.filter(r => r.e === "roto" || r.e === "noresp").length, dud = res.filter(r => r.e === "dudoso").length;
+    setMsg($("chkMsg"), malos ? "error" : "ok", (chkCancelar ? "Chequeo cancelado. " : "Chequeo terminado. ") + hechos + " links revisados: " + (malos ? malos + " caído(s)" : "ninguno caído") + (dud ? " y " + dud + " dudoso(s)" : "") + ".");
+  }catch(err){ console.error(err); setMsg($("chkMsg"), "error", errorLegible(err)); }
+  chkCorriendo = false;
+  $("chkRun").disabled = false; $("chkStop").style.display = "none"; $("chkProg").textContent = ""; $("chkBar").style.display = "none"; barra.style.width = "0";
+}
+$("chkRun").addEventListener("click", () => chequearLinks(false));
+$("chkStop").addEventListener("click", () => { chkCancelar = true; });
+async function autoChequeo(){
+  try{
+    if(localStorage.getItem("ms47_chk_auto") !== "1") return;
+    const meta = (await get(ref(db, "chequeoMeta"))).val();
+    if(meta && meta.ts && Date.now() - meta.ts < 864e5) return;
+    await chequearLinks(true);
+  }catch(e){ console.warn("Chequeo automático:", e); }
+}
+function renderChequeos(){
+  const box = $("chkLista"); if(!box) return;
+  box.innerHTML = "";
+  const items = [];
+  Object.entries(chequeosData || {}).forEach(([slug, o]) => Object.entries(o || {}).forEach(([h, v]) => { if(v && v.url) items.push({ slug, h, v }); }));
+  const peso = { roto: 0, noresp: 1, dudoso: 2 };
+  items.sort((a, b) => (peso[a.v.e] ?? 3) - (peso[b.v.e] ?? 3) || (a.slug < b.slug ? -1 : 1));
+  if(!items.length){ box.innerHTML = '<p class="hint">' + (chequeoMeta ? "Ningún link con problemas en el último chequeo. 🎉" : "") + '</p>'; return; }
+  items.forEach(x => {
+    const g = (INDICE.juegos || {})[x.slug];
+    const vigente = !g || (g.descargas || []).some(dl => dl && dl.url && hashUrl(dl.url) === x.h);
+    const et = CHK_ETQ[x.v.e] || CHK_ETQ.dudoso;
+    const it = document.createElement("div"); it.className = "pagina-item" + (vigente ? "" : " oculta");
+    const info = document.createElement("div"); info.className = "pagina-info";
+    const t = document.createElement("div"); t.className = "titulo"; t.textContent = ((g && g.titulo) || x.slug) + " · " + (x.v.label || "Descargar");
+    const chip = document.createElement("span"); chip.className = "chip-est"; chip.style.setProperty("--c", et[1]); chip.textContent = et[0]; t.append(chip);
+    const l = document.createElement("div"); l.className = "link"; l.textContent = x.v.url;
+    const m = document.createElement("div"); m.className = "hint";
+    m.textContent = (x.v.d || "") + " · " + wdFecha(x.v.ts || Date.now()) + (!vigente ? " · el link ya fue cambiado en el juego" : "");
+    info.append(t, l, m);
+    const acc = document.createElement("div");
+    if(/^https?:\/\//i.test(x.v.url)){ const a = document.createElement("a"); a.className = "btn-secondary"; a.href = x.v.url; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = "↗ Probar"; acc.append(a); }
+    acc.append(mkBtn("🔁 Reprobar", "btn-secondary", () => chkReprobar(x)));
+    if(g){
+      acc.append(mkBtn("✎ Editar juego", "btn-secondary", () => rpEditar(x.slug)));
+      acc.append(mkBtn("❌ Marcar «Links caídos»", "btn-secondary", () => rpEstado(x.slug, "caido")));
+    }
+    acc.append(mkBtn("✔ Ignorar", "btn-primary", () => remove(ref(db, "chequeos/" + x.slug + "/" + x.h)).catch(err => setMsg($("chkMsg"), "error", errorLegible(err)))));
+    it.append(info, acc); box.append(it);
+  });
+}
+async function chkReprobar(x){
+  setMsg($("chkMsg"), "", "");
+  try{
+    const r = await probarLink(x.v.url);
+    if(r.e === "ok"){ await remove(ref(db, "chequeos/" + x.slug + "/" + x.h)); setMsg($("chkMsg"), "ok", "Ahora el link responde bien. Lo saqué de la lista."); }
+    else{ await update(ref(db, "chequeos/" + x.slug + "/" + x.h), { e: r.e, d: r.d, ts: Date.now() }); setMsg($("chkMsg"), "error", "Sigue con problemas: " + r.d); }
+  }catch(err){ console.error(err); setMsg($("chkMsg"), "error", errorLegible(err)); }
+}
+
+// ---------- Links y bloques predeterminados ----------
+const PS_FORMATOS = AP_FORMATOS.filter(f => ["links", "texto", "lista"].includes(f[0]));
+const PS_ALCANCES = [["todas", "Todas las páginas (juegos y series)"], ["juegos", "Solo los juegos"], ["series", "Solo las series y películas"], ["algunas", "Solo algunas páginas que elija"]];
+function psTodo(){ return [...document.querySelectorAll("#psLista .ps-card")]; }
+function crearPreset(a){
+  a = a || {};
+  const cont = $("psLista");
+  const el = document.createElement("div");
+  el.className = "grupo-media apartado-card ps-card";
+  let paginas = Array.isArray(a.paginas) ? a.paginas.filter(Boolean) : [];
+  const formato = PS_FORMATOS.some(f => f[0] === a.formato) ? a.formato : "links";
+  el.innerHTML = `
+    <div class="fila ap-cab">
+      <input type="text" class="psTitulo" placeholder="Título (ej: 🛠️ Programas necesarios)">
+      <button class="btn-secondary mini" type="button" data-a="up" title="Subir">↑</button>
+      <button class="btn-secondary mini" type="button" data-a="down" title="Bajar">↓</button>
+      <button class="btn-danger mini" type="button" data-a="del" title="Quitar">✕</button>
+    </div>
+    <label class="chk-lbl"><input type="checkbox" class="psActivo"> Activo (si lo destildás se oculta sin borrarlo)</label>
+    <div class="ap-opts">
+      <div><label>Formato</label><select class="psFormato">${opcionesHtml(PS_FORMATOS, formato)}</select></div>
+      <div><label>Cómo se muestra</label><select class="psModo">${opcionesHtml(AP_MODOS, a.modo || "cerrado")}</select></div>
+      <div><label>Dónde va en el juego</label><select class="psUbic">${opcionesHtml(AP_UBICS, a.ubic || "despues_descargas")}</select></div>
+    </div>
+    <label>Contenido</label>
+    <textarea class="psContenido" rows="4"></textarea>
+    <p class="hint psAyuda"></p>
+    <label>Dónde aparece</label>
+    <select class="psAlcance">${opcionesHtml(PS_ALCANCES, PS_ALCANCES.some(x => x[0] === a.alcance) ? a.alcance : "todas")}</select>
+    <div class="psSel" hidden>
+      <div class="psPick"></div>
+      <div class="ps-chips"></div>
+      <p class="hint">Buscá y elegí los juegos o series donde querés que aparezca. Tocá una etiqueta para quitarla.</p>
+    </div>`;
+  el.querySelector(".psTitulo").value = a.titulo || "";
+  el.querySelector(".psActivo").checked = a.activo !== false;
+  el.querySelector(".psContenido").value = a.contenido || "";
+  const ayuda = () => { el.querySelector(".psAyuda").textContent = AP_AYUDA[el.querySelector(".psFormato").value] || ""; };
+  el.querySelector(".psFormato").addEventListener("change", ayuda); ayuda();
+  const chips = el.querySelector(".ps-chips");
+  const pintarChips = () => {
+    chips.innerHTML = "";
+    paginas.forEach(id => {
+      const c = document.createElement("span"); c.className = "w-chip"; c.textContent = wdEtiqueta(id) + " ✕"; c.title = "Quitar";
+      c.addEventListener("click", () => { paginas = paginas.filter(x => x !== id); pintarChips(); });
+      chips.append(c);
+    });
+  };
+  wdCrearPicker(el.querySelector(".psPick"), {
+    excluir: () => new Set(paginas),
+    alElegir: (id) => {
+      if(!/^(juego|serie)_html/.test(id)){ setMsg($("psMsg"), "error", "Elegí un juego o una serie (no una categoría ni el inicio)."); return; }
+      setMsg($("psMsg"), "", ""); if(!paginas.includes(id)) paginas.push(id); pintarChips();
+    }
+  });
+  const sel = el.querySelector(".psAlcance");
+  const alc = () => { el.querySelector(".psSel").hidden = sel.value !== "algunas"; };
+  sel.addEventListener("change", alc); alc(); pintarChips();
+  el._paginas = () => paginas;
+  el.querySelector('[data-a="del"]').addEventListener("click", () => el.remove());
+  el.querySelector('[data-a="up"]').addEventListener("click", () => { const prev = el.previousElementSibling; if(prev) cont.insertBefore(el, prev); });
+  el.querySelector('[data-a="down"]').addEventListener("click", () => { const next = el.nextElementSibling; if(next) cont.insertBefore(next, el); });
+  cont.appendChild(el);
+  return el;
+}
+async function cargarPresets(){
+  setMsg($("psMsg"), "", "");
+  try{
+    await wdConstruirPaginas();
+    const v = (await get(ref(db, "config/linksPredeterminados"))).val();
+    $("psLista").innerHTML = "";
+    (Array.isArray(v) ? v : Object.values(v || {})).forEach(a => a && crearPreset(a));
+  }catch(err){ console.error(err); setMsg($("psMsg"), "error", errorLegible(err)); }
+}
+$("psAdd").addEventListener("click", () => { const el = crearPreset(); el.querySelector(".psTitulo").focus(); });
+$("psSave").addEventListener("click", async () => {
+  const out = []; let sinPaginas = 0;
+  psTodo().forEach(el => {
+    const titulo = el.querySelector(".psTitulo").value.trim();
+    const contenido = el.querySelector(".psContenido").value.replace(/\s+$/g, "");
+    if(!titulo && !contenido.trim()) return;
+    const alcance = el.querySelector(".psAlcance").value, paginas = el._paginas();
+    if(alcance === "algunas" && !paginas.length) sinPaginas++;
+    out.push({ titulo, activo: el.querySelector(".psActivo").checked, formato: el.querySelector(".psFormato").value, modo: el.querySelector(".psModo").value,
+      ubic: el.querySelector(".psUbic").value, contenido, alcance, paginas: alcance === "algunas" ? paginas : [] });
+  });
+  try{
+    if(out.length) await set(ref(db, "config/linksPredeterminados"), out); else await remove(ref(db, "config/linksPredeterminados"));
+    setMsg($("psMsg"), sinPaginas ? "error" : "ok", "Guardado (" + out.length + " bloque" + (out.length === 1 ? "" : "s") + ")." + (sinPaginas ? " Ojo: " + sinPaginas + " bloque(s) están en «algunas páginas» pero no elegiste ninguna, así que no se muestran en ningún lado." : " Ya se ve en el sitio."));
+  }catch(err){ console.error(err); setMsg($("psMsg"), "error", errorLegible(err)); }
+});
 
 // ---------- Estadísticas ----------
 let stDatos = null, stTok = 0, stTimer = null;
