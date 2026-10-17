@@ -286,6 +286,37 @@
     niveles, resolver, limpiar, generarCSS, fuentesHref, urlOk,
     actual: {},
 
+    // ---------- Imágenes livianas ----------
+    // Devuelve la URL de una miniatura del ancho pedido:
+    //  · Cloudinary: se le agrega el recorte/optimización en la propia URL.
+    //  · Otras imágenes de internet: solo si en config.js pusiste IMG_PROXY: "weserv" (convierte a WebP chico).
+    //  · Archivos del repositorio (ej: aventura.png): se usan tal cual (comprimilos antes de subirlos).
+    thumb(url, w) {
+      url = urlOk(url);
+      if (!url) return "";
+      w = Math.max(60, Math.min(1600, Math.round(w || 480)));
+      try {
+        if (/^https?:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\//i.test(url) && !/\/upload\/(?:[^/]*,)?(?:w_|q_auto|f_auto)/i.test(url)) {
+          return url.replace("/upload/", "/upload/w_" + w + ",c_limit,q_auto,f_auto/");
+        }
+        const px = window.MS47 && window.MS47.IMG_PROXY;
+        if (px === "weserv" && /^https?:\/\//i.test(url) && !/^https?:\/\/(localhost|127\.|192\.168\.)/i.test(url) && !/\.(gif|svg)(\?|#|$)/i.test(url)) {
+          return "https://images.weserv.nl/?url=" + encodeURIComponent(url.replace(/^https?:\/\//i, "")) + "&w=" + w + "&we&q=75&output=webp";
+        }
+      } catch (e) {}
+      return url;
+    },
+    // <img> listo: miniatura + carga diferida + decodificación en segundo plano.
+    // Si la miniatura falla, vuelve sola a la imagen original.
+    img(url, w, alt, extra) {
+      const full = urlOk(url);
+      if (!full) return '<img alt="" style="visibility:hidden">';
+      const q = x => String(x == null ? "" : x).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+      const t = API.thumb(full, w);
+      const fb = t !== full ? ' data-full="' + q(full) + '" onerror="this.onerror=null;this.src=this.dataset.full"' : "";
+      return '<img src="' + q(t) + '"' + fb + ' alt="' + q(alt) + '" loading="lazy" decoding="async"' + (extra ? " " + extra : "") + ">";
+    },
+
     aplicar(v) {
       v = limpiar(v);
       API.actual = v;
