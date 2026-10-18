@@ -1,9 +1,11 @@
 {
+  "id": "admin.html",
   "name": "MS47 Panel Admin",
   "short_name": "MS47 Admin",
   "description": "Panel de administración de MS47",
+  "lang": "es",
   "start_url": "admin.html",
-  "scope": "./",
+  "scope": "admin.html",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0a0a0b",
