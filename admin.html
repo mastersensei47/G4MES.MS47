@@ -131,6 +131,25 @@ button.mini{padding:7px 10px;margin-top:0;}
 .busq-vacio{padding:14px;text-align:center;color:var(--muted);font-size:13px;}
 .busq-cab{font-size:10px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:var(--accent2);padding:8px 10px 4px;}
 kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--muted);}
+/* ===== Edición en lote ===== */
+.pagina-item .sel-lote{width:20px;height:20px;accent-color:var(--accent2);cursor:pointer;flex-shrink:0;margin:0 4px 0 0;}
+.pagina-item.en-lote{border-color:var(--accent2);}
+.lote-bar{position:sticky;bottom:12px;z-index:900;background:var(--card2);border:1px solid var(--accent2);border-radius:14px;padding:12px 14px;margin:14px 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.5);}
+.lote-bar[hidden]{display:none;}
+.lote-bar select,.lote-bar input[type=text]{width:auto;min-width:150px;margin:0;padding:8px 10px;font-size:13px;}
+.lote-bar button{margin:0;padding:8px 12px;font-size:13px;}
+.lote-bar .lote-n{font-weight:700;color:var(--accent2);}
+.lote-acc{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px;}
+.lote-acc button{margin:0;padding:6px 12px;font-size:12px;}
+/* ===== Aviso de cambios sin guardar ===== */
+.sucio-bar{position:fixed;left:50%;transform:translateX(-50%);top:12px;z-index:1500;background:#2a1d00;border:1px solid #f5a623;color:#ffd58a;border-radius:14px;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;box-shadow:0 10px 30px rgba(0,0,0,.6);max-width:94vw;font-size:13px;}
+.sucio-bar[hidden]{display:none;}
+.sucio-bar button{margin:0;padding:7px 12px;font-size:12px;}
+/* ===== Papelera / herramientas ===== */
+.papelera-item{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;}
+.papelera-item .t{font-weight:700;font-size:14px;}
+.papelera-item small{display:block;color:var(--muted);font-size:12px;margin-top:2px;}
+.papelera-item button{margin:0;padding:6px 12px;font-size:12px;}
 .filtro-lista{margin:0 0 12px;border-radius:22px !important;padding:10px 16px !important;}
 .filtro-info{font-size:12px;color:var(--muted);margin:-4px 0 12px 6px;}
 
@@ -293,6 +312,7 @@ select.sel-estado{width:auto;max-width:100%;margin-top:8px;padding:6px 8px;font-
       <input type="text" id="busqGlobal" autocomplete="off" placeholder="🔍 Buscar juegos, series, categorías, ajustes…  ( / )">
       <div class="busq-res" id="busqRes"></div>
     </div>
+    <button class="btn-secondary" id="btnInstalar" type="button" style="margin:0;display:none;">📲 Instalar app</button>
     <button class="btn-secondary" id="btnLogout" style="margin:0;">Bloquear panel</button>
   </div>
 
@@ -308,6 +328,7 @@ select.sel-estado{width:auto;max-width:100%;margin-top:8px;padding:6px 8px;font-
     <button class="tab-btn" id="tabBtnReportes" type="button">🚩 Links rotos <span class="badge" id="badgeReportes" hidden></span></button>
     <button class="tab-btn" id="tabBtnPreset" type="button">🔗 Predeterminados</button>
     <button class="tab-btn" id="tabBtnStats" type="button">📊 Estadísticas</button>
+    <button class="tab-btn" id="tabBtnHerr" type="button">🧰 Papelera y copias</button>
   </div>
 
   <div id="tabJuegos">
@@ -324,6 +345,9 @@ select.sel-estado{width:auto;max-width:100%;margin-top:8px;padding:6px 8px;font-
     <label>Grupo / carpeta (opcional, para organizar la lista de abajo)</label>
     <input type="text" id="fGrupo" list="listaGruposJuegos" placeholder="Ej: Terror, Favoritos, Para revisar...">
     <datalist id="listaGruposJuegos"></datalist>
+
+    <label>🎬 Link de mi video del juego (opcional, YouTube: sale en «Actualizados recientemente» de la home)</label>
+    <input type="text" id="fVideoPropio" placeholder="https://www.youtube.com/watch?v=...">
 
     <div class="grid-secciones">
 
@@ -489,7 +513,19 @@ select.sel-estado{width:auto;max-width:100%;margin-top:8px;padding:6px 8px;font-
 
   <h2>Páginas existentes</h2>
   <input type="text" id="filtroJuegos" class="filtro-lista" autocomplete="off" placeholder="🔍 Filtrar juegos por nombre, grupo, descarga, contenido…">
+  <div class="lote-acc" id="loteAcc">
+    <button class="btn-secondary" id="loteTodos" type="button">☑ Seleccionar los visibles</button>
+    <button class="btn-secondary" id="loteNinguno" type="button">☐ Quitar selección</button>
+    <span class="hint" style="margin:0;align-self:center;">Tildá varios juegos para cambiarles la etiqueta o el grupo de una vez, o mandarlos a la papelera.</span>
+  </div>
   <div id="listaPaginas"></div>
+  <div class="lote-bar" id="loteBar" hidden>
+    <span><span class="lote-n" id="loteN">0</span> seleccionado(s)</span>
+    <select id="loteEstado" title="Etiqueta de estado"></select>
+    <input type="text" id="loteGrupo" list="listaGruposJuegos" placeholder="Mover a grupo… (vacío = no cambiar)">
+    <button class="btn-primary" id="loteAplicar" type="button">Aplicar</button>
+    <button class="btn-danger" id="loteBorrar" type="button">🗑 A la papelera</button>
+  </div>
 
   </div><!-- /tabJuegos -->
 
@@ -690,6 +726,11 @@ select.sel-estado{width:auto;max-width:100%;margin-top:8px;padding:6px 8px;font-
 
     <label>Texto del pie de página</label>
     <input type="text" id="aFooter" placeholder="© 2026 ...">
+
+    <label>Sección «Actualizados recientemente» en la home</label>
+    <label class="chk" style="margin-top:6px;"><input type="checkbox" id="aRecOn" checked> Mostrarla (juegos que guardaste o editaste hace poco, con el link de tu video)</label>
+    <label>Cuántos juegos mostrar (1 a 24)</label>
+    <input type="text" id="aRecN" inputmode="numeric" value="8" style="max-width:120px;">
 
     <label>Redes sociales</label>
     <div id="redesList"></div>
@@ -896,7 +937,47 @@ select.sel-estado{width:auto;max-width:100%;margin-top:8px;padding:6px 8px;font-
   <div class="card card-ancha"><h2>🔥 Más vistos</h2><p class="hint" style="margin:0 0 8px;">Visitas totales acumuladas de cada página (no dependen del período de arriba).</p><div id="stTop"></div></div>
   </div><!-- /tabStats -->
 
+  <!-- ================= PAPELERA, COPIAS Y COMPARTIR ================= -->
+  <div id="tabHerr" style="display:none;">
 
+  <div class="card card-ancha">
+    <h2>🗑 Papelera</h2>
+    <p class="hint" style="margin:0 0 10px;">Lo que borres (juegos, series y categorías) queda acá 30 días por si te arrepentís. Pasado ese tiempo se elimina solo.</p>
+    <div id="papLista"></div>
+    <div><button class="btn-danger" id="papVaciar" type="button" style="display:none;">Vaciar papelera</button></div>
+    <p class="hint">Para que la papelera funcione, las reglas de Firebase tienen que dejar leer y escribir el nodo <b>papelera</b> igual que hacés con <b>paginasJuegos</b> (con tu correo de admin).</p>
+  </div>
+
+  <div class="card card-ancha">
+    <h2>💾 Copia de seguridad</h2>
+    <p class="hint" style="margin:0 0 10px;">Descarga un archivo con todos tus juegos, series, categorías, ajustes y novedades. Para restaurar, elegí ese mismo archivo: se mezcla con lo que hay (lo del archivo pisa lo igual y lo demás se queda), y antes de tocar nada se baja una copia de lo actual.</p>
+    <div>
+      <button class="btn-primary" id="copiaBajar" type="button">⬇ Descargar copia</button>
+      <button class="btn-secondary" id="copiaSubir" type="button">⬆ Restaurar desde un archivo</button>
+      <input type="file" id="copiaArchivo" accept=".json,application/json" hidden>
+    </div>
+    <p class="msg" id="copiaMsg"></p>
+  </div>
+
+  <div class="card card-ancha">
+    <h2>🔗 Vista previa al compartir</h2>
+    <p class="hint" style="margin:0 0 10px;">WhatsApp, Discord o Telegram no ejecutan JavaScript, así que para que el link muestre la imagen y el título hace falta una página estática por juego. Este botón las genera todas en un zip: descomprimilo y subí la carpeta <b>c</b> a la raíz del repositorio. Después, en la lista de juegos usá «📤 Link para compartir». Cuando cambies títulos o imágenes, volvé a generarlas.</p>
+    <label>Dirección de tu sitio (con la barra final)</label>
+    <input type="text" id="shBase" data-nodirty placeholder="https://tuusuario.github.io/tu-repo/">
+    <div style="margin-top:10px;"><button class="btn-primary" id="shGenerar" type="button">📦 Generar páginas para compartir (.zip)</button></div>
+    <p class="msg" id="shMsg"></p>
+  </div>
+
+  </div><!-- /tabHerr -->
+
+
+
+</div>
+
+<div class="sucio-bar" id="sucioBar" hidden>
+  <span id="sucioTxt"></span>
+  <button class="btn-primary" id="sucioGuardar" type="button">Guardar</button>
+  <button class="btn-secondary" id="sucioDescartar" type="button">Descartar</button>
 </div>
 
 <script src="config.js"></script>
@@ -994,12 +1075,13 @@ onAuthStateChanged(auth, (user) => {
 document.getElementById("btnLogout").addEventListener("click", () => signOut(auth));
 
 // ---------- Tabs ----------
-const TABS = { Juegos: "tabJuegos", Series: "tabSeries", Categorias: "tabCategorias", Estetica: "tabEstetica", Ajustes: "tabAjustes", Chat: "tabChat", Novedades: "tabNovedades", Pedidos: "tabPedidos", Reportes: "tabReportes", Preset: "tabPreset", Stats: "tabStats" };
+const TABS = { Juegos: "tabJuegos", Series: "tabSeries", Categorias: "tabCategorias", Estetica: "tabEstetica", Ajustes: "tabAjustes", Chat: "tabChat", Novedades: "tabNovedades", Pedidos: "tabPedidos", Reportes: "tabReportes", Preset: "tabPreset", Stats: "tabStats", Herr: "tabHerr" };
 function mostrarTab(nombre){
   Object.keys(TABS).forEach(k => {
     document.getElementById(TABS[k]).style.display = (k === nombre) ? "block" : "none";
     document.getElementById("tabBtn" + k).classList.toggle("active", k === nombre);
   });
+  if(nombre === "Herr") cargarHerramientas();
   if(nombre === "Series") cargarListaSeries();
   if(nombre === "Categorias") cargarCategorias();
   if(nombre === "Estetica") cargarEstetica();
@@ -1070,7 +1152,7 @@ document.getElementById("fTitulo").addEventListener("input", (e) => {
 let editandoSlug = null;
 
 function limpiarFormulario(){
-  ["fTitulo","fSlug","fGrupo","fFondo","fPortada","fFondoVideo","fVideoIzq","fVideoCentro","fVideoDer","fImagenIzq","fImagenCentro","fImagenDer","fPeso","fVerificacion","fTituloVerif","fTituloContenido","fTituloReq","fTituloInfo","fTituloGaleria","fEstado","fEstadoTxt","fVersion","fEstadoNota"].forEach(id => document.getElementById(id).value = "");
+  ["fTitulo","fSlug","fGrupo","fVideoPropio","fFondo","fPortada","fFondoVideo","fVideoIzq","fVideoCentro","fVideoDer","fImagenIzq","fImagenCentro","fImagenDer","fPeso","fVerificacion","fTituloVerif","fTituloContenido","fTituloReq","fTituloInfo","fTituloGaleria","fEstado","fEstadoTxt","fVersion","fEstadoNota"].forEach(id => document.getElementById(id).value = "");
   ["fModoIzq","fModoCentro","fModoDer","fFondoModo"].forEach(id => document.getElementById(id).value = "hover");
   document.getElementById("fSlug").readOnly = false;
   ["descargasList","contenidoList","requisitosList","infoJuegoList","galeriaList","apartadosList"].forEach(id => document.getElementById(id).innerHTML = "");
@@ -1104,6 +1186,7 @@ document.getElementById("btnGuardar").addEventListener("click", async () => {
   const data = {
     titulo,
     grupo: document.getElementById("fGrupo").value.trim(),
+    videoPropio: document.getElementById("fVideoPropio").value.trim(),
     actualizado: Date.now(),
     portada: document.getElementById("fPortada").value.trim(),
     fondo: document.getElementById("fFondo").value.trim(),
@@ -1149,6 +1232,7 @@ document.getElementById("btnGuardar").addEventListener("click", async () => {
     await set(ref(db, "paginasJuegos/" + slug), data);
     formMsg.className = "msg ok";
     formMsg.textContent = "¡Página guardada! Link: juego.html?slug=" + slug;
+    limpiarSucio("juego");
     limpiarFormulario();
     cargarLista();
   }catch(err){
@@ -1164,6 +1248,7 @@ function crearItemPagina(slug, d){
   const item = document.createElement("div");
   item.className = "pagina-item";
   item.innerHTML = `
+    <input type="checkbox" class="sel-lote" title="Seleccionar para editar en lote">
     ${miniatura ? E.img(miniatura, 120, "", 'class="mini-thumb"') : ""}
     <div class="pagina-info">
       <div class="titulo">${esc(d.titulo || slug)}<span class="chip-slot">${chipEstadoAdmin(d)}</span>${chipCaidos(slug)}</div>
@@ -1173,11 +1258,16 @@ function crearItemPagina(slug, d){
     <div>
       <a class="btn-secondary" href="${esc(link)}" target="_blank" rel="noopener">↗ Abrir página</a>
       <button class="btn-secondary" type="button" data-accion="copiar">Copiar link</button>
+      <button class="btn-secondary" type="button" data-accion="compartir" title="Link con vista previa (imagen y título) para WhatsApp, Discord, etc.">📤 Link para compartir</button>
       <button class="btn-secondary" type="button" data-accion="estetica">🎨 Estética</button>
       <button class="btn-secondary" type="button" data-accion="editar">Editar</button>
       <button class="btn-danger" type="button" data-accion="eliminar">Eliminar</button>
     </div>`;
   item.querySelector('[data-accion="copiar"]').addEventListener("click", () => navigator.clipboard.writeText(link));
+  item.querySelector('[data-accion="compartir"]').addEventListener("click", () => copiarLinkShare(slug, false));
+  const chk = item.querySelector(".sel-lote");
+  chk.checked = LOTE.has(slug); item.classList.toggle("en-lote", chk.checked);
+  chk.addEventListener("change", () => { chk.checked ? LOTE.add(slug) : LOTE.delete(slug); item.classList.toggle("en-lote", chk.checked); loteSync(); });
   item.querySelector('[data-accion="estetica"]').addEventListener("click", () => abrirEstetica("juego__" + slug));
   item.querySelector('[data-accion="editar"]').addEventListener("click", () => cargarParaEditar(slug, d));
   item.querySelector('[data-accion="eliminar"]').addEventListener("click", () => eliminarPagina(slug));
@@ -1313,6 +1403,7 @@ function cargarParaEditar(slug, d){
   document.getElementById("fSlug").value = slug;
   document.getElementById("fSlug").readOnly = true;
   document.getElementById("fGrupo").value = d.grupo || "";
+  document.getElementById("fVideoPropio").value = d.videoPropio || "";
   document.getElementById("fFondo").value = d.fondo || "";
   document.getElementById("fPortada").value = d.portada || "";
   document.getElementById("fFondoVideo").value = d.fondoVideo || "";
@@ -1368,13 +1459,17 @@ function cargarParaEditar(slug, d){
 }
 
 async function eliminarPagina(slug){
-  if(!confirm("¿Seguro que querés eliminar esta página? No se puede deshacer.")) return;
+  if(!confirm("¿Mandar esta página a la papelera? Podés recuperarla durante " + PAP_DIAS + " días desde 🧰 Papelera y copias.")) return;
   try{
-    await remove(ref(db, "paginasJuegos/" + slug));
-    cargarLista();
+    const d = (await get(ref(db, "paginasJuegos/" + slug))).val();
+    if(d){ if(!(await borrarConPapelera("juego", slug, d))) return; }
+    else await remove(ref(db, "paginasJuegos/" + slug));
+    LOTE.delete(slug);
+    await cargarLista(); loteSync();
+    toast("Página enviada a la papelera.");
   }catch(err){
     console.error(err);
-    alert("Error al eliminar la página.");
+    alert("Error al eliminar la página: " + errorLegible(err));
   }
 }
 
@@ -1531,6 +1626,7 @@ document.getElementById("btnGuardarSerie").addEventListener("click", async () =>
     });
     formMsgSerie.className = "msg ok";
     formMsgSerie.textContent = "¡Serie guardada! Link: serie.html?slug=" + slug;
+    limpiarSucio("serie");
     limpiarFormularioSerie();
     cargarListaSeries();
   }catch(err){
@@ -1554,11 +1650,13 @@ function crearItemSerie(slug, s){
     <div>
       <a class="btn-secondary" href="${esc(link)}" target="_blank" rel="noopener">↗ Abrir página</a>
       <button class="btn-secondary" type="button" data-accion="copiar">Copiar link</button>
+      <button class="btn-secondary" type="button" data-accion="compartir" title="Link con vista previa (imagen y título) para WhatsApp, Discord, etc.">📤 Link para compartir</button>
       <button class="btn-secondary" type="button" data-accion="estetica">🎨 Estética</button>
       <button class="btn-secondary" type="button" data-accion="editar">Editar</button>
       <button class="btn-danger" type="button" data-accion="eliminar">Eliminar</button>
     </div>`;
   item.querySelector('[data-accion="copiar"]').addEventListener("click", () => navigator.clipboard.writeText(link));
+  item.querySelector('[data-accion="compartir"]').addEventListener("click", () => copiarLinkShare(slug, true));
   item.querySelector('[data-accion="estetica"]').addEventListener("click", () => abrirEstetica("serie__" + slug));
   item.querySelector('[data-accion="editar"]').addEventListener("click", () => cargarSerieParaEditar(slug, s));
   item.querySelector('[data-accion="eliminar"]').addEventListener("click", () => eliminarSerie(slug));
@@ -1710,13 +1808,16 @@ function cargarSerieParaEditar(slug, s){
 }
 
 async function eliminarSerie(slug){
-  if(!confirm("¿Seguro que querés eliminar esta serie? No se puede deshacer.")) return;
+  if(!confirm("¿Mandar esta serie a la papelera? Podés recuperarla durante " + PAP_DIAS + " días desde 🧰 Papelera y copias.")) return;
   try{
-    await remove(ref(db, "paginasSeries/" + slug));
+    const d = (await get(ref(db, "paginasSeries/" + slug))).val();
+    if(d){ if(!(await borrarConPapelera("serie", slug, d))) return; }
+    else await remove(ref(db, "paginasSeries/" + slug));
     cargarListaSeries();
+    toast("Serie enviada a la papelera.");
   }catch(err){
     console.error(err);
-    alert("Error al eliminar la serie.");
+    alert("Error al eliminar la serie: " + errorLegible(err));
   }
 }
 
@@ -2003,6 +2104,7 @@ document.getElementById("btnGuardarCat").addEventListener("click", async () => {
     };
     await set(ref(db, "categorias/" + slug), data);
     setMsg(cMsg, "ok", "¡Categoría guardada! Link: categoria.html?slug=" + slug);
+    limpiarSucio("categoria");
     limpiarFormularioCat();
     setMsg(cMsg, "ok", "¡Categoría guardada! Link: categoria.html?slug=" + slug);
     await cargarCategorias();
@@ -2014,8 +2116,12 @@ document.getElementById("btnGuardarCat").addEventListener("click", async () => {
 
 async function eliminarCategoria(slug){
   const d = categoriasData[slug];
-  if(!confirm(`¿Eliminar la categoría "${d.nombre || slug}"? Los juegos y series NO se borran, solo la categoría. No se puede deshacer.`)) return;
-  try{ await remove(ref(db, "categorias/" + slug)); await cargarCategorias(); }
+  if(!confirm(`¿Mandar la categoría "${d.nombre || slug}" a la papelera? Los juegos y series NO se borran, solo la categoría. La podés recuperar durante ${PAP_DIAS} días desde 🧰 Papelera y copias.`)) return;
+  try{
+    if(!(await borrarConPapelera("categoria", slug, d))) return;
+    await cargarCategorias();
+    toast("Categoría enviada a la papelera.");
+  }
   catch(err){ console.error(err); alert(errorLegible(err)); }
 }
 
@@ -2091,6 +2197,8 @@ async function cargarAjustes(){
     document.getElementById("aColor").value = /^#[0-9a-f]{6}$/i.test(c.colorAcento || "") ? c.colorAcento : "#ff2e2e";
     document.getElementById("aAviso").value = c.aviso || "";
     document.getElementById("aFooter").value = c.footer || "";
+    document.getElementById("aRecOn").checked = c.recientesOn !== false;
+    document.getElementById("aRecN").value = c.recientesN || 8;
     document.getElementById("redesList").innerHTML = "";
     (Array.isArray(c.redes) ? c.redes : []).forEach(r => crearFilaRed(r.tipo, r.url));
   }catch(err){
@@ -2117,8 +2225,11 @@ document.getElementById("btnGuardarAjustes").addEventListener("click", async () 
       colorAcento: document.getElementById("aColor").value,
       aviso: document.getElementById("aAviso").value.trim(),
       footer: document.getElementById("aFooter").value.trim(),
+      recientesOn: document.getElementById("aRecOn").checked,
+      recientesN: Math.min(24, Math.max(1, parseInt(document.getElementById("aRecN").value, 10) || 8)),
       redes
     });
+    limpiarSucio("ajustes");
     setMsg(aMsg, "ok", "¡Ajustes guardados! Ya se ven en la home.");
   }catch(err){
     console.error(err);
@@ -2904,6 +3015,7 @@ $("wdSave").addEventListener("click", async () => {
   });
   try{
     await set(WD("settings"), { global: g, pages, adminUid: auth.currentUser.uid });
+    limpiarSucio("chat");
     // Se vuelve a leer lo guardado para comprobar que quedó en la base
     const v = (await get(WD("settings"))).val() || {};
     const n = Object.keys(v.pages || {}).length;
@@ -3599,6 +3711,387 @@ $("stRefresh").addEventListener("click", cargarStats);
 window.addEventListener("resize", () => {
   clearTimeout(stTimer);
   stTimer = setTimeout(() => { if(stDatos && $("tabStats").style.display !== "none") stPintar(); }, 150);
+});
+
+
+// =====================================================================
+//  AVISOS Y UTILIDADES NUEVAS (toast, cambios sin guardar)
+// =====================================================================
+function toast(txt, tipo){
+  let t = document.getElementById("toastMs");
+  if(!t){
+    t = document.createElement("div"); t.id = "toastMs";
+    t.style.cssText = "position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:3000;padding:11px 18px;border-radius:12px;font-size:14px;font-weight:600;max-width:92vw;box-shadow:0 10px 30px rgba(0,0,0,.6);";
+    document.body.appendChild(t);
+  }
+  t.textContent = txt;
+  t.style.background = tipo === "error" ? "#3a1015" : "#0d2a26";
+  t.style.border = "1px solid " + (tipo === "error" ? "#ff4d5e" : "#00e5c7");
+  t.style.color = tipo === "error" ? "#ff9aa5" : "#7ff5e3";
+  t.style.display = "block";
+  clearTimeout(t._h); t._h = setTimeout(() => { t.style.display = "none"; }, 3800);
+}
+
+// ---------- Aviso de cambios sin guardar ----------
+const SUCIO = new Set();
+const ZONAS = {
+  juego:     { nombre: "la página de juego",   tab: "tabJuegos",     raiz: "#tabJuegos > .card",     guardar: "btnGuardar",         descartar: () => limpiarFormulario(),      persiste: true },
+  serie:     { nombre: "la serie / película",  tab: "tabSeries",     raiz: "#tabSeries > .card",     guardar: "btnGuardarSerie",    descartar: () => limpiarFormularioSerie(), persiste: true },
+  categoria: { nombre: "la categoría",         tab: "tabCategorias", raiz: "#tabCategorias > .card", guardar: "btnGuardarCat",      descartar: () => limpiarFormularioCat(),   persiste: true },
+  ajustes:   { nombre: "los ajustes del sitio", tab: "tabAjustes",   raiz: "#tabAjustes > .card",    guardar: "btnGuardarAjustes",  descartar: () => cargarAjustes(),          persiste: false },
+  chat:      { nombre: "los ajustes del chat", tab: "tabChat",       raiz: "#tabChat > .card",       guardar: "wdSave",             descartar: () => wdCargarAjustes(),        persiste: false }
+};
+function pintarSucio(){
+  const z = [...SUCIO];
+  $("sucioBar").hidden = !z.length;
+  if(z.length) $("sucioTxt").textContent = "● Cambios sin guardar en " + z.map(k => ZONAS[k].nombre).join(", ");
+}
+function marcarSucio(z){ if(!SUCIO.has(z)){ SUCIO.add(z); pintarSucio(); } }
+function limpiarSucio(z){ if(SUCIO.delete(z)) pintarSucio(); }
+Object.entries(ZONAS).forEach(([z, c]) => {
+  const raiz = document.querySelector(c.raiz); if(!raiz) return;
+  const alCambiar = (e) => {
+    const t = e.target;
+    if(!t || !t.closest) return;
+    if(t.closest(".w-pick, [data-nodirty]") || (t.placeholder && t.placeholder.startsWith("🔍")) || t.type === "file") return;
+    marcarSucio(z);
+  };
+  raiz.addEventListener("input", alCambiar);
+  raiz.addEventListener("change", alCambiar);
+});
+$("sucioGuardar").addEventListener("click", () => { [...SUCIO].forEach(z => { const b = $(ZONAS[z].guardar); if(b) b.click(); }); });
+$("sucioDescartar").addEventListener("click", () => {
+  if(!confirm("¿Descartar los cambios sin guardar en " + [...SUCIO].map(k => ZONAS[k].nombre).join(", ") + "?")) return;
+  [...SUCIO].forEach(z => { limpiarSucio(z); try{ ZONAS[z].descartar(); }catch(e){ console.error(e); } });
+});
+window.addEventListener("beforeunload", (e) => { if(SUCIO.size){ e.preventDefault(); e.returnValue = ""; } });
+const MSG_SUCIO = (z) => "Tenés cambios sin guardar en " + ZONAS[z].nombre + ". Si seguís se pierden. ¿Seguir igual?";
+// Al empezar a editar otra cosa o limpiar el formulario, avisa si hay cambios pendientes
+[["cargarParaEditar", "juego"], ["cargarSerieParaEditar", "serie"], ["cargarCategoriaParaEditar", "categoria"]].forEach(([n, z]) => {
+  const orig = ({ cargarParaEditar, cargarSerieParaEditar, cargarCategoriaParaEditar })[n];
+  const nuevo = function(...a){ if(SUCIO.has(z) && !confirm(MSG_SUCIO(z))) return; limpiarSucio(z); return orig.apply(this, a); };
+  if(n === "cargarParaEditar") cargarParaEditar = nuevo; else if(n === "cargarSerieParaEditar") cargarSerieParaEditar = nuevo; else cargarCategoriaParaEditar = nuevo;
+});
+{
+  const lf = limpiarFormulario, ls = limpiarFormularioSerie, lc = limpiarFormularioCat;
+  limpiarFormulario = function(){ if(SUCIO.has("juego") && !confirm(MSG_SUCIO("juego"))) return; limpiarSucio("juego"); return lf(); };
+  limpiarFormularioSerie = function(){ if(SUCIO.has("serie") && !confirm(MSG_SUCIO("serie"))) return; limpiarSucio("serie"); return ls(); };
+  limpiarFormularioCat = function(){ if(SUCIO.has("categoria") && !confirm(MSG_SUCIO("categoria"))) return; limpiarSucio("categoria"); return lc(); };
+}
+// Los botones «Cancelar edición» usan la función original: se confirma aparte
+[["btnCancelar", "juego"], ["btnCancelarSerie", "serie"], ["btnCancelarCat", "categoria"]].forEach(([id, z]) => {
+  $(id).addEventListener("click", (e) => { if(SUCIO.has(z) && !confirm(MSG_SUCIO(z))) e.stopImmediatePropagation(); else limpiarSucio(z); }, true);
+});
+// Al salir de una pestaña que se recarga al volver, avisa si hay cambios sin guardar
+{
+  const mt = mostrarTab;
+  mostrarTab = function(nombre){
+    for(const [z, c] of Object.entries(ZONAS)){
+      if(c.persiste || !SUCIO.has(z)) continue;
+      const visible = $(c.tab).style.display !== "none";
+      if(visible && TABS[nombre] !== c.tab){ if(!confirm(MSG_SUCIO(z))) return; limpiarSucio(z); }
+    }
+    return mt(nombre);
+  };
+}
+
+// =====================================================================
+//  EDICIÓN EN LOTE (juegos)
+// =====================================================================
+const LOTE = new Set();
+function loteSync(){
+  [...LOTE].forEach(sl => { if(!(INDICE.juegos || {})[sl]) LOTE.delete(sl); });
+  $("loteN").textContent = LOTE.size;
+  $("loteBar").hidden = LOTE.size === 0;
+}
+$("loteEstado").innerHTML = '<option value="__no__">🏷 Etiqueta: no cambiar</option><option value="">Quitar la etiqueta</option>' +
+  Object.entries(ESTADOS).map(([k, e]) => `<option value="${k}">${e[0]}</option>`).join("");
+function loteContenedorVisible(){ return document.querySelector("#listaPaginas .grupo-panel.active") || $("listaPaginas"); }
+$("loteTodos").addEventListener("click", () => {
+  loteContenedorVisible().querySelectorAll(".pagina-item .sel-lote").forEach(c => { if(!c.checked){ c.checked = true; c.dispatchEvent(new Event("change")); } });
+});
+$("loteNinguno").addEventListener("click", () => {
+  LOTE.clear();
+  document.querySelectorAll("#listaPaginas .sel-lote").forEach(c => { c.checked = false; c.closest(".pagina-item").classList.remove("en-lote"); });
+  loteSync();
+});
+$("loteAplicar").addEventListener("click", async () => {
+  const est = $("loteEstado").value, grp = $("loteGrupo").value.trim();
+  if(est === "__no__" && !grp){ toast("Elegí una etiqueta o escribí un grupo para aplicar.", "error"); return; }
+  const slugs = [...LOTE];
+  const que = [est !== "__no__" ? (est ? "la etiqueta «" + ESTADOS[est][0] + "»" : "quitar la etiqueta") : "", grp ? "el grupo «" + grp + "»" : ""].filter(Boolean).join(" y ");
+  if(!confirm("Se va a aplicar " + que + " a " + slugs.length + " juego(s). ¿Seguir?")) return;
+  const up = {};
+  slugs.forEach(sl => { if(est !== "__no__") up[sl + "/estado"] = est; if(grp) up[sl + "/grupo"] = grp; });
+  try{
+    await update(ref(db, "paginasJuegos"), up);
+    slugs.forEach(sl => { const d = INDICE.juegos[sl]; if(!d) return; if(est !== "__no__") d.estado = est; if(grp) d.grupo = grp; });
+    LOTE.clear(); $("loteGrupo").value = ""; $("loteEstado").value = "__no__";
+    renderListaJuegos(); loteSync();
+    toast("Listo: se actualizaron " + slugs.length + " juego(s).");
+  }catch(err){ console.error(err); toast(errorLegible(err), "error"); }
+});
+$("loteBorrar").addEventListener("click", async () => {
+  const slugs = [...LOTE];
+  if(!confirm("¿Mandar " + slugs.length + " juego(s) a la papelera? Podés recuperarlos durante " + PAP_DIAS + " días desde 🧰 Papelera y copias.")) return;
+  let ok = 0;
+  for(const sl of slugs){
+    try{
+      const d = (await get(ref(db, "paginasJuegos/" + sl))).val();
+      if(d){ if(!(await borrarConPapelera("juego", sl, d))) break; }
+      LOTE.delete(sl); ok++;
+    }catch(err){ console.error(err); toast(errorLegible(err), "error"); break; }
+  }
+  await cargarLista(); loteSync();
+  if(ok) toast(ok + " juego(s) en la papelera.");
+});
+
+// =====================================================================
+//  PAPELERA
+// =====================================================================
+const PAP_DIAS = 30;
+const PAP_RUTA = { juego: "paginasJuegos/", serie: "paginasSeries/", categoria: "categorias/" };
+const PAP_ETQ = { juego: "🎮 Juego", serie: "📺 Serie / película", categoria: "📂 Categoría" };
+async function aPapelera(tipo, slug, datos){
+  await set(ref(db, "papelera/" + tipo + "__" + slug), {
+    tipo, slug, titulo: String((datos && (datos.titulo || datos.nombre)) || slug), borrado: Date.now(), datos: datos || {}
+  });
+}
+// Guarda una copia en la papelera y recién después borra. Devuelve false si el usuario cancela.
+async function borrarConPapelera(tipo, slug, datos){
+  try{ await aPapelera(tipo, slug, datos); }
+  catch(err){
+    console.error(err);
+    if(!confirm("No se pudo guardar la copia en la papelera (" + errorLegible(err) + ").\n\n¿Eliminar igual, sin poder recuperarlo?")) return false;
+  }
+  await remove(ref(db, PAP_RUTA[tipo] + slug));
+  return true;
+}
+async function refrescarTodo(){
+  const fns = [cargarLista, cargarListaSeries, cargarCategorias, cargarIndice];
+  for(const f of fns){ try{ await f(); }catch(e){ console.error(e); } }
+}
+async function renderPapelera(){
+  const box = $("papLista");
+  box.textContent = "Cargando…";
+  try{
+    const todo = (await get(ref(db, "papelera"))).val() || {};
+    const lim = Date.now() - PAP_DIAS * 864e5;
+    for(const [k, o] of Object.entries(todo)){
+      if(o && o.borrado && o.borrado < lim){ try{ await remove(ref(db, "papelera/" + k)); }catch(e){} delete todo[k]; }
+    }
+    const ent = Object.entries(todo).filter(([k, o]) => o && PAP_RUTA[o.tipo] && o.slug).sort((a, b) => (b[1].borrado || 0) - (a[1].borrado || 0));
+    $("papVaciar").style.display = ent.length ? "" : "none";
+    if(!ent.length){ box.innerHTML = '<p class="hint">La papelera está vacía.</p>'; return; }
+    box.innerHTML = "";
+    ent.forEach(([k, o]) => {
+      const dias = Math.max(0, Math.ceil(((o.borrado || 0) + PAP_DIAS * 864e5 - Date.now()) / 864e5));
+      const fila = document.createElement("div"); fila.className = "papelera-item";
+      fila.innerHTML = `<div><div class="t">${esc(o.titulo || o.slug)}</div><small>${esc(PAP_ETQ[o.tipo])} · ${esc(o.slug)} · borrado el ${esc(new Date(o.borrado || 0).toLocaleString("es-AR"))} · se elimina solo en ${dias} día${dias === 1 ? "" : "s"}</small></div>
+        <div><button class="btn-primary" type="button" data-a="rest">↩ Restaurar</button> <button class="btn-danger" type="button" data-a="del">Borrar definitivo</button></div>`;
+      fila.querySelector('[data-a="rest"]').addEventListener("click", async () => {
+        try{
+          const ruta = PAP_RUTA[o.tipo] + o.slug;
+          if((await get(ref(db, ruta))).exists() && !confirm("Ya existe «" + o.slug + "» en el sitio. ¿Reemplazarlo por la copia de la papelera?")) return;
+          await set(ref(db, ruta), o.datos || {});
+          await remove(ref(db, "papelera/" + k));
+          toast("Restaurado: " + (o.titulo || o.slug));
+          renderPapelera(); refrescarTodo();
+        }catch(err){ console.error(err); toast(errorLegible(err), "error"); }
+      });
+      fila.querySelector('[data-a="del"]').addEventListener("click", async () => {
+        if(!confirm("¿Borrar «" + (o.titulo || o.slug) + "» para siempre? No se puede deshacer.")) return;
+        try{ await remove(ref(db, "papelera/" + k)); renderPapelera(); }catch(err){ console.error(err); toast(errorLegible(err), "error"); }
+      });
+      box.appendChild(fila);
+    });
+  }catch(err){
+    console.error(err);
+    box.innerHTML = '<p class="msg error">' + esc(errorLegible(err)) + ' Si es un error de permisos, agregá el nodo «papelera» a las reglas de Firebase (mirá la nota de abajo).</p>';
+  }
+}
+$("papVaciar").addEventListener("click", async () => {
+  if(!confirm("¿Vaciar la papelera? Todo lo que hay adentro se borra para siempre.")) return;
+  try{ await remove(ref(db, "papelera")); renderPapelera(); }catch(err){ console.error(err); toast(errorLegible(err), "error"); }
+});
+
+// =====================================================================
+//  COPIA DE SEGURIDAD
+// =====================================================================
+const COPIA_NODOS = ["config", "categorias", "paginasJuegos", "paginasSeries", "widgets/settings", "widgets/news"];
+function descargarBlob(blob, nombre){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+const sello = () => { const d = new Date(); const p = (n) => String(n).padStart(2, "0"); return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + "-" + p(d.getHours()) + p(d.getMinutes()); };
+async function exportarCopia(){
+  const nodos = {};
+  for(const n of COPIA_NODOS){ nodos[n] = (await get(ref(db, n))).val() || null; }
+  return { app: "ms47", version: 1, fecha: new Date().toISOString(), nodos };
+}
+$("copiaBajar").addEventListener("click", async () => {
+  setMsg($("copiaMsg"), "", "");
+  try{
+    const c = await exportarCopia();
+    descargarBlob(new Blob([JSON.stringify(c, null, 1)], { type: "application/json" }), "ms47-copia-" + sello() + ".json");
+    const nj = Object.keys(c.nodos.paginasJuegos || {}).length, ns = Object.keys(c.nodos.paginasSeries || {}).length, nc = Object.keys(c.nodos.categorias || {}).length;
+    setMsg($("copiaMsg"), "ok", "Copia descargada: " + nj + " juegos, " + ns + " series y " + nc + " categorías, más los ajustes.");
+  }catch(err){ console.error(err); setMsg($("copiaMsg"), "error", errorLegible(err)); }
+});
+$("copiaSubir").addEventListener("click", () => $("copiaArchivo").click());
+$("copiaArchivo").addEventListener("change", async (e) => {
+  const f = e.target.files[0]; e.target.value = "";
+  if(!f) return;
+  setMsg($("copiaMsg"), "", "");
+  try{
+    const c = JSON.parse(await f.text());
+    if(!c || c.app !== "ms47" || !c.nodos || typeof c.nodos !== "object") throw new Error("Ese archivo no es una copia de seguridad de MS47.");
+    const cuenta = (n) => Object.keys(c.nodos[n] || {}).length;
+    const resumen = cuenta("paginasJuegos") + " juegos, " + cuenta("paginasSeries") + " series, " + cuenta("categorias") + " categorías y los ajustes";
+    if(!confirm("Copia del " + new Date(c.fecha || 0).toLocaleString("es-AR") + " con " + resumen + ".\n\nSe mezcla con lo que hay ahora: lo que esté en el archivo pisa lo igual y lo demás se queda como está. ¿Restaurar?")) return;
+    // Antes de tocar nada se baja una copia de lo actual, por las dudas
+    try{ const actual = await exportarCopia(); descargarBlob(new Blob([JSON.stringify(actual, null, 1)], { type: "application/json" }), "ms47-antes-de-restaurar-" + sello() + ".json"); }catch(e2){ console.error(e2); }
+    for(const n of COPIA_NODOS){
+      const v = c.nodos[n];
+      if(v && typeof v === "object") await update(ref(db, n), v);
+    }
+    setMsg($("copiaMsg"), "ok", "Copia restaurada (" + resumen + "). Se bajó también una copia de lo anterior.");
+    refrescarTodo();
+  }catch(err){ console.error(err); setMsg($("copiaMsg"), "error", errorLegible(err) || String(err.message || err)); }
+});
+
+// =====================================================================
+//  VISTA PREVIA AL COMPARTIR (páginas estáticas con etiquetas Open Graph)
+// =====================================================================
+const CRC_T = (() => { const t = new Uint32Array(256); for(let n = 0; n < 256; n++){ let c = n; for(let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); t[n] = c >>> 0; } return t; })();
+function crc32(b){ let c = 0xFFFFFFFF; for(let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function crearZip(files){
+  const enc = new TextEncoder(), partes = [], central = [];
+  let off = 0, csize = 0;
+  const now = new Date();
+  const dt = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+  const tm = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+  files.forEach(f => {
+    const nombre = enc.encode(f.name), datos = typeof f.data === "string" ? enc.encode(f.data) : f.data, crc = crc32(datos);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, tm, true); lh.setUint16(12, dt, true); lh.setUint32(14, crc, true);
+    lh.setUint32(18, datos.length, true); lh.setUint32(22, datos.length, true); lh.setUint16(26, nombre.length, true); lh.setUint16(28, 0, true);
+    partes.push(lh.buffer, nombre, datos);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+    ch.setUint16(12, tm, true); ch.setUint16(14, dt, true); ch.setUint32(16, crc, true);
+    ch.setUint32(20, datos.length, true); ch.setUint32(24, datos.length, true); ch.setUint16(28, nombre.length, true);
+    ch.setUint16(30, 0, true); ch.setUint16(32, 0, true); ch.setUint16(34, 0, true); ch.setUint16(36, 0, true); ch.setUint32(38, 0, true); ch.setUint32(42, off, true);
+    central.push(ch.buffer, nombre);
+    off += 30 + nombre.length + datos.length;
+    csize += 46 + nombre.length;
+  });
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(4, 0, true); end.setUint16(6, 0, true);
+  end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, csize, true); end.setUint32(16, off, true); end.setUint16(20, 0, true);
+  return new Blob([...partes, ...central, end.buffer], { type: "application/zip" });
+}
+const claveShare = (slug, serie) => (serie ? "s-" : "") + String(slug).replace(/[^a-zA-Z0-9._-]/g, "_");
+const baseSitio = () => location.origin + location.pathname.replace(/[^/]*$/, "");
+function urlAbs(base, u){
+  u = String(u || "").trim();
+  if(!u || /^\s*(javascript|data|vbscript):/i.test(u)) return "";
+  if(/^https?:\/\//i.test(u)) return u;
+  if(u.startsWith("//")) return "https:" + u;
+  return base + encodeURI(u.replace(/^\.?\//, ""));
+}
+const esImgCompartir = (u) => !!u && !/youtu|\.(mp4|webm|ogg|ogv|mov|m3u8)(\?|$)/i.test(u);
+function recortar(t, n){ t = String(t || "").replace(/\s+/g, " ").trim(); return t.length > n ? t.slice(0, n - 1).trimEnd() + "…" : t; }
+function paginaShare({ titulo, desc, imagen, urlShare, destino, sitio }){
+  const t = esc(titulo + " | " + sitio);
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${t}</title>
+<meta name="description" content="${esc(desc)}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="${esc(sitio)}">
+<meta property="og:title" content="${esc(titulo)}">
+<meta property="og:description" content="${esc(desc)}">
+${imagen ? `<meta property="og:image" content="${esc(imagen)}">\n` : ""}<meta property="og:url" content="${esc(urlShare)}">
+<meta name="twitter:card" content="${imagen ? "summary_large_image" : "summary"}">
+<meta name="twitter:title" content="${esc(titulo)}">
+<meta name="twitter:description" content="${esc(desc)}">
+${imagen ? `<meta name="twitter:image" content="${esc(imagen)}">\n` : ""}<meta http-equiv="refresh" content="0;url=${esc(destino)}">
+<script>location.replace(${JSON.stringify(destino).replace(/</g, "\\u003c")});<\/script>
+</head>
+<body style="background:#0a0a0b;color:#f2f2f2;font-family:Arial,sans-serif;text-align:center;padding:40px;">
+<p>Abriendo <a href="${esc(destino)}" style="color:#00e5c7;">${esc(titulo)}</a>…</p>
+</body>
+</html>
+`;
+}
+function armarShareArchivos(base, cfg, juegos, series){
+  const sitio = (cfg && cfg.sitioNombre) || "MS47";
+  const archivos = [];
+  const imgDefault = urlAbs(base, (cfg && cfg.bannerImagen) || "ms47.jpg");
+  Object.entries(juegos || {}).forEach(([slug, d]) => {
+    if(!d) return;
+    const img = [d.portada, d.fondo, d.imagenIzq, d.imagenCentro, d.imagenDer, (d.galeria || [])[0]].find(esImgCompartir);
+    const est = d.estado === "custom" ? (d.estadoTxt || "") : ((ESTADOS[d.estado] || [""])[0] || "");
+    const desc = recortar([d.titulo || slug, d.version, est].filter(Boolean).join(" · ") + " — descarga y más info en " + sitio + ".", 200);
+    const nombre = claveShare(slug);
+    archivos.push({ name: "c/" + nombre + ".html", data: paginaShare({
+      titulo: d.titulo || slug, desc, imagen: urlAbs(base, img) || imgDefault,
+      urlShare: base + "c/" + nombre + ".html", destino: base + "juego.html?slug=" + encodeURIComponent(slug), sitio }) });
+  });
+  Object.entries(series || {}).forEach(([slug, d]) => {
+    if(!d) return;
+    const img = [d.poster, d.fondo].find(esImgCompartir);
+    const desc = recortar(d.sinopsis || ((d.titulo || slug) + " — mirá los capítulos en " + sitio + "."), 200);
+    const nombre = claveShare(slug, true);
+    archivos.push({ name: "c/" + nombre + ".html", data: paginaShare({
+      titulo: d.titulo || slug, desc, imagen: urlAbs(base, img) || imgDefault,
+      urlShare: base + "c/" + nombre + ".html", destino: base + "serie.html?slug=" + encodeURIComponent(slug), sitio }) });
+  });
+  archivos.push({ name: "c/LEEME.txt", data: "Páginas para compartir (vista previa en WhatsApp, Discord, Telegram, etc.).\nSubí esta carpeta «c» a la raíz del repositorio, junto a index.html.\nEl link para compartir de cada juego es: " + base + "c/<slug>.html\n" });
+  return archivos;
+}
+$("shBase").value = baseSitio();
+$("shGenerar").addEventListener("click", async () => {
+  setMsg($("shMsg"), "", "");
+  let base = $("shBase").value.trim();
+  if(!/^https?:\/\//i.test(base)){ setMsg($("shMsg"), "error", "Poné la dirección completa de tu sitio, por ejemplo https://tuusuario.github.io/tu-repo/"); return; }
+  if(!base.endsWith("/")) base += "/";
+  try{
+    const [j, s, c] = await Promise.all([get(ref(db, "paginasJuegos")), get(ref(db, "paginasSeries")), get(ref(db, "config"))]);
+    const cfg = mezclarConfig(c.val());
+    const archivos = armarShareArchivos(base, cfg, j.val() || {}, s.val() || {});
+    descargarBlob(crearZip(archivos), "ms47-compartir-" + sello() + ".zip");
+    setMsg($("shMsg"), "ok", "Listo: " + (archivos.length - 1) + " páginas generadas. Descomprimí el zip y subí la carpeta «c» a la raíz del repositorio (GitHub → Add file → Upload files).");
+  }catch(err){ console.error(err); setMsg($("shMsg"), "error", errorLegible(err)); }
+});
+async function copiarLinkShare(slug, serie){
+  const base = ($("shBase").value.trim() || baseSitio()).replace(/\/?$/, "/");
+  const link = base + "c/" + claveShare(slug, serie) + ".html";
+  try{ await navigator.clipboard.writeText(link); toast("Link para compartir copiado. Recordá subir la carpeta «c» (🧰 Papelera y copias → Vista previa)."); }
+  catch(e){ prompt("Copiá este link:", link); }
+}
+
+function cargarHerramientas(){ renderPapelera(); }
+
+// =====================================================================
+//  APP INSTALABLE (botón «Instalar app», solo para el panel admin)
+// =====================================================================
+let promptInstalar = null;
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); promptInstalar = e; $("btnInstalar").style.display = ""; });
+window.addEventListener("appinstalled", () => { promptInstalar = null; $("btnInstalar").style.display = "none"; });
+$("btnInstalar").addEventListener("click", async () => {
+  if(!promptInstalar) return;
+  promptInstalar.prompt();
+  try{ await promptInstalar.userChoice; }catch(e){}
+  promptInstalar = null; $("btnInstalar").style.display = "none";
 });
 
 // ---------- App instalable (PWA solo para el panel admin) ----------
