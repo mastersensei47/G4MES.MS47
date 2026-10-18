@@ -21,6 +21,9 @@ window.MS47 = {
   // IMPORTANTE: restringila por dominio en Google Cloud (ver LEEME.md).
   YT_API_KEY: "AIzaSyCN5aFqwNDIvgDx30F98gc3Hqvw9_tLq4g",
 
+  // Chequeador de links (Cloudflare Worker): detecta archivos borrados en Mega, Drive, MediaFire.
+  LINK_CHECK_URL: "https://ms47-links.senm151220.workers.dev",
+
   // OPCIONAL: subir imágenes desde el panel admin con Cloudinary.
   // Si dejás los dos campos vacíos, el botón "Subir imagen" no aparece
   // y las imágenes se cargan pegando una URL como siempre.
