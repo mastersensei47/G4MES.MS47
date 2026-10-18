@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MS47 - Inicio</title>
+<meta name="description" content="Descargas, series y películas de mastersensei47.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="mastersensei47">
+<meta property="og:title" content="mastersensei47">
+<meta property="og:description" content="Descargas, series y películas de mastersensei47.">
+<meta property="og:image" content="https://mastersensei47.github.io/G4MES.MS47/ms47.jpg">
+<meta name="twitter:card" content="summary_large_image">
 
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -66,6 +73,23 @@ body{
     transition:0.3s;
 }
 .redes a:hover{ color:var(--text,white); }
+
+/* ===== ACTUALIZADOS RECIENTEMENTE ===== */
+.recientes{ max-width:1200px; margin:auto; padding:30px 20px 0; display:none; }
+.recientes h2{ text-align:center; margin:0 0 30px; font-size:32px; }
+.rec-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:22px; }
+.rec-card{ background:var(--card,#1c1c1c); border-radius:15px; overflow:hidden; display:flex; flex-direction:column; transition:0.3s; }
+.rec-card:hover{ transform:translateY(-4px); box-shadow:0 0 22px var(--accent); }
+.rec-main{ display:block; color:var(--text,white); text-decoration:none; }
+.rec-main img{ width:100%; height:150px; object-fit:cover; display:block; background:var(--card2,#262626); }
+.rec-info{ padding:12px 14px 4px; }
+.rec-info h3{ margin:0 0 8px; font-size:15px; line-height:1.3; }
+.rec-meta{ display:flex; flex-wrap:wrap; gap:6px 8px; align-items:center; font-size:12px; color:var(--muted,#999); }
+.rec-chip{ padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700; color:#fff; background:var(--c,#444); }
+.rec-acc{ display:flex; gap:8px; padding:10px 14px 14px; margin-top:auto; }
+.rec-acc a{ flex:1; text-align:center; text-decoration:none; font-size:13px; font-weight:700; padding:8px 6px; border-radius:8px; border:1px solid var(--accent); color:var(--accent); transition:0.2s; }
+.rec-acc a:hover{ filter:brightness(1.2); }
+.rec-acc a.v{ background:var(--accent); color:#fff; }
 
 /* ===== CATEGORIAS ===== */
 .categorias{
@@ -141,6 +165,11 @@ footer{
 
 <div class="redes" id="redes"></div>
 
+<section class="recientes" id="recientes">
+    <h2>🆕 Actualizados recientemente</h2>
+    <div class="rec-grid" id="recGrid"></div>
+</section>
+
 <section class="categorias">
     <h2>🎮 Categorías</h2>
     <div class="grid" id="grid">
@@ -159,7 +188,7 @@ footer{
 <script src="defaults.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, get, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const { firebaseConfig } = window.MS47;
 const D = window.MS47_DEFAULTS;
@@ -176,8 +205,66 @@ function urlSegura(u){
 function leerCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)); }catch(e){ return null; } }
 function guardarCache(v){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify(v)); }catch(e){} }
 
-function render({ config, categorias }){
+const ESTADOS = {
+  ok: ["✅ Funciona", "#2ecc71"], parcial: ["⚠️ Parcial", "#f5a623"], actualizando: ["🛠 Actualizando", "#3b9eff"],
+  desactualizado: ["⏳ Desactualizado", "#ff8a3d"], ultima: ["🆕 Última versión", "#00e5c7"],
+  proximamente: ["🔜 Próximamente actualizado", "#b07cff"], caido: ["❌ Links caídos", "#ff4d5e"]
+};
+function esImagen(u){ return !!u && !/youtu|\.(mp4|webm|ogg|ogv|mov|m3u8)(\?|$)/i.test(u); }
+// Link al video propio: el que cargaste en el admin; si no hay, el de verificación si es de YouTube
+function linkVideo(d){
+  const yt = (u) => {
+    u = urlSegura(u);
+    const m = u.match(/youtu\.be\/([\w-]{6,})|youtube\.com\/(?:embed\/|shorts\/)([\w-]{6,})|[?&]v=([\w-]{6,})/i);
+    return m ? "https://www.youtube.com/watch?v=" + (m[1] || m[2] || m[3]) : "";
+  };
+  const propio = urlSegura(d.videoPropio);
+  if(propio) return yt(propio) || (/^https?:\/\//i.test(propio) ? propio : "");
+  return yt(d.verificacion);
+}
+function haceCuanto(ts){
+  const dias = Math.floor((Date.now() - ts) / 864e5);
+  if(dias <= 0) return "Hoy";
+  if(dias === 1) return "Ayer";
+  if(dias < 30) return "Hace " + dias + " días";
+  return new Date(ts).toLocaleDateString("es-AR");
+}
+function renderRecientes(cfg, recientes){
+  const sec = document.getElementById("recientes"), grid = document.getElementById("recGrid");
+  const n = Math.min(24, Math.max(1, parseInt(cfg.recientesN, 10) || 8));
+  const lista = Object.entries(recientes || {})
+    .filter(([, d]) => d && d.actualizado)
+    .sort((a, b) => b[1].actualizado - a[1].actualizado)
+    .slice(0, n);
+  if(cfg.recientesOn === false || !lista.length){ sec.style.display = "none"; return; }
+  grid.innerHTML = lista.map(([slug, d]) => {
+    const img = [d.portada, d.fondo, d.imagenIzq, d.imagenCentro, d.imagenDer, (d.galeria || [])[0]].find(esImagen) || "";
+    const titulo = d.titulo || slug;
+    const est = d.estado === "custom" ? (d.estadoTxt ? `<span class="rec-chip">${esc(d.estadoTxt)}</span>` : "")
+      : (ESTADOS[d.estado] ? `<span class="rec-chip" style="--c:${ESTADOS[d.estado][1]}">${ESTADOS[d.estado][0]}</span>` : "");
+    const v = linkVideo(d);
+    return `
+      <div class="rec-card">
+        <a class="rec-main" href="juego.html?slug=${encodeURIComponent(slug)}">
+          ${img ? window.MS47_ESTILO.img(urlSegura(img), 420, titulo) : `<img alt="" style="visibility:hidden">`}
+          <div class="rec-info">
+            <h3>${esc(titulo)}</h3>
+            <div class="rec-meta">${est}${d.version ? `<span>${esc(d.version)}</span>` : ""}<span>${esc(haceCuanto(d.actualizado))}</span></div>
+          </div>
+        </a>
+        <div class="rec-acc">
+          <a href="juego.html?slug=${encodeURIComponent(slug)}">Ver página</a>
+          ${v ? `<a class="v" href="${esc(v)}" target="_blank" rel="noopener">▶ Mi video</a>` : ""}
+        </div>
+      </div>`;
+  }).join("");
+  grid.querySelectorAll("img").forEach(i => i.addEventListener("error", () => { i.style.visibility = "hidden"; }));
+  sec.style.display = "block";
+}
+
+function render({ config, categorias, recientes }){
   const cfg = D.mezclarConfig(config);
+  renderRecientes(cfg, recientes);
 
   // Si la base está totalmente vacía (todavía no se cargó nada desde el admin) se usan los valores iniciales
   const usarDefaults = !categorias && !(config && config.inicializado);
@@ -247,8 +334,12 @@ async function iniciar(){
 
   try{
     const db = getDatabase(initializeApp(firebaseConfig));
-    const [c, k] = await Promise.all([get(ref(db, "config")), get(ref(db, "categorias"))]);
-    const datos = { config: c.val(), categorias: k.val() };
+    const [c, k, r] = await Promise.all([
+      get(ref(db, "config")), get(ref(db, "categorias")),
+      // Los últimos juegos guardados/editados (si falla, la home sigue andando sin esta sección)
+      get(query(ref(db, "paginasJuegos"), orderByChild("actualizado"), limitToLast(24))).catch(() => null)
+    ]);
+    const datos = { config: c.val(), categorias: k.val(), recientes: r ? r.val() : null };
     render(datos);
     guardarCache(datos);
   }catch(err){
