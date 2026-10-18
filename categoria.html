@@ -22,6 +22,14 @@ h2.seccion{font-size:18px;margin:30px 0 14px;border-left:4px solid var(--accent,
 .loader{text-align:center;padding:20px;color:var(--muted,#888)}
 .loader.error{color:#ff8a93}
 .oculto{display:none !important}
+.barra{display:flex;flex-wrap:wrap;gap:10px 14px;justify-content:center;align-items:center;margin:0 auto 22px;max-width:900px}
+.barra select{padding:9px 12px;border-radius:8px;border:1px solid var(--line,#2a2a2a);background:var(--card,#1b1b1b);color:var(--text,#fff);font-size:14px;cursor:pointer}
+.barra select:focus{outline:none;border-color:var(--accent,#00bfff)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chip{border:1px solid var(--line,#2a2a2a);background:var(--card,#1b1b1b);color:var(--text,#fff);border-radius:20px;padding:6px 13px;font-size:13px;cursor:pointer;transition:.2s}
+.chip:hover{border-color:var(--accent,#00bfff)}
+.chip.on{background:var(--accent,#00bfff);border-color:var(--accent,#00bfff);color:#fff;font-weight:700}
+.est{position:absolute;top:8px;right:8px;color:#fff;background:var(--c,#444);border-radius:6px;padding:3px 7px;font-size:11px;font-weight:700;max-width:70%;text-align:right}
 </style>
 <script src="estilo.js"></script>
 <script>MS47_ESTILO.aplicarCache("cat__" + (new URLSearchParams(location.search).get("slug") || "").trim());</script>
@@ -36,6 +44,15 @@ h2.seccion{font-size:18px;margin:30px 0 14px;border-left:4px solid var(--accent,
 <div class="container">
     <input type="text" id="buscar" class="buscador" placeholder="🔍 Buscar en esta categoría..." style="display:none">
     <div class="conteo" id="conteo"></div>
+    <div class="barra" id="barra" style="display:none">
+        <select id="orden" aria-label="Ordenar">
+            <option value="def">Orden: como está armada</option>
+            <option value="rec">Más recientes primero</option>
+            <option value="az">A → Z</option>
+            <option value="za">Z → A</option>
+        </select>
+        <div class="chips" id="chips"></div>
+    </div>
     <div id="contenido"></div>
     <div id="loader" class="loader">Cargando...</div>
 </div>
@@ -111,15 +128,28 @@ async function cargarPlaylist(id){
   }
 }
 
+const ESTADOS = {
+  ok: ["✅ Funciona", "#2ecc71"], parcial: ["⚠️ Parcial", "#f5a623"], actualizando: ["🛠 Actualizando", "#3b9eff"],
+  desactualizado: ["⏳ Desactualizado", "#ff8a3d"], ultima: ["🆕 Última versión", "#00e5c7"],
+  proximamente: ["🔜 Próximamente actualizado", "#b07cff"], caido: ["❌ Links caídos", "#ff4d5e"]
+};
+// Etiqueta de estado de un juego: { k: clave para filtrar, txt: texto, c: color } o null
+function infoEstado(d){
+  if(!d) return null;
+  if(d.estado === "custom"){ const x = String(d.estadoTxt || "").trim(); return x ? { k: "custom:" + x.toLowerCase(), txt: x, c: "#444" } : null; }
+  return ESTADOS[d.estado] ? { k: d.estado, txt: ESTADOS[d.estado][0], c: ESTADOS[d.estado][1] } : null;
+}
+
 function miniaturaJuego(d){
   return [d.portada, d.fondo, d.imagenIzq, d.imagenCentro, d.imagenDer, (d.galeria || [])[0], d.poster]
     .find(esImagen) || "";
 }
 
-function tarjeta({ href, titulo, img, badge, nueva }){
+function tarjeta({ href, titulo, img, badge, nueva, est, u }){
   return `
-    <a class="card" href="${esc(href)}" ${nueva ? 'target="_blank" rel="noopener"' : ""} data-t="${esc(String(titulo).toLowerCase())}">
+    <a class="card" href="${esc(href)}" ${nueva ? 'target="_blank" rel="noopener"' : ""} data-t="${esc(String(titulo).toLowerCase())}" data-e="${esc(est ? est.k : "")}" data-u="${+u || 0}">
       ${badge ? `<span class="badge">${badge}</span>` : ""}
+      ${est ? `<span class="est" style="--c:${est.c}">${esc(est.txt)}</span>` : ""}
       ${img ? window.MS47_ESTILO.img(img, 420, "") : `<img alt="" style="visibility:hidden">`}
       <h3>${esc(titulo)}</h3>
     </a>`;
@@ -193,7 +223,9 @@ async function iniciar(){
         href: `${esSerie ? "serie" : "juego"}.html?slug=${encodeURIComponent(it.slug)}`,
         titulo: it.d.titulo || it.slug,
         img: miniaturaJuego(it.d),
-        badge: esSerie ? ((it.d.tipo || it.d.tipoContenido) === "pelicula" ? "🎬" : "📺") : "🎮"
+        badge: esSerie ? ((it.d.tipo || it.d.tipoContenido) === "pelicula" ? "🎬" : "📺") : "🎮",
+        est: esSerie ? null : infoEstado(it.d),
+        u: it.d.actualizado
       });
     }).join("") + `</div>`;
   }
@@ -221,18 +253,65 @@ async function iniciar(){
   if(total){
     const buscar = document.getElementById("buscar");
     const conteo = document.getElementById("conteo");
+    const barra = document.getElementById("barra");
+    const orden = document.getElementById("orden");
+    const chips = document.getElementById("chips");
+    const cards = [...contenido.querySelectorAll(".card")];
+    cards.forEach((c, i) => { c.dataset.i = i; });
+    const txtTotal = `${total} ${total === 1 ? "elemento" : "elementos"}`;
     buscar.style.display = "block";
-    conteo.textContent = `${total} ${total === 1 ? "elemento" : "elementos"}`;
-    buscar.addEventListener("input", () => {
+    conteo.textContent = txtTotal;
+
+    // Chips de estado: solo los que realmente tiene algún juego de esta categoría
+    const estados = new Map();
+    itemsCargados.forEach(it => { if(it.tipo !== "serie"){ const e = infoEstado(it.d); if(e && !estados.has(e.k)) estados.set(e.k, e); } });
+    let filtroEstado = "";
+    if(estados.size){
+      chips.innerHTML = `<button type="button" class="chip on" data-k="">Todos</button>` +
+        [...estados.values()].map(e => `<button type="button" class="chip" data-k="${esc(e.k)}">${esc(e.txt)}</button>`).join("");
+      chips.addEventListener("click", (ev) => {
+        const b = ev.target.closest(".chip"); if(!b) return;
+        filtroEstado = b.dataset.k;
+        chips.querySelectorAll(".chip").forEach(x => x.classList.toggle("on", x === b));
+        aplicar();
+      });
+    }
+    if(total > 1 || estados.size) barra.style.display = "flex";
+    if(total <= 1) orden.style.display = "none";
+
+    function ordenar(){
+      const modo = orden.value;
+      contenido.querySelectorAll(".grid").forEach(g => {
+        const hijos = [...g.children];
+        hijos.sort((a, b) => {
+          if(modo === "rec") return (+b.dataset.u || 0) - (+a.dataset.u || 0) || a.dataset.i - b.dataset.i;
+          if(modo === "az") return a.dataset.t.localeCompare(b.dataset.t, "es");
+          if(modo === "za") return b.dataset.t.localeCompare(a.dataset.t, "es");
+          return a.dataset.i - b.dataset.i;
+        });
+        hijos.forEach(h => g.appendChild(h));
+      });
+    }
+    function aplicar(){
       const q = buscar.value.trim().toLowerCase();
+      ordenar();
       let visibles = 0;
-      contenido.querySelectorAll(".card").forEach(c => {
-        const ok = !q || c.dataset.t.includes(q);
+      cards.forEach(c => {
+        const ok = (!q || c.dataset.t.includes(q)) && (!filtroEstado || c.dataset.e === filtroEstado);
         c.classList.toggle("oculto", !ok);
         if(ok) visibles++;
       });
-      conteo.textContent = q ? `${visibles} de ${total}` : `${total} ${total === 1 ? "elemento" : "elementos"}`;
-    });
+      // Si una sección quedó sin tarjetas visibles, se esconde también su título
+      contenido.querySelectorAll(".grid").forEach(g => {
+        const hay = !!g.querySelector(".card:not(.oculto)");
+        g.classList.toggle("oculto", !hay);
+        const h = g.previousElementSibling;
+        if(h && h.classList.contains("seccion")) h.classList.toggle("oculto", !hay);
+      });
+      conteo.textContent = (q || filtroEstado) ? `${visibles} de ${total}` : txtTotal;
+    }
+    buscar.addEventListener("input", aplicar);
+    orden.addEventListener("change", aplicar);
   }
 }
 iniciar();
