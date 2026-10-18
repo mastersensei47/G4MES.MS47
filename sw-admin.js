@@ -1,7 +1,7 @@
 /* Service worker del panel admin (solo para que se pueda instalar como app).
    - Solo toca los archivos del panel; el resto del sitio pasa de largo.
    - Red primero: siempre se ve la versión nueva; si no hay internet, usa la copia guardada. */
-const CACHE = "ms47-admin-v1";
+const CACHE = "ms47-admin-v2";
 const SHELL = ["admin.html", "config.js", "defaults.js", "estilo.js", "manifest-admin.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {
