@@ -45,6 +45,9 @@ button:active{transform:scale(0.97);}
 .btn-danger{background:rgba(255,43,61,0.12);color:#ff9aa2;border:1px solid rgba(255,43,61,0.3);}
 .btn-danger:hover{background:rgba(255,43,61,0.22);color:#ffb3ba;}
 
+.fila-rec{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--card2);align-items:center;}
+.fila-rec input{flex:1 1 240px;margin:0;}
+.fila-rec button{margin:0;padding:9px 12px;}
 .fila{display:flex;gap:8px;margin-top:8px;align-items:center;}
 .fila input{flex:1;}
 .fila button{margin:0;padding:9px 12px;}
@@ -346,10 +349,7 @@ select.sel-estado{width:auto;max-width:100%;margin-top:8px;padding:6px 8px;font-
     <input type="text" id="fGrupo" list="listaGruposJuegos" placeholder="Ej: Terror, Favoritos, Para revisar...">
     <datalist id="listaGruposJuegos"></datalist>
 
-    <label>🎬 Link de mi video del juego (opcional, YouTube: sale en «Actualizados recientemente» de la home)</label>
-    <input type="text" id="fVideoPropio" placeholder="https://www.youtube.com/watch?v=...">
-
-    <div class="grid-secciones">
+<div class="grid-secciones">
 
     <details class="seccion" id="secFondo">
       <summary>🖼️ Portada y fondo del hero</summary>
@@ -727,10 +727,11 @@ select.sel-estado{width:auto;max-width:100%;margin-top:8px;padding:6px 8px;font-
     <label>Texto del pie de página</label>
     <input type="text" id="aFooter" placeholder="© 2026 ...">
 
-    <label>Sección «Actualizados recientemente» en la home</label>
-    <label class="chk" style="margin-top:6px;"><input type="checkbox" id="aRecOn" checked> Mostrarla (juegos que guardaste o editaste hace poco, con el link de tu video)</label>
-    <label>Cuántos juegos mostrar (1 a 24)</label>
-    <input type="text" id="aRecN" inputmode="numeric" value="8" style="max-width:120px;">
+    <label>Sección «Actualizados recientemente» en la home (tus videos)</label>
+    <label class="chk" style="margin-top:6px;"><input type="checkbox" id="aRecOn" checked> Mostrarla en la home</label>
+    <p class="hint" style="margin:6px 0 0;">Pegá el link de cada video que hiciste hace poco (YouTube). Al tocarlo, el visitante va directo al video. El título y la miniatura se toman solos del video; si querés, los podés escribir vos. El primero de la lista es el que sale primero. Máximo 24.</p>
+    <div id="recVideosList"></div>
+    <button class="btn-secondary" id="btnAddRecVideo" type="button">+ Agregar video</button>
 
     <label>Redes sociales</label>
     <div id="redesList"></div>
@@ -1152,7 +1153,7 @@ document.getElementById("fTitulo").addEventListener("input", (e) => {
 let editandoSlug = null;
 
 function limpiarFormulario(){
-  ["fTitulo","fSlug","fGrupo","fVideoPropio","fFondo","fPortada","fFondoVideo","fVideoIzq","fVideoCentro","fVideoDer","fImagenIzq","fImagenCentro","fImagenDer","fPeso","fVerificacion","fTituloVerif","fTituloContenido","fTituloReq","fTituloInfo","fTituloGaleria","fEstado","fEstadoTxt","fVersion","fEstadoNota"].forEach(id => document.getElementById(id).value = "");
+  ["fTitulo","fSlug","fGrupo","fFondo","fPortada","fFondoVideo","fVideoIzq","fVideoCentro","fVideoDer","fImagenIzq","fImagenCentro","fImagenDer","fPeso","fVerificacion","fTituloVerif","fTituloContenido","fTituloReq","fTituloInfo","fTituloGaleria","fEstado","fEstadoTxt","fVersion","fEstadoNota"].forEach(id => document.getElementById(id).value = "");
   ["fModoIzq","fModoCentro","fModoDer","fFondoModo"].forEach(id => document.getElementById(id).value = "hover");
   document.getElementById("fSlug").readOnly = false;
   ["descargasList","contenidoList","requisitosList","infoJuegoList","galeriaList","apartadosList"].forEach(id => document.getElementById(id).innerHTML = "");
@@ -1186,7 +1187,6 @@ document.getElementById("btnGuardar").addEventListener("click", async () => {
   const data = {
     titulo,
     grupo: document.getElementById("fGrupo").value.trim(),
-    videoPropio: document.getElementById("fVideoPropio").value.trim(),
     actualizado: Date.now(),
     portada: document.getElementById("fPortada").value.trim(),
     fondo: document.getElementById("fFondo").value.trim(),
@@ -1403,7 +1403,6 @@ function cargarParaEditar(slug, d){
   document.getElementById("fSlug").value = slug;
   document.getElementById("fSlug").readOnly = true;
   document.getElementById("fGrupo").value = d.grupo || "";
-  document.getElementById("fVideoPropio").value = d.videoPropio || "";
   document.getElementById("fFondo").value = d.fondo || "";
   document.getElementById("fPortada").value = d.portada || "";
   document.getElementById("fFondoVideo").value = d.fondoVideo || "";
@@ -2174,6 +2173,24 @@ document.getElementById("btnImportarIniciales").addEventListener("click", async 
 // =====================================================================
 const aMsg = document.getElementById("aMsg");
 
+function crearFilaRecVideo(titulo = "", url = "", imagen = ""){
+  const cont = document.getElementById("recVideosList");
+  const fila = document.createElement("div");
+  fila.className = "fila-rec";
+  fila.innerHTML = `<input type="text" class="vUrl" placeholder="Link del video (https://youtu.be/...)" value="${esc(url)}">
+    <input type="text" class="vTit" placeholder="Título (opcional, si no se toma del video)" value="${esc(titulo)}">
+    <input type="text" class="vImg" placeholder="Imagen (opcional, si no se usa la del video)" value="${esc(imagen)}">
+    <button class="btn-secondary" type="button" data-a="sube" title="Subir">↑</button>
+    <button class="btn-danger" type="button" data-a="quita" title="Quitar">✕</button>`;
+  fila.querySelector('[data-a="quita"]').addEventListener("click", () => { fila.remove(); marcarSucio("ajustes"); });
+  fila.querySelector('[data-a="sube"]').addEventListener("click", () => { if(fila.previousElementSibling){ fila.parentNode.insertBefore(fila, fila.previousElementSibling); marcarSucio("ajustes"); } });
+  cont.appendChild(fila);
+}
+document.getElementById("btnAddRecVideo").addEventListener("click", () => {
+  if(document.querySelectorAll("#recVideosList .fila-rec").length >= 24){ alert("Máximo 24 videos."); return; }
+  crearFilaRecVideo(); marcarSucio("ajustes");
+});
+
 function crearFilaRed(tipo = "instagram", url = ""){
   const cont = document.getElementById("redesList");
   const fila = document.createElement("div");
@@ -2198,7 +2215,8 @@ async function cargarAjustes(){
     document.getElementById("aAviso").value = c.aviso || "";
     document.getElementById("aFooter").value = c.footer || "";
     document.getElementById("aRecOn").checked = c.recientesOn !== false;
-    document.getElementById("aRecN").value = c.recientesN || 8;
+    document.getElementById("recVideosList").innerHTML = "";
+    (Array.isArray(c.recientesVideos) ? c.recientesVideos : []).forEach(v => crearFilaRecVideo(v && v.titulo, v && v.url, v && v.imagen));
     document.getElementById("redesList").innerHTML = "";
     (Array.isArray(c.redes) ? c.redes : []).forEach(r => crearFilaRed(r.tipo, r.url));
   }catch(err){
@@ -2218,6 +2236,17 @@ document.getElementById("btnGuardarAjustes").addEventListener("click", async () 
     redes.push({ tipo: f.querySelector(".rTipo").value, url });
   });
   if(invalida){ setMsg(aMsg, "error", "Hay un link de red social que no es válido."); return; }
+  const recientesVideos = [];
+  let videoMalo = false;
+  document.querySelectorAll("#recVideosList .fila-rec").forEach(f => {
+    const url = f.querySelector(".vUrl").value.trim();
+    const imagen = f.querySelector(".vImg").value.trim();
+    if(!url) return;
+    if(!urlSegura(url) || (imagen && !urlSegura(imagen))){ videoMalo = true; return; }
+    recientesVideos.push({ titulo: f.querySelector(".vTit").value.trim(), url, imagen });
+  });
+  if(videoMalo){ setMsg(aMsg, "error", "Hay un link de video (o de imagen) que no es válido."); return; }
+  if(recientesVideos.length > 24){ setMsg(aMsg, "error", "Máximo 24 videos en «Actualizados recientemente»."); return; }
   try{
     await update(ref(db, "config"), {
       sitioNombre: document.getElementById("aNombre").value.trim(),
@@ -2226,7 +2255,7 @@ document.getElementById("btnGuardarAjustes").addEventListener("click", async () 
       aviso: document.getElementById("aAviso").value.trim(),
       footer: document.getElementById("aFooter").value.trim(),
       recientesOn: document.getElementById("aRecOn").checked,
-      recientesN: Math.min(24, Math.max(1, parseInt(document.getElementById("aRecN").value, 10) || 8)),
+      recientesVideos,
       redes
     });
     limpiarSucio("ajustes");
