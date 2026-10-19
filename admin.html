@@ -135,6 +135,15 @@ button.mini{padding:7px 10px;margin-top:0;}
 .busq-cab{font-size:10px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:var(--accent2);padding:8px 10px 4px;}
 kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--muted);}
 /* ===== Edición en lote ===== */
+.pd-resp{flex-basis:100%;border-left:3px solid var(--accent2);background:var(--card2);border-radius:8px;padding:9px 12px;font-size:13px;}
+.pd-resp b{display:block;font-size:12px;margin-bottom:2px;}
+.pd-resp.contest{border-left-color:#f5c542;}
+.pd-edit{flex-basis:100%;display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--accent2);border-radius:10px;background:var(--card2);}
+.pd-edit select,.pd-edit textarea{margin:0;}
+.pd-edit textarea{min-height:70px;resize:vertical;}
+.pd-edit .rapidas{display:flex;flex-wrap:wrap;gap:6px;}
+.pd-edit .rapidas button,.pd-edit .acc button{margin:0;padding:6px 10px;font-size:12px;}
+.pd-edit .acc{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
 .pagina-item .sel-lote{width:20px;height:20px;accent-color:var(--accent2);cursor:pointer;flex-shrink:0;margin:0 4px 0 0;}
 .pagina-item.en-lote{border-color:var(--accent2);}
 .lote-bar{position:sticky;bottom:12px;z-index:900;background:var(--card2);border:1px solid var(--accent2);border-radius:14px;padding:12px 14px;margin:14px 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.5);}
@@ -3355,9 +3364,14 @@ function renderPedidos(){
     const t = document.createElement("div"); t.className = "titulo"; t.textContent = x.v.juego;
     const n = pdVotos(x.v);
     const l = document.createElement("div"); l.className = "link";
-    l.textContent = "👍 " + n + (n === 1 ? " voto" : " votos") + " · " + wdFecha(x.v.ts || Date.now()) + (x.v.hecho ? " · ✅ hecho el " + wdFecha(x.v.hechoTs || Date.now()) : "");
+    l.textContent = "👍 " + n + (n === 1 ? " voto" : " votos") + " · " + wdFecha(x.v.ts || Date.now()) + (x.v.hecho ? " · ✅ hecho el " + wdFecha(x.v.hechoTs || Date.now()) : "") + (x.v.contestacion && x.v.contestacion.t ? " · 💬 contestó" : "") + (x.v.respuesta && !(x.v.contestacion && x.v.contestacion.t) ? " · respondido" : "");
     info.append(t, l);
     const acc = document.createElement("div");
+    acc.append(mkBtn(x.v.respuesta ? "💬 Editar respuesta" : "💬 Responder", "btn-secondary", () => {
+      pdEditando = pdEditando === x.k ? null : x.k;
+      pdBorrador = x.v.respuesta ? { tipo: x.v.respuesta.tipo || "info", texto: x.v.respuesta.texto || "" } : { tipo: "ok", texto: "" };
+      renderPedidos();
+    }));
     if(!x.v.hecho){
       acc.append(
         mkBtn("✅ Hecho", "btn-secondary", () => pdAccion(update(ref(db, "pedidos/" + x.k), { hecho: true, hechoTs: Date.now() }))),
@@ -3372,8 +3386,71 @@ function renderPedidos(){
       acc.append(mkBtn("↩ Reabrir", "btn-secondary", () => pdAccion(update(ref(db, "pedidos/" + x.k), { hecho: false, hechoTs: null }))));
     }
     acc.append(mkBtn("🗑", "btn-danger", () => { if(confirm("¿Borrar este pedido?")) pdAccion(remove(ref(db, "pedidos/" + x.k))); }));
-    it.append(info, acc); box.append(it);
+    it.append(info, acc);
+    const rv = pdRespuestaVista(x); if(rv) it.append(rv);
+    const cv = pdContestacionVista(x); if(cv) it.append(cv);
+    if(pdEditando === x.k) it.append(pdEditor(x));
+    box.append(it);
   });
+}
+// ---------- Responder pedidos ----------
+const PD_TIPOS = { ok: "✅ Aceptado (lo voy a hacer)", no: "❌ No se va a poder (explicar por qué)", pregunta: "❓ Tengo una pregunta", info: "ℹ️ Aviso / novedad" };
+const PD_RAPIDAS = {
+  ok: ["¡Aceptado! Lo voy a hacer, te aviso cuando esté.", "Lo anoté, lo hago en cuanto pueda."],
+  no: ["No se va a poder: el juego no está disponible o es demasiado pesado.", "No lo voy a subir porque no encuentro una versión que funcione bien.", "Por ahora no, pero lo dejo anotado por si cambia."],
+  pregunta: ["¿Es la versión de PC? ¿Me pasás cuál querés (año, edición o versión)?", "¿Es este juego o hay otro con nombre parecido?"],
+  info: ["Ya estoy trabajando en este.", "Ya está subido, revisá el buscador."]
+};
+let pdEditando = null, pdBorrador = { tipo: "ok", texto: "" };
+function pdEditor(x){
+  const ed = document.createElement("div"); ed.className = "pd-edit";
+  const sel = document.createElement("select");
+  sel.innerHTML = Object.entries(PD_TIPOS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("");
+  sel.value = pdBorrador.tipo;
+  const ta = document.createElement("textarea"); ta.maxLength = 300; ta.placeholder = "Escribí la respuesta (máx. 300 caracteres). La ve cualquiera que abra «Pedidos de juegos», pero solo quien lo pidió puede contestar.";
+  ta.value = pdBorrador.texto;
+  const rap = document.createElement("div"); rap.className = "rapidas";
+  const pintarRapidas = () => {
+    rap.innerHTML = "";
+    (PD_RAPIDAS[sel.value] || []).forEach(f => rap.append(mkBtn(f.length > 46 ? f.slice(0, 44) + "…" : f, "btn-secondary", () => { ta.value = f; pdBorrador.texto = f; ta.focus(); })));
+  };
+  sel.addEventListener("change", () => { pdBorrador.tipo = sel.value; pintarRapidas(); });
+  ta.addEventListener("input", () => { pdBorrador.texto = ta.value; });
+  pintarRapidas();
+  const acc = document.createElement("div"); acc.className = "acc";
+  acc.append(
+    mkBtn("Enviar respuesta", "btn-primary", async () => {
+      const texto = ta.value.trim();
+      if(!texto){ setMsg($("pdMsg"), "error", "Escribí la respuesta antes de enviarla."); return; }
+      await pdAccion(update(ref(db, "pedidos/" + x.k), { respuesta: { tipo: sel.value, texto, ts: Date.now() }, contestacion: null }));
+      pdEditando = null; pdBorrador = { tipo: "ok", texto: "" }; renderPedidos();
+      toast("Respuesta enviada.");
+    }),
+    mkBtn("Cancelar", "btn-secondary", () => { pdEditando = null; renderPedidos(); })
+  );
+  if(x.v.respuesta) acc.append(mkBtn("Quitar la respuesta actual", "btn-danger", async () => {
+    if(!confirm("¿Quitar la respuesta de este pedido?")) return;
+    await pdAccion(update(ref(db, "pedidos/" + x.k), { respuesta: null, contestacion: null }));
+    pdEditando = null; renderPedidos();
+  }));
+  ed.append(sel, ta, rap, acc);
+  return ed;
+}
+function pdRespuestaVista(x){
+  const r = x.v.respuesta; if(!r || !r.texto) return null;
+  const d = document.createElement("div"); d.className = "pd-resp";
+  const b = document.createElement("b"); b.textContent = "Tu respuesta (" + (PD_TIPOS[r.tipo] || "Aviso").split(" (")[0] + ") · " + wdFecha(r.ts || Date.now());
+  const p = document.createElement("div"); p.textContent = r.texto;
+  d.append(b, p);
+  return d;
+}
+function pdContestacionVista(x){
+  const c = x.v.contestacion; if(!c || !c.t) return null;
+  const d = document.createElement("div"); d.className = "pd-resp contest";
+  const b = document.createElement("b"); b.textContent = "💬 Quien lo pidió contestó · " + wdFecha(c.ts || Date.now());
+  const p = document.createElement("div"); p.textContent = c.t;
+  d.append(b, p);
+  return d;
 }
 function pdAccion(promesa){
   setMsg($("pdMsg"), "", "");
