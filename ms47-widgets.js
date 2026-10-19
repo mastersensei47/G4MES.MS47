@@ -84,6 +84,16 @@
 #w47 .bnr{position:fixed;top:10px;left:50%;transform:translateX(-50%);max-width:min(94vw,640px);width:max-content;display:flex;align-items:center;gap:10px;background:rgba(14,18,24,.96);border:1px solid rgba(255,209,102,.5);border-radius:12px;padding:8px 12px;font-size:14px;box-shadow:0 6px 24px rgba(0,0,0,.5)}
 #w47 .bnr span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #w47 .bnr .x{background:transparent;padding:0 4px;font-size:16px}
+#w47 .qr{margin:2px 4px 8px;padding:8px 10px;border-radius:8px;font-size:13px;word-break:break-word;border-left:3px solid var(--c,#5aa9ff);background:rgba(255,255,255,.06)}
+#w47 .qr b{display:block;font-size:11px;margin-bottom:2px;color:var(--c,#5aa9ff)}
+#w47 .qr.ok{--c:#4cd98a}
+#w47 .qr.no{--c:#ff6b6b}
+#w47 .qr.pregunta{--c:#f5c542}
+#w47 .qr .qa1{margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.1);color:#cfe}
+#w47 .qr .qa{display:flex;gap:6px;margin-top:6px}
+#w47 .qr .qa input{flex:1;min-width:0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 8px;font-size:13px}
+#w47 .qr .qa button{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);padding:5px 10px;font-size:13px}
+#w47 .q1 .qm{display:inline-block;margin-left:6px;padding:0 6px;border-radius:6px;background:rgba(42,127,128,.45);font-size:10px;color:#fff}
 #w47 .qh{margin:12px 0 4px;font-size:11px;color:#8aa;text-transform:uppercase;letter-spacing:.6px}
 #w47 .qh:first-child{margin-top:0}
 #w47 .q1{display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.08)}
@@ -119,7 +129,7 @@
  <form class="f" id="w47nu"><input id="w47ni" maxlength="20" placeholder="Elegí tu usuario" autocomplete="off"><button>Entrar</button></form>
  <form class="f" id="w47mf" hidden><button type="button" class="emb" id="w47eb" title="Emojis">😊</button><input id="w47mi" placeholder="Enviar mensaje..." autocomplete="off"><button>➤</button></form>
 </div>
-<div class="bt"><span class="vs" id="w47vs" hidden></span><button id="w47bn" title="Novedades">📣<i id="w47dot" hidden></i></button><button id="w47bq" title="Pedir un juego">🎮</button><button id="w47bc" title="Chat">💬<i id="w47cdot" hidden></i></button></div>`;
+<div class="bt"><span class="vs" id="w47vs" hidden></span><button id="w47bn" title="Novedades">📣<i id="w47dot" hidden></i></button><button id="w47bq" title="Pedir un juego">🎮<i id="w47qdot" hidden></i></button><button id="w47bc" title="Chat">💬<i id="w47cdot" hidden></i></button></div>`;
 
   async function boot() {
     const CFG = window.MS47_FIREBASE_CONFIG || (window.MS47 && window.MS47.firebaseConfig);
@@ -163,7 +173,7 @@
     function show(w) {   // w: 'c' (chat) | 'n' (novedades) | 'q' (pedidos) | 'x' (todo cerrado)
       $('w47c').hidden = w !== 'c'; $('w47n').hidden = w !== 'n'; $('w47q').hidden = w !== 'q';
       $('w47bc').classList.toggle('on', w === 'c'); $('w47bn').classList.toggle('on', w === 'n'); $('w47bq').classList.toggle('on', w === 'q');
-      if (w === 'q') startReq();
+      if (w === 'q') { startReq(); qSeenAll(); }
       ss.set('w47s_' + PAGE, w);
       if (w === 'c') { ml.scrollTop = ml.scrollHeight; $('w47cdot').hidden = true; }
       if (w === 'n' && newestNews) { ls.set('ms47w_ns', newestNews); $('w47dot').hidden = true; }
@@ -172,6 +182,7 @@
     $('w47bc').onclick = () => show(cur() === 'c' ? 'x' : 'c');
     $('w47bn').onclick = () => show(cur() === 'n' ? 'x' : 'n');
     $('w47bq').onclick = () => show(cur() === 'q' ? 'x' : 'q');
+    setTimeout(() => { try { qEarlyCheck(); } catch (e) {} }, 1500);
     root.querySelectorAll('[data-x]').forEach(b => b.onclick = () => show('x'));
     window.MS47W = { openNews: () => show('n'), openChat: () => show('c'), openReq: () => show('q') };
 
@@ -334,6 +345,56 @@
       const r = db.ref('pedidos/' + k + '/votos/' + dev);
       r.once('value').then(s => s.exists() ? r.remove() : r.set(true)).catch(() => qHint('No se pudo votar'));
     }
+    const RESP = { ok: '✅ Aceptado', no: '❌ No se va a poder', pregunta: '❓ Una pregunta para vos', info: 'ℹ️ Aviso' };
+    const lsJ = (k, d) => { try { return JSON.parse(ls.get(k)) || d; } catch (e) { return d; } };
+    const rememberMine = k => { const a = lsJ('ms47w_mine', []).filter(x => x !== k); a.push(k); ls.set('ms47w_mine', JSON.stringify(a.slice(-20))); };
+    function qResp(x) {
+      const r = x.v.respuesta; if (!r || !r.texto) return null;
+      const mine = x.v.d === dev;
+      const el = document.createElement('div'); el.className = 'qr ' + (RESP[r.tipo] ? r.tipo : 'info');
+      const b = document.createElement('b'); b.textContent = RESP[r.tipo] || RESP.info; el.append(b);
+      const p = document.createElement('div'); p.textContent = r.texto; el.append(p);
+      const c = x.v.contestacion;
+      if (c && c.t) {
+        const a = document.createElement('div'); a.className = 'qa1'; a.textContent = (mine ? 'Tu respuesta: ' : 'Respuesta: ') + c.t; el.append(a);
+      } else if (mine && r.tipo === 'pregunta') {
+        const f = document.createElement('form'); f.className = 'qa';
+        const i = document.createElement('input'); i.maxLength = 200; i.placeholder = 'Escribí tu respuesta…';
+        const s = document.createElement('button'); s.textContent = 'Enviar'; f.append(i, s);
+        f.onsubmit = e => {
+          e.preventDefault();
+          const tx = i.value.trim().replace(/\s+/g, ' ').slice(0, 200); if (!tx) return;
+          if (/https?:\/\/|www\./i.test(tx)) { qHint('Sin links, por favor'); return; }
+          let lim = tx;
+          ((cfg && cfg.words) || '').split(',').map(w => w.trim()).filter(Boolean).forEach(w => { lim = lim.replace(new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '***'); });
+          if (lim !== tx) { qHint('Ese texto no está permitido'); return; }
+          s.disabled = true;
+          db.ref('pedidos/' + x.k + '/contestacion').set({ t: tx, d: dev, ts: TS })
+            .then(() => qHint('Respuesta enviada ✔', true))
+            .catch(() => { qHint('No se pudo enviar tu respuesta'); s.disabled = false; });
+        };
+        el.append(f);
+      }
+      return el;
+    }
+    // Punto rojo en 🎮 cuando hay una respuesta nueva a un pedido mío
+    function qDotMark() {
+      const seen = lsJ('ms47w_rs', {}); let nuevo = false;
+      reqItems.forEach(x => { if (x.v.d === dev && x.v.respuesta && x.v.respuesta.ts > (seen[x.k] || 0)) nuevo = true; });
+      $('w47qdot').hidden = !nuevo || cur() === 'q';
+    }
+    function qSeenAll() {
+      const seen = lsJ('ms47w_rs', {});
+      reqItems.forEach(x => { if (x.v.d === dev) { rememberMine(x.k); if (x.v.respuesta) seen[x.k] = x.v.respuesta.ts; } });
+      ls.set('ms47w_rs', JSON.stringify(seen)); $('w47qdot').hidden = true;
+    }
+    // Al cargar la página: mira solo MIS pedidos guardados (pocas lecturas) para saber si hay respuesta nueva
+    function qEarlyCheck() {
+      const seen = lsJ('ms47w_rs', {});
+      lsJ('ms47w_mine', []).forEach(k => {
+        db.ref('pedidos/' + k + '/respuesta/ts').once('value').then(s => { if (s.exists() && s.val() > (seen[k] || 0) && cur() !== 'q') $('w47qdot').hidden = false; }).catch(() => {});
+      });
+    }
     function paintReq() {
       const box = $('w47ql'); box.innerHTML = '';
       const pend = reqItems.filter(x => !x.v.hecho).sort((a, b) => qCount(b.v) - qCount(a.v) || (b.v.ts || 0) - (a.v.ts || 0));
@@ -345,6 +406,7 @@
         const t = document.createElement('div'); t.className = 'qt'; t.textContent = x.v.juego || '';
         const sm = document.createElement('small');
         sm.textContent = ok ? '✅ Ya está hecho' : new Date(x.v.ts || Date.now()).toLocaleDateString();
+        if (x.v.d === dev) { const m = document.createElement('span'); m.className = 'qm'; m.textContent = 'tu pedido'; sm.append(m); }
         t.append(sm); el.append(t);
         if (!ok) {
           const mine = !!(x.v.votos && x.v.votos[dev]);
@@ -354,9 +416,11 @@
           b.onclick = () => qVote(x.k); el.append(b);
         }
         box.append(el);
+        const rs = qResp(x); if (rs) box.append(rs);
       };
       if (pend.length) { title('Más pedidos'); pend.forEach(x => row(x, false)); }
       if (done.length) { title('Ya hechos'); done.forEach(x => row(x, true)); }
+      if (cur() === 'q') qSeenAll(); else qDotMark();
     }
     function startReq() {   // se conecta recién cuando alguien abre el panel (así no gasta datos en cada página)
       if (reqOn) return; reqOn = true;
@@ -384,8 +448,10 @@
       const qd = (ls.get('ms47w_qd') || '').split('|'), usados = qd[0] === dayKey() ? (+qd[1] || 0) : 0;
       if (usados >= 3) { qHint('Hoy ya hiciste 3 pedidos. Mañana podés pedir más 🙌'); return; }
       const btn = $('w47qb'); btn.disabled = true;
-      db.ref('pedidos').push({ juego: t, ts: TS, d: dev, hecho: false, votos: { [dev]: true } }).then(() => {
+      const nuevoRef = db.ref('pedidos').push({ juego: t, ts: TS, d: dev, hecho: false, votos: { [dev]: true } });
+      nuevoRef.then(() => {
         $('w47qi').value = ''; ls.set('ms47w_qd', dayKey() + '|' + (usados + 1)); qHint('¡Pedido enviado! 🎮', true);
+        if (nuevoRef && nuevoRef.key) rememberMine(nuevoRef.key);
       }).catch(err => { console.error('MS47 widgets: no se pudo enviar el pedido', err); qHint('No se pudo enviar (' + ((err && (err.code || err.message)) || 'error') + ')'); })
         .then(() => { btn.disabled = false; });
     };
